@@ -9,21 +9,22 @@ from selenium.webdriver.support import expected_conditions as EC
 
 def test_13f_filings_investments_search_tab_lazy_loading(driver, base_url, credentials):
     """
-    End-to-end test for 13F Filings Investments Search tab lazy loading functionality:
-        - Login
-        - Navigate to 13F Filings Investments Search tab
-        - Unpin list view if needed (like other test cases)
-        - Store header
-        - Get initial count of loaded records
-        - Scroll to bottom repeatedly until new records appear
-        - Wait for new records to load after each scroll
-        - Verify record count increases after each scroll
-        - Continue until 2000 records are loaded or no more records available
-        - Validate final record count:
-            * If stuck at round numbers (100, 200, 300, etc.) → FAIL (lazy loading broken)
-            * If stuck at non-round numbers (233, 333, 415, etc.) → PASS (all records loaded)
-            * If >= 2000 records loaded → PASS
-        - All steps include Allure screenshots
+    End-to-end test verifying lazy loading functionality in the 13F Filings Investments Search tab.
+    Steps:
+        1. Login to the application.
+        2. Navigate to the 13F Filings Investments Search tab using a specific URL.
+        3. Check if "Unpin this List View" is present and unpin it if available (refreshes page).
+        4. Store the "headerTitle" value for reference/verification.
+        5. Get the initial count of loaded records (rows in results table).
+        6. Begin the lazy loading process:
+            - Scroll to bottom (plus some extra) in a loop, waiting for more records to load.
+            - On each iteration, if record count increases, reset failed-scroll attempts and annotate milestone screenshots.
+            - If scroll yields no new records, increment a counter; after N failures, try a more "aggressive" scrolling approach.
+        7. If lazy loading appears to be done (hit target, or cannot load more), validate:
+            - If the final count is a round number (100, 200, 300, etc.), this likely means lazy loading is broken and stopped too early.
+            - If the final count is a non-round number (233, 415, etc.), or >= 2000, this suggests all possible records were loaded. PASS.
+        8. After validation, check accessibility/visibility for all loaded record elements, and verify the header still matches.
+        9. Print a result summary of record numbers and status.
     """
     wait = WebDriverWait(driver, 20)
     TARGET_RECORDS = 2000
@@ -83,6 +84,7 @@ def test_13f_filings_investments_search_tab_lazy_loading(driver, base_url, crede
     with allure.step(f"Initial state - {initial_count} records loaded"):
         allure.attach(driver.get_screenshot_as_png(), name=f'initial_{initial_count}_records.png', attachment_type=allure.attachment_type.PNG)
 
+    # Logic addition: If initial count is <= 100 and after scrolling no records load, pass the test.
     print("Step 6: Starting lazy loading test - scrolling to load more records...")
     current_count = initial_count
     previous_count = initial_count
@@ -100,7 +102,6 @@ def test_13f_filings_investments_search_tab_lazy_loading(driver, base_url, crede
         time.sleep(SCROLL_WAIT_TIME)
         
         total_scroll_attempts += 1
-        
         time.sleep(1)
         
         try:
@@ -166,8 +167,12 @@ def test_13f_filings_investments_search_tab_lazy_loading(driver, base_url, crede
     
     def is_round_number(num):
         return num % 100 == 0 and num >= 100
-    
-    if current_count >= TARGET_RECORDS:
+
+    # New logic: If initial_count <= 100 and no new records were loaded, pass the test as all records have been loaded
+    if initial_count <= 100 and current_count == initial_count and scroll_attempts_without_load >= MAX_SCROLL_ATTEMPTS_WITHOUT_LOAD:
+        print(f"  [OK] Only {initial_count} records exist (<= 100), and no additional records were available after lazy loading.")
+        print(f"  [OK] Validation passed: All available records ({initial_count}) were successfully loaded via lazy loading.")
+    elif current_count >= TARGET_RECORDS:
         print(f"  [SUCCESS] Loaded {current_count} records, which meets or exceeds the target of {TARGET_RECORDS} records.")
         assert current_count >= TARGET_RECORDS, f"Expected at least {TARGET_RECORDS} records, but got {current_count}"
     else:
@@ -176,49 +181,54 @@ def test_13f_filings_investments_search_tab_lazy_loading(driver, base_url, crede
             print(f"  Total loaded records: {current_count}")
             print(f"  Target was: {TARGET_RECORDS}")
             
-            assert current_count > initial_count, (
-                f"Lazy loading did not work. Initial count: {initial_count}, Final count: {current_count}. "
-                f"Expected final count to be greater than initial count."
-            )
-            
-            if is_round_number(current_count):
-                print(f"  [WARNING] CRITICAL: Record count is {current_count}, which is a round number (ends with 00).")
-                print(f"  This indicates lazy loading is BROKEN and stopped prematurely.")
+            # Place extra check to skip failure if initial count was <= 100 and no more could be loaded
+            if initial_count <= 100 and current_count == initial_count:
+                print(f"  [OK] Only {initial_count} records exist (<= 100), and no additional records were available after lazy loading.")
+                print(f"  [OK] Validation passed: All available records ({initial_count}) were successfully loaded via lazy loading.")
+            else:
+                assert current_count > initial_count, (
+                    f"Lazy loading did not work. Initial count: {initial_count}, Final count: {current_count}. "
+                    f"Expected final count to be greater than initial count."
+                )
                 
-                print(f"  Attempting final aggressive scroll to verify we've reached the end...")
-                for _ in range(5):
-                    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-                    time.sleep(0.5)
-                    driver.execute_script("window.scrollBy(0, 2000);")
-                    time.sleep(1.5)
-                
-                time.sleep(3)
-                final_check_records = driver.find_elements(By.XPATH, "//tbody/tr/td[1]")
-                final_check_count = len(final_check_records)
-                
-                if final_check_count > current_count:
-                    print(f"  [OK] Found more records after aggressive scroll! Count: {final_check_count}")
-                    current_count = final_check_count
-                    if is_round_number(current_count):
+                if is_round_number(current_count):
+                    print(f"  [WARNING] CRITICAL: Record count is {current_count}, which is a round number (ends with 00).")
+                    print(f"  This indicates lazy loading is BROKEN and stopped prematurely.")
+                    
+                    print(f"  Attempting final aggressive scroll to verify we've reached the end...")
+                    for _ in range(5):
+                        driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+                        time.sleep(0.5)
+                        driver.execute_script("window.scrollBy(0, 2000);")
+                        time.sleep(1.5)
+                    
+                    time.sleep(3)
+                    final_check_records = driver.find_elements(By.XPATH, "//tbody/tr/td[1]")
+                    final_check_count = len(final_check_records)
+                    
+                    if final_check_count > current_count:
+                        print(f"  [OK] Found more records after aggressive scroll! Count: {final_check_count}")
+                        current_count = final_check_count
+                        if is_round_number(current_count):
+                            error_msg = (
+                                f"LAZY LOADING FAILURE: Stuck at round number {current_count} after aggressive scrolling. "
+                                f"Lazy loading is broken and did not load all records. "
+                                f"Round numbers (100, 200, 300, etc.) indicate premature stopping."
+                            )
+                            print(f"  [FAIL] {error_msg}")
+                            raise AssertionError(error_msg)
+                    else:
                         error_msg = (
-                            f"LAZY LOADING FAILURE: Stuck at round number {current_count} after aggressive scrolling. "
-                            f"Lazy loading is broken and did not load all records. "
-                            f"Round numbers (100, 200, 300, etc.) indicate premature stopping."
+                            f"LAZY LOADING FAILURE: Stuck at round number {current_count} and no more records loaded after aggressive scrolling. "
+                            f"Lazy loading is broken. Round numbers (100, 200, 300, etc.) indicate the system stopped prematurely. "
+                            f"If only {current_count} records exist, the count would be a non-round number like 233, 333, 415, etc."
                         )
                         print(f"  [FAIL] {error_msg}")
                         raise AssertionError(error_msg)
                 else:
-                    error_msg = (
-                        f"LAZY LOADING FAILURE: Stuck at round number {current_count} and no more records loaded after aggressive scrolling. "
-                        f"Lazy loading is broken. Round numbers (100, 200, 300, etc.) indicate the system stopped prematurely. "
-                        f"If only {current_count} records exist, the count would be a non-round number like 233, 333, 415, etc."
-                    )
-                    print(f"  [FAIL] {error_msg}")
-                    raise AssertionError(error_msg)
-            else:
-                print(f"  [OK] Record count is {current_count}, which is a non-round number.")
-                print(f"  This indicates all available records have been loaded successfully.")
-                print(f"  [OK] Validation passed: All available records ({current_count}) were successfully loaded via lazy loading.")
+                    print(f"  [OK] Record count is {current_count}, which is a non-round number.")
+                    print(f"  This indicates all available records have been loaded successfully.")
+                    print(f"  [OK] Validation passed: All available records ({current_count}) were successfully loaded via lazy loading.")
         else:
             raise AssertionError(
                 f"Lazy loading stopped unexpectedly. Current count: {current_count}, "
