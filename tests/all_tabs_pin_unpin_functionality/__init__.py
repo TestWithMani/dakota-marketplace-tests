@@ -1,0 +1,2 @@
+# Pin/Unpin functionality tests
+
