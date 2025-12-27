@@ -362,62 +362,111 @@ def getTestStatistics() {
         def reportContent = readFile(reportPath)
         
         // Try to extract from pytest summary line format in HTML (most reliable)
-        // Format: "=============== 6 passed, 155 deselected in 893.13s ================"
-        // Or: "6 passed, 0 failed, 0 skipped in 652.69s"
+        // Format examples:
+        // "=============== 6 passed, 155 deselected in 893.13s ================"
+        // "================ 1 passed, 27 deselected in 64.13s ================"
+        // "6 passed, 0 failed, 0 skipped in 652.69s"
+        
+        def summaryMatch = null
+        
         // Pattern 1: Full summary with all three values: "X passed, Y failed, Z skipped"
-        def summaryMatch = reportContent =~ /(?i)=+\s+(\d+)\s+passed[,\s]+(\d+)\s+failed[,\s]+(\d+)\s+skipped[,\s]+in/
+        summaryMatch = reportContent =~ /(?i)=+\s+(\d+)\s+passed[,\s]+(\d+)\s+failed[,\s]+(\d+)\s+skipped[,\s]+in/
         if (!summaryMatch) {
             // Pattern 2: Summary with passed and failed only: "X passed, Y failed"
             summaryMatch = reportContent =~ /(?i)=+\s+(\d+)\s+passed[,\s]+(\d+)\s+failed[,\s]+in/
         }
         if (!summaryMatch) {
-            // Pattern 3: Just passed (no failed/skipped mentioned): "X passed"
+            // Pattern 3: Just passed with deselected: "X passed, Y deselected in" (most common for filtered tests)
+            def deselectedMatch = reportContent =~ /(?i)=+\s+(\d+)\s+passed[,\s]+(\d+)\s+deselected[,\s]+in/
+            if (deselectedMatch) {
+                // For deselected tests, we only count passed, failed, and skipped (deselected are not counted)
+                stats.passed = deselectedMatch[0][1].toInteger()
+                stats.failed = 0
+                stats.skipped = 0
+                echo "Extracted statistics from summary format: Passed=${stats.passed}, Failed=${stats.failed}, Skipped=${stats.skipped} (${deselectedMatch[0][2]} deselected)"
+                summaryMatch = deselectedMatch // Set to continue with normal flow
+            }
+        }
+        if (!summaryMatch) {
+            // Pattern 4: Just passed (no failed/skipped/deselected mentioned): "X passed in"
             summaryMatch = reportContent =~ /(?i)=+\s+(\d+)\s+passed[,\s]+in/
         }
         if (!summaryMatch) {
-            // Pattern 4: Simple format without equals signs: "X passed, Y failed, Z skipped"
+            // Pattern 5: Simple format without equals signs: "X passed, Y failed, Z skipped"
             summaryMatch = reportContent =~ /(?i)(\d+)\s+passed[,\s]+(\d+)\s+failed[,\s]+(\d+)\s+skipped/
         }
         if (!summaryMatch) {
-            // Pattern 5: Simple format with just passed: "X passed"
-            summaryMatch = reportContent =~ /(?i)(\d+)\s+passed[,\s]+in/
+            // Pattern 6: Simple format with passed and failed: "X passed, Y failed"
+            summaryMatch = reportContent =~ /(?i)(\d+)\s+passed[,\s]+(\d+)\s+failed/
+        }
+        if (!summaryMatch) {
+            // Pattern 7: Simple format with just passed and deselected: "X passed, Y deselected"
+            summaryMatch = reportContent =~ /(?i)(\d+)\s+passed[,\s]+(\d+)\s+deselected/
+            if (summaryMatch) {
+                stats.passed = summaryMatch[0][1].toInteger()
+                stats.failed = 0
+                stats.skipped = 0
+                echo "Extracted statistics from simple format: Passed=${stats.passed}, Failed=${stats.failed}, Skipped=${stats.skipped} (${summaryMatch[0][2]} deselected)"
+            }
+        }
+        if (!summaryMatch) {
+            // Pattern 8: Most flexible - just "X passed" anywhere in the content
+            summaryMatch = reportContent =~ /(?i)(\d+)\s+passed(?:[,\s]|</|$|\s)/
         }
         
-        if (summaryMatch) {
+        // Only process summaryMatch if stats haven't been set yet (to avoid overwriting deselected handling)
+        if (summaryMatch && summaryMatch[0].size() > 1 && stats.passed == 0 && stats.failed == 0 && stats.skipped == 0) {
             stats.passed = summaryMatch[0][1].toInteger()
             if (summaryMatch[0].size() > 2 && summaryMatch[0][2]) {
-                stats.failed = summaryMatch[0][2].toInteger()
+                // Check if it's a failed count (not deselected)
+                def matchText = summaryMatch[0][0].toLowerCase()
+                if (matchText.contains('failed')) {
+                    stats.failed = summaryMatch[0][2].toInteger()
+                }
             }
             if (summaryMatch[0].size() > 3 && summaryMatch[0][3]) {
                 stats.skipped = summaryMatch[0][3].toInteger()
             }
             echo "Extracted statistics from summary format: Passed=${stats.passed}, Failed=${stats.failed}, Skipped=${stats.skipped}"
+        } else if (summaryMatch && summaryMatch[0].size() > 1) {
+            // If we have a match but stats were already set, just update passed if needed
+            if (stats.passed == 0) {
+                stats.passed = summaryMatch[0][1].toInteger()
+                echo "Updated passed count from summary: ${stats.passed}"
+            }
         }
         
-        // Fallback: Try HTML format like "<span class="passed">5 Passed,</span>"
+        // Fallback: Try HTML format like "<span class="passed">5 Passed,</span>" or text content
         if (stats.passed == 0 && stats.failed == 0 && stats.skipped == 0) {
+            // Try HTML span elements first
             def passedMatch = reportContent =~ /(?i)<span[^>]*class=["']passed["'][^>]*>(\d+)\s+Passed/
             if (!passedMatch) {
-                passedMatch = reportContent =~ /(\d+)\s+[Pp]assed/
+                // Try more flexible pattern for passed
+                passedMatch = reportContent =~ /(?i)(\d+)\s+passed(?:,|\s|</)/
             }
             if (passedMatch) {
                 stats.passed = passedMatch[0][1].toInteger()
+                echo "Found passed count from HTML: ${stats.passed}"
             }
             
             def failedMatch = reportContent =~ /(?i)<span[^>]*class=["']failed["'][^>]*>(\d+)\s+Failed/
             if (!failedMatch) {
-                failedMatch = reportContent =~ /(\d+)\s+[Ff]ailed/
+                // Try more flexible pattern for failed
+                failedMatch = reportContent =~ /(?i)(\d+)\s+failed(?:,|\s|</)/
             }
             if (failedMatch) {
                 stats.failed = failedMatch[0][1].toInteger()
+                echo "Found failed count from HTML: ${stats.failed}"
             }
             
             def skippedMatch = reportContent =~ /(?i)<span[^>]*class=["']skipped["'][^>]*>(\d+)\s+Skipped/
             if (!skippedMatch) {
-                skippedMatch = reportContent =~ /(\d+)\s+[Ss]kipped/
+                // Try more flexible pattern for skipped
+                skippedMatch = reportContent =~ /(?i)(\d+)\s+skipped(?:,|\s|</)/
             }
             if (skippedMatch) {
                 stats.skipped = skippedMatch[0][1].toInteger()
+                echo "Found skipped count from HTML: ${stats.skipped}"
             }
         }
         
