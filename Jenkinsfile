@@ -32,15 +32,19 @@ pipeline {
             choices: ['uat', 'prod'],
             description: 'Select test environment'
         )
-        choice(
+        extendedChoice(
             name: 'TEST_SUITE',
-            choices: ['all', 'column_names', 'fields_comparison', 'fields_display', 'lazy_loading', 'list_view_crud', 'pin_unpin'],
-            description: 'Select test suite to run (ignored if MARKERS is specified)'
+            type: 'PT_MULTI_SELECT',
+            value: 'all,column_names,fields_comparison,fields_display,lazy_loading,list_view_crud,pin_unpin',
+            description: 'Select one or more test suites to run. Hold Ctrl/Cmd to select multiple. If MARKERS are also selected, tests will be filtered by both suite and markers.',
+            multiSelectDelimiter: ','
         )
-        text(
+        extendedChoice(
             name: 'MARKERS',
-            defaultValue: '',
-            description: 'Optional: Run tests by markers (comma-separated). Examples: "accounts" (runs all 6 tests for accounts tab), "accounts,contact" (runs all tests for accounts and contact tabs), "accounts and column_names" (runs accounts column_names test only). Leave empty to use TEST_SUITE selection.'
+            type: 'PT_MULTI_SELECT',
+            value: 'accounts,contact,all_documents,filings_13f_investments_search,accounts_default,contact_default,investment_allocator_accounts_default,investment_allocator_contacts_default,investment_firm_contacts_default,my_accounts_default,portfolio_companies_contacts_default,university_alumni_contacts_default,conference_search,consultant_reviews,continuation_vehicle,dakota_city_guides,dakota_searches,dakota_video_search,fee_schedules_dashboard,fund_family_memos,fund_launches,investment_allocator_accounts,investment_allocator_contacts,investment_firm_accounts,investment_firm_contacts,manager_presentation_dashboard,my_accounts,pension_documents,portfolio_companies,portfolio_companies_contacts,private_fund_search,public_company_search,public_investments_search,public_plan_minutes_search,recent_transactions,university_alumni_contacts,column_names,fields_comparison,fields_display,lazy_loading,list_view_crud,pin_unpin',
+            description: 'Select one or more markers (tabs or suites) to run. Hold Ctrl/Cmd to select multiple. Selected markers use OR logic. If TEST_SUITE is also selected, both will be combined.',
+            multiSelectDelimiter: ','
         )
         booleanParam(
             name: 'SEND_EMAIL',
@@ -221,7 +225,21 @@ pipeline {
                 def testStats = getTestStatistics()
                 
                 // Update build description
-                def testSelection = params.MARKERS && params.MARKERS.trim() ? "Markers: ${params.MARKERS}" : "Suite: ${params.TEST_SUITE}"
+                def testSelectionParts = []
+                if (params.TEST_SUITE && params.TEST_SUITE.trim() && params.TEST_SUITE != 'all') {
+                    def suites = params.TEST_SUITE.split(',').collect { it.trim() }.findAll { it && it != 'all' }
+                    if (suites.size() > 0) {
+                        testSelectionParts.add("Suites: ${suites.join(', ')}")
+                    }
+                }
+                if (params.MARKERS && params.MARKERS.trim()) {
+                    def markers = params.MARKERS.split(',').collect { it.trim() }.findAll { it }
+                    if (markers.size() > 0) {
+                        testSelectionParts.add("Markers: ${markers.join(', ')}")
+                    }
+                }
+                def testSelection = testSelectionParts.size() > 0 ? testSelectionParts.join(' | ') : "All Tests"
+                
                 currentBuild.description = """
                     Environment: ${ENV} | 
                     ${testSelection} | 
@@ -267,49 +285,84 @@ def buildTestCommand(testSuite, markers) {
     def baseCommand = "\"%PYTHON_EXE%\" -m pytest"
     def reportOptions = "--html=\"%HTML_REPORT%\" --self-contained-html --alluredir=\"%ALLURE_RESULTS%\" -v --tb=short"
     
-    def hasMarkers = markers && markers.trim()
-    def hasSuite = testSuite && testSuite != 'all' && testSuite.trim()
-    
-    // If both suite and markers are specified, combine them (run specific suite filtered by markers)
-    if (hasSuite && hasMarkers) {
-        def testPath = getTestPath(testSuite)
-        // Build marker expression
-        def markerExpression = markers.trim()
-        // Replace comma with "or" for OR logic, or keep "and" for AND logic
-        if (!markerExpression.contains(' and ')) {
-            markerExpression = markerExpression.replace(',', ' or ')
+    // Parse multiple suites (extendedChoice returns comma-separated string)
+    def suitesList = []
+    if (testSuite && testSuite.trim()) {
+        testSuite.split(',').each { suite ->
+            def trimmed = suite.trim()
+            if (trimmed && trimmed != 'all') {
+                suitesList.add(trimmed)
+            }
         }
-        echo "Running test suite: ${testSuite} from path: ${testPath} with markers: ${markerExpression}"
-        return "${baseCommand} ${testPath} -m \"${markerExpression}\" ${reportOptions}"
     }
+    def hasSuite = suitesList.size() > 0
     
-    // If only markers are specified, use marker selection (runs all suites with that marker)
-    if (hasMarkers) {
-        // Filter out empty strings manually to avoid findAll script security issues
-        def markersList = []
+    // Parse multiple markers (extendedChoice returns comma-separated string)
+    def markersList = []
+    if (markers && markers.trim()) {
         markers.split(',').each { marker ->
             def trimmed = marker.trim()
             if (trimmed) {
                 markersList.add(trimmed)
             }
         }
-        if (markersList.size() > 0) {
-            // Build marker expression
-            // Support both "marker1,marker2" (OR) and "marker1 and marker2" (AND) syntax
-            def markerExpression = markers.trim()
-            // Replace comma with "or" for OR logic, or keep "and" for AND logic
-            if (!markerExpression.contains(' and ')) {
-                markerExpression = markerExpression.replace(',', ' or ')
+    }
+    def hasMarkers = markersList.size() > 0
+    
+    // Build marker expression (multiple markers use OR logic)
+    def markerExpression = null
+    if (hasMarkers) {
+        markerExpression = markersList.join(' or ')
+    }
+    
+    // Case 1: Both suites and markers specified - combine them
+    if (hasSuite && hasMarkers) {
+        // Build test paths for multiple suites
+        def testPaths = []
+        suitesList.each { suite ->
+            def path = getTestPath(suite)
+            if (path && path != 'tests/') {
+                testPaths.add(path)
             }
+        }
+        
+        if (testPaths.size() > 0) {
+            def pathsStr = testPaths.join(' ')
+            echo "Running test suites: ${suitesList.join(', ')} from paths: ${testPaths.join(', ')} with markers: ${markerExpression}"
+            return "${baseCommand} ${pathsStr} -m \"${markerExpression}\" ${reportOptions}"
+        } else {
+            // Fallback: if paths are empty, use marker-only approach
             echo "Running tests with markers: ${markerExpression}"
             return "${baseCommand} -m \"${markerExpression}\" ${reportOptions}"
         }
     }
     
-    // Otherwise use suite selection (runs all markers in that suite)
-    def testPath = getTestPath(testSuite)
-    echo "Running test suite: ${testSuite} from path: ${testPath}"
-    return "${baseCommand} ${testPath} ${reportOptions}"
+    // Case 2: Only markers specified - run all suites with those markers
+    if (hasMarkers) {
+        echo "Running tests with markers: ${markerExpression}"
+        return "${baseCommand} -m \"${markerExpression}\" ${reportOptions}"
+    }
+    
+    // Case 3: Only suites specified - run all tests in those suites
+    if (hasSuite) {
+        def testPaths = []
+        suitesList.each { suite ->
+            def path = getTestPath(suite)
+            if (path && path != 'tests/') {
+                testPaths.add(path)
+            }
+        }
+        
+        if (testPaths.size() > 0) {
+            def pathsStr = testPaths.join(' ')
+            echo "Running test suites: ${suitesList.join(', ')} from paths: ${testPaths.join(', ')}"
+            return "${baseCommand} ${pathsStr} ${reportOptions}"
+        }
+    }
+    
+    // Case 4: Neither specified - run all tests
+    echo "Running all tests"
+    return "${baseCommand} tests/ ${reportOptions}"
 }
 
 // Helper function to get test path based on suite selection
@@ -549,6 +602,22 @@ def sendEmailNotification(buildStatus) {
     def passPercentage = testStats.total > 0 ? (testStats.passed * 100 / testStats.total).intValue() : 0
     def failPercentage = testStats.total > 0 ? (testStats.failed * 100 / testStats.total).intValue() : 0
     def skipPercentage = testStats.total > 0 ? (testStats.skipped * 100 / testStats.total).intValue() : 0
+    
+    // Build test selection string for email
+    def testSelectionParts = []
+    if (params.TEST_SUITE && params.TEST_SUITE.trim() && params.TEST_SUITE != 'all') {
+        def suites = params.TEST_SUITE.split(',').collect { it.trim() }.findAll { it && it != 'all' }
+        if (suites.size() > 0) {
+            testSelectionParts.add("Suites: ${suites.join(', ')}")
+        }
+    }
+    if (params.MARKERS && params.MARKERS.trim()) {
+        def markers = params.MARKERS.split(',').collect { it.trim() }.findAll { it }
+        if (markers.size() > 0) {
+            testSelectionParts.add("Markers: ${markers.join(', ')}")
+        }
+    }
+    def testSelectionDisplay = testSelectionParts.size() > 0 ? testSelectionParts.join('<br>') : 'All Tests'
     
     def body = """
 <!DOCTYPE html>
@@ -900,7 +969,7 @@ def sendEmailNotification(buildStatus) {
                 </div>
                 <div class="info-card">
                     <h3>Test Selection</h3>
-                    <div class="value" style="font-size: 16px;">${params.MARKERS && params.MARKERS.trim() ? params.MARKERS : params.TEST_SUITE.toUpperCase()}</div>
+                    <div class="value" style="font-size: 14px;">${testSelectionDisplay}</div>
                 </div>
             </div>
             
