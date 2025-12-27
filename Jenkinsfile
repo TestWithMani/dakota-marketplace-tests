@@ -474,14 +474,27 @@ def getTestStatistics() {
         }
         if (!summaryMatch) {
             // Pattern 3: Just passed with deselected: "X passed, Y deselected in" (most common for filtered tests)
+            // But only if "failed" is NOT present before "passed" in the same summary line
             def deselectedMatch = reportContent =~ /(?i)=+\s+(\d+)\s+passed[,\s]+(\d+)\s+deselected[,\s]+in/
             if (deselectedMatch) {
-                // For deselected tests, we only count passed, failed, and skipped (deselected are not counted)
-                stats.passed = deselectedMatch[0][1].toInteger()
-                stats.failed = 0
-                stats.skipped = 0
-                echo "Extracted statistics from summary format: Passed=${stats.passed}, Failed=${stats.failed}, Skipped=${stats.skipped} (${deselectedMatch[0][2]} deselected)"
-                summaryMatch = deselectedMatch // Set to continue with normal flow
+                // Find the position of the match and check the surrounding context for "failed"
+                def matchPos = reportContent.indexOf(deselectedMatch[0][0])
+                // Look back up to 50 characters to find if "failed" appears before "passed"
+                def contextStart = Math.max(0, matchPos - 50)
+                def contextBefore = reportContent.substring(contextStart, matchPos).toLowerCase()
+                // Only use this match if "failed" is NOT in the context before "passed"
+                if (!contextBefore.contains('failed')) {
+                    // For deselected tests, we only count passed, failed, and skipped (deselected are not counted)
+                    stats.passed = deselectedMatch[0][1].toInteger()
+                    stats.failed = 0
+                    stats.skipped = 0
+                    echo "Extracted statistics from summary format: Passed=${stats.passed}, Failed=${stats.failed}, Skipped=${stats.skipped} (${deselectedMatch[0][2]} deselected)"
+                    summaryMatch = deselectedMatch // Set to continue with normal flow
+                } else {
+                    // "failed" appears before "passed", so Pattern 3b should have matched instead
+                    // Don't use this match - let it fall through to check other patterns
+                    deselectedMatch = null
+                }
             }
         }
         if (!summaryMatch) {
@@ -542,12 +555,25 @@ def getTestStatistics() {
         }
         if (!summaryMatch) {
             // Pattern 7: Simple format with just passed and deselected: "X passed, Y deselected"
+            // But only if "failed" is NOT present before "passed" in the same context
             summaryMatch = reportContent =~ /(?i)(\d+)\s+passed[,\s]+(\d+)\s+deselected/
             if (summaryMatch) {
-                stats.passed = summaryMatch[0][1].toInteger()
-                stats.failed = 0
-                stats.skipped = 0
-                echo "Extracted statistics from simple format: Passed=${stats.passed}, Failed=${stats.failed}, Skipped=${stats.skipped} (${summaryMatch[0][2]} deselected)"
+                // Find the position of the match and check the surrounding context for "failed"
+                def matchPos = reportContent.indexOf(summaryMatch[0][0])
+                // Look back up to 50 characters to find if "failed" appears before "passed"
+                def contextStart = Math.max(0, matchPos - 50)
+                def contextBefore = reportContent.substring(contextStart, matchPos).toLowerCase()
+                // Only use this match if "failed" is NOT in the context before "passed"
+                if (!contextBefore.contains('failed')) {
+                    stats.passed = summaryMatch[0][1].toInteger()
+                    stats.failed = 0
+                    stats.skipped = 0
+                    echo "Extracted statistics from simple format: Passed=${stats.passed}, Failed=${stats.failed}, Skipped=${stats.skipped} (${summaryMatch[0][2]} deselected)"
+                } else {
+                    // "failed" appears before "passed", so Pattern 7b should have matched instead
+                    // Don't use this match - reset to null
+                    summaryMatch = null
+                }
             }
         }
         if (!summaryMatch) {
