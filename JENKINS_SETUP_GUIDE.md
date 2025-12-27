@@ -97,6 +97,8 @@ Configure SMTP settings for email notifications:
 
 5. **Click Save**
 
+**Note**: After saving, you may only see a **Build** button initially. The **Build with Parameters** option will appear after Jenkins successfully checks out and loads the Jenkinsfile for the first time. This is normal behavior - run a regular build first to let Jenkins parse the parameters.
+
 ### Step 3: Configure GitHub Webhook (Optional but Recommended)
 
 For automatic builds on push to GitHub:
@@ -126,21 +128,31 @@ For automatic builds on push to GitHub:
 
 ### Step 4: Test the Pipeline
 
-1. **Manual Build**
+1. **Initial Build (Required First)**
    - Go to your Jenkins job
-   - Click **Build with Parameters**
+   - **Important**: If you see only **Build** (not "Build with Parameters"), click **Build** first
+   - This initial build will:
+     - Checkout the code from GitHub
+     - Load and parse the Jenkinsfile
+     - Register the parameters defined in the Jenkinsfile
+   - Wait for this build to complete (or at least reach the checkout stage)
+   - After this, **Build with Parameters** option will appear
+
+2. **Build with Parameters**
+   - Go to your Jenkins job
+   - Click **Build with Parameters** (this option appears after Jenkins successfully loads the Jenkinsfile)
    - Select parameters:
      - **ENVIRONMENT**: `uat` (or `prod`)
      - **TEST_SUITE**: `all` (or specific suite)
      - **SEND_EMAIL**: `true`
    - Click **Build**
 
-2. **Monitor Build**
+3. **Monitor Build**
    - Click on the build number
    - Click **Console Output** to see real-time logs
    - Wait for build to complete
 
-3. **Verify Results**
+4. **Verify Results**
    - Check **HTML Report** link in build page
    - Check **Allure Report** link (if Allure is installed)
    - Verify email notification received
@@ -235,6 +247,21 @@ The pipeline generates and publishes:
 - Verify GitHub repository URL is correct
 - Check internet connectivity
 - Verify repository is public (or add credentials if private)
+- Check for encoding errors in Jenkinsfile (remove emoji/special characters)
+- Ensure Jenkinsfile is saved with UTF-8 encoding
+
+### Issue: "Build with Parameters" option not visible
+**Solution**:
+- **This is normal on first setup!** The "Build with Parameters" option only appears after Jenkins successfully loads the Jenkinsfile
+- Try clicking **Build** (regular build) first
+- Wait for the build to at least complete the checkout stage
+- If checkout succeeds, Jenkins will parse the parameters block
+- Refresh the job page - "Build with Parameters" should now appear
+- If it still doesn't appear:
+  - Check that the Jenkinsfile has a `parameters {}` block
+  - Verify the Jenkinsfile syntax is correct (no encoding errors)
+  - Check Jenkins console output for errors during checkout
+  - Try saving the job configuration again
 
 ### Issue: Tests fail
 **Solution**:

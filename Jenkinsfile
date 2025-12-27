@@ -48,9 +48,9 @@ pipeline {
         stage('Checkout') {
             steps {
                 script {
-                    echo "🔄 Checking out code from GitHub..."
+                    echo "Checking out code from GitHub..."
                     checkout scm
-                    echo "✅ Code checked out successfully"
+                    echo "Code checked out successfully"
                     echo "Branch: ${env.BRANCH_NAME}"
                     echo "Commit: ${env.GIT_COMMIT.take(7)}"
                 }
@@ -60,7 +60,7 @@ pipeline {
         stage('Setup Python Environment') {
             steps {
                 script {
-                    echo "🐍 Setting up Python virtual environment..."
+                    echo "Setting up Python virtual environment..."
                     
                     // Check if Python is available
                     bat '''
@@ -87,7 +87,7 @@ pipeline {
                         "%PIP_EXE%" install --upgrade pip
                     '''
                     
-                    echo "✅ Python environment setup complete"
+                    echo "Python environment setup complete"
                 }
             }
         }
@@ -95,7 +95,7 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 script {
-                    echo "📦 Installing Python dependencies..."
+                    echo "Installing Python dependencies..."
                     bat '''
                         "%PIP_EXE%" install -r requirements.txt
                         if errorlevel 1 (
@@ -103,7 +103,7 @@ pipeline {
                             exit /b 1
                         )
                     '''
-                    echo "✅ Dependencies installed successfully"
+                    echo "Dependencies installed successfully"
                 }
             }
         }
@@ -111,13 +111,13 @@ pipeline {
         stage('Create Directories') {
             steps {
                 script {
-                    echo "📁 Creating report directories..."
+                    echo "Creating report directories..."
                     bat '''
                         if not exist "%WORKSPACE%\\reports" mkdir "%WORKSPACE%\\reports"
                         if not exist "%WORKSPACE%\\allure-results" mkdir "%WORKSPACE%\\allure-results"
                         if not exist "%WORKSPACE%\\allure-report" mkdir "%WORKSPACE%\\allure-report"
                     '''
-                    echo "✅ Directories created"
+                    echo "Directories created"
                 }
             }
         }
@@ -125,8 +125,8 @@ pipeline {
         stage('Run Tests') {
             steps {
                 script {
-                    echo "🧪 Running test suite: ${params.TEST_SUITE}"
-                    echo "🌍 Environment: ${ENV}"
+                    echo "Running test suite: ${params.TEST_SUITE}"
+                    echo "Environment: ${ENV}"
                     
                     def testPath = getTestPath(params.TEST_SUITE)
                     def testCommand = "\"%PYTHON_EXE%\" -m pytest ${testPath} --html=\"%HTML_REPORT%\" --self-contained-html --alluredir=\"%ALLURE_RESULTS%\" -v --tb=short"
@@ -151,7 +151,7 @@ pipeline {
         stage('Generate Allure Report') {
             steps {
                 script {
-                    echo "📊 Generating Allure report..."
+                    echo "Generating Allure report..."
                     try {
                         // Check if Allure is installed
                         bat '''
@@ -177,9 +177,9 @@ pipeline {
                             results: [[path: 'allure-results']]
                         ])
                         
-                        echo "✅ Allure report generated successfully"
+                        echo "Allure report generated successfully"
                     } catch (Exception e) {
-                        echo "⚠️ Allure report generation skipped: ${e.getMessage()}"
+                        echo "WARNING: Allure report generation skipped: ${e.getMessage()}"
                     }
                 }
             }
@@ -188,7 +188,7 @@ pipeline {
         stage('Publish Test Results') {
             steps {
                 script {
-                    echo "📈 Publishing test results..."
+                    echo "Publishing test results..."
                     
                     // Publish HTML report
                     publishHTML([
@@ -200,7 +200,7 @@ pipeline {
                         allowMissing: true
                     ])
                     
-                    echo "✅ Test results published"
+                    echo "Test results published"
                 }
             }
         }
@@ -226,7 +226,7 @@ pipeline {
         
         success {
             script {
-                echo "✅ Build succeeded!"
+                echo "Build succeeded!"
                 if (params.SEND_EMAIL) {
                     sendEmailNotification('SUCCESS')
                 }
@@ -235,7 +235,7 @@ pipeline {
         
         failure {
             script {
-                echo "❌ Build failed!"
+                echo "Build failed!"
                 if (params.SEND_EMAIL) {
                     sendEmailNotification('FAILURE')
                 }
@@ -244,7 +244,7 @@ pipeline {
         
         unstable {
             script {
-                echo "⚠️ Build unstable!"
+                echo "Build unstable!"
                 if (params.SEND_EMAIL) {
                     sendEmailNotification('UNSTABLE')
                 }
@@ -310,7 +310,7 @@ def getTestStatistics() {
 def sendEmailNotification(buildStatus) {
     def testStats = getTestStatistics()
     def statusColor = buildStatus == 'SUCCESS' ? '#28a745' : buildStatus == 'FAILURE' ? '#dc3545' : '#ffc107'
-    def statusIcon = buildStatus == 'SUCCESS' ? '✅' : buildStatus == 'FAILURE' ? '❌' : '⚠️'
+    def statusIcon = buildStatus == 'SUCCESS' ? '[SUCCESS]' : buildStatus == 'FAILURE' ? '[FAILURE]' : '[UNSTABLE]'
     
     def subject = "${statusIcon} Dakota Marketplace Tests - ${buildStatus} - Build #${env.BUILD_NUMBER}"
     
@@ -479,7 +479,7 @@ def sendEmailNotification(buildStatus) {
 <body>
     <div class="container">
         <div class="header">
-            <h1>${statusIcon} Dakota Marketplace Test Automation</h1>
+            <h1>Dakota Marketplace Test Automation</h1>
             <div class="status-badge">${buildStatus}</div>
         </div>
         
@@ -503,7 +503,7 @@ def sendEmailNotification(buildStatus) {
         </div>
         
         <div class="test-results">
-            <h2>📊 Test Results Summary</h2>
+            <h2>Test Results Summary</h2>
             <div class="stats-container">
                 <div class="stat-box total">
                     <div class="stat-number" style="color: #007bff;">${testStats.total}</div>
@@ -525,7 +525,7 @@ def sendEmailNotification(buildStatus) {
         </div>
         
         <div class="build-info">
-            <h3 style="margin-top: 0;">🔧 Build Information</h3>
+            <h3 style="margin-top: 0;">Build Information</h3>
             <table>
                 <tr>
                     <td>Branch:</td>
@@ -551,7 +551,7 @@ def sendEmailNotification(buildStatus) {
         </div>
         
         <div class="links">
-            <h3 style="margin-top: 0;">🔗 Quick Links</h3>
+            <h3 style="margin-top: 0;">Quick Links</h3>
             <a href="${env.BUILD_URL}">View Build Details</a>
             <a href="${env.BUILD_URL}HTML_Report/">View HTML Report</a>
             <a href="${env.BUILD_URL}allure/">View Allure Report</a>
