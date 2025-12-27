@@ -315,8 +315,8 @@ def getTestStatistics() {
         def reportContent = readFile(reportPath)
         
         // Try multiple patterns to extract test statistics from HTML report
-        // Pattern 1: HTML format like "<span class="passed">5 Passed,</span>"
-        def passedMatch = reportContent =~ /<span[^>]*class="passed"[^>]*>(\d+)\s+Passed/i
+        // Pattern 1: HTML format like "<span class="passed">5 Passed,</span>" (case-insensitive)
+        def passedMatch = reportContent =~ /(?i)<span[^>]*class=["']passed["'][^>]*>(\d+)\s+Passed/
         if (!passedMatch) {
             // Pattern 2: Text format like "5 passed" or "5 Passed"
             passedMatch = reportContent =~ /(\d+)\s+[Pp]assed/
@@ -326,7 +326,7 @@ def getTestStatistics() {
         }
         
         // Extract failed count
-        def failedMatch = reportContent =~ /<span[^>]*class="failed"[^>]*>(\d+)\s+Failed/i
+        def failedMatch = reportContent =~ /(?i)<span[^>]*class=["']failed["'][^>]*>(\d+)\s+Failed/
         if (!failedMatch) {
             failedMatch = reportContent =~ /(\d+)\s+[Ff]ailed/
         }
@@ -335,7 +335,7 @@ def getTestStatistics() {
         }
         
         // Extract skipped count
-        def skippedMatch = reportContent =~ /<span[^>]*class="skipped"[^>]*>(\d+)\s+Skipped/i
+        def skippedMatch = reportContent =~ /(?i)<span[^>]*class=["']skipped["'][^>]*>(\d+)\s+Skipped/
         if (!skippedMatch) {
             skippedMatch = reportContent =~ /(\d+)\s+[Ss]kipped/
         }
@@ -370,7 +370,7 @@ def getTestStatistics() {
         // Final fallback: Try to parse from console output summary format
         // Format: "5 passed, 0 failed, 0 skipped in 652.69s"
         if (stats.passed == 0 && stats.failed == 0 && stats.skipped == 0) {
-            def summaryMatch = reportContent =~ /(\d+)\s+passed[,\s]+(\d+)\s+failed[,\s]+(\d+)\s+skipped/i
+            def summaryMatch = reportContent =~ /(?i)(\d+)\s+passed[,\s]+(\d+)\s+failed[,\s]+(\d+)\s+skipped/
             if (summaryMatch) {
                 stats.passed = summaryMatch[0][1].toInteger()
                 stats.failed = summaryMatch[0][2].toInteger()
