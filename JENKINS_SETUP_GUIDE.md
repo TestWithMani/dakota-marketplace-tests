@@ -197,8 +197,21 @@ The pipeline supports the following parameters:
 | Parameter | Options | Description |
 |-----------|---------|-------------|
 | **ENVIRONMENT** | `uat`, `prod` | Test environment to run against |
-| **TEST_SUITE** | `all`, `column_names`, `fields_comparison`, `fields_display`, `lazy_loading`, `list_view_crud`, `pin_unpin` | Test suite to execute |
+| **TEST_SUITE** | `all`, `column_names`, `fields_comparison`, `fields_display`, `lazy_loading`, `list_view_crud`, `pin_unpin` | Test suite to execute (ignored if MARKERS is specified) |
+| **MARKERS** | Text input | Optional: Run tests by markers (comma-separated). Examples: `accounts` (runs all 6 tests for accounts tab), `accounts,contact` (runs all tests for accounts and contact tabs), `accounts and column_names` (runs accounts column_names test only). Leave empty to use TEST_SUITE selection. |
 | **SEND_EMAIL** | `true`, `false` | Send email notification after build |
+
+### Using Markers in Jenkins
+
+**Markers allow you to run tests by tab name instead of suite name.** This is useful when you want to test all functionality for a specific tab.
+
+**Examples:**
+- Run all 6 test cases for Accounts tab: Set `MARKERS` = `accounts`
+- Run all tests for Accounts and Contact tabs: Set `MARKERS` = `accounts,contact`
+- Run only column_names tests for Accounts: Set `MARKERS` = `accounts and column_names`
+- Run lazy_loading tests for multiple tabs: Set `MARKERS` = `lazy_loading and (accounts or contact)`
+
+**Note:** When MARKERS is specified, TEST_SUITE selection is ignored. For more details, see [MARKERS_USAGE_GUIDE.md](MARKERS_USAGE_GUIDE.md).
 
 ## 📊 Reports and Artifacts
 
@@ -281,6 +294,31 @@ You can run specific test suites by selecting them in the build parameters:
 - **lazy_loading**: Tests in `tests/all_tabs_lazy_loading/`
 - **list_view_crud**: Tests in `tests/all_tabs_list_view_crud/`
 - **pin_unpin**: Tests in `tests/all_tabs_pin_unpin_functionality/`
+
+## 🏷️ Running Tests by Markers (Tab-Based Selection)
+
+**New Feature:** You can now run tests by tab name using markers. This allows you to run all 6 test cases for a specific tab across all suites.
+
+**In Jenkins:**
+1. Leave **TEST_SUITE** as default
+2. Enter marker expression in **MARKERS** field:
+   - Single tab: `accounts`
+   - Multiple tabs: `accounts,contact`
+   - Tab + Suite: `accounts and column_names`
+
+**Locally:**
+```bash
+# Run all tests for Accounts tab
+pytest -m accounts
+
+# Run all tests for Accounts and Contact tabs
+pytest -m "accounts or contact"
+
+# Run only column_names tests for Accounts tab
+pytest -m "accounts and column_names"
+```
+
+For complete marker usage guide, see [MARKERS_USAGE_GUIDE.md](MARKERS_USAGE_GUIDE.md).
 
 ## 📝 Best Practices
 

@@ -7,6 +7,9 @@ from config.urls import URLs, get_url
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import pytest
+@pytest.mark.investment_allocator_contacts
+@pytest.mark.list_view_crud
 
 
 def test_investment_allocator_contacts_list_view_crud(driver, base_url, credentials):

@@ -6,6 +6,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+@pytest.mark.13f_filings_investments_search
+@pytest.mark.column_names
 def test_verify_13f_filings_investments_search_tab_column_names(driver, base_url, credentials):
     """
     Verify that the columns in the 13F Filings Investments Search tab match the expected field names.

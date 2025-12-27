@@ -5,6 +5,9 @@ from config.urls import URLs, get_url
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import pytest
+@pytest.mark.dakota_searches
+@pytest.mark.column_names
 
 def test_verify_dakota_searches_tab_column_names(driver, base_url, credentials):
     """

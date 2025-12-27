@@ -5,6 +5,9 @@ from config.urls import URLs, get_url
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import pytest
+@pytest.mark.manager_presentation_dashboard
+@pytest.mark.lazy_loading
 
 
 def test_manager_presentation_dashboard_tab_lazy_loading(driver, base_url, credentials):

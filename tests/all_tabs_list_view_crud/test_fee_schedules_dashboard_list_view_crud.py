@@ -7,6 +7,9 @@ from config.urls import URLs, get_url
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import pytest
+@pytest.mark.fee_schedules_dashboard
+@pytest.mark.list_view_crud
 
 
 def test_fee_schedules_dashboard_list_view_crud(driver, base_url, credentials):

@@ -35,7 +35,12 @@ pipeline {
         choice(
             name: 'TEST_SUITE',
             choices: ['all', 'column_names', 'fields_comparison', 'fields_display', 'lazy_loading', 'list_view_crud', 'pin_unpin'],
-            description: 'Select test suite to run'
+            description: 'Select test suite to run (ignored if MARKERS is specified)'
+        )
+        text(
+            name: 'MARKERS',
+            defaultValue: '',
+            description: 'Optional: Run tests by markers (comma-separated). Examples: "accounts" (runs all 6 tests for accounts tab), "accounts,contact" (runs all tests for accounts and contact tabs), "accounts and column_names" (runs accounts column_names test only). Leave empty to use TEST_SUITE selection.'
         )
         booleanParam(
             name: 'SEND_EMAIL',
@@ -125,11 +130,10 @@ pipeline {
         stage('Run Tests') {
             steps {
                 script {
-                    echo "Running test suite: ${params.TEST_SUITE}"
                     echo "Environment: ${ENV}"
                     
-                    def testPath = getTestPath(params.TEST_SUITE)
-                    def testCommand = "\"%PYTHON_EXE%\" -m pytest ${testPath} --html=\"%HTML_REPORT%\" --self-contained-html --alluredir=\"%ALLURE_RESULTS%\" -v --tb=short"
+                    def testCommand = buildTestCommand(params.TEST_SUITE, params.MARKERS)
+                    echo "Test command: ${testCommand}"
                     
                     bat """
                         set ENV=${ENV}
@@ -213,9 +217,10 @@ pipeline {
                 def testStats = getTestStatistics()
                 
                 // Update build description
+                def testSelection = params.MARKERS && params.MARKERS.trim() ? "Markers: ${params.MARKERS}" : "Suite: ${params.TEST_SUITE}"
                 currentBuild.description = """
                     Environment: ${ENV} | 
-                    Suite: ${params.TEST_SUITE} | 
+                    ${testSelection} | 
                     Tests: ${testStats.total} | 
                     Passed: ${testStats.passed} | 
                     Failed: ${testStats.failed} | 
@@ -251,6 +256,33 @@ pipeline {
             }
         }
     }
+}
+
+// Helper function to build test command based on suite or markers
+def buildTestCommand(testSuite, markers) {
+    def baseCommand = "\"%PYTHON_EXE%\" -m pytest"
+    def reportOptions = "--html=\"%HTML_REPORT%\" --self-contained-html --alluredir=\"%ALLURE_RESULTS%\" -v --tb=short"
+    
+    // If markers are specified, use marker selection
+    if (markers && markers.trim()) {
+        def markersList = markers.split(',').collect { it.trim() }.findAll { it }
+        if (markersList.size() > 0) {
+            // Build marker expression
+            // Support both "marker1,marker2" (OR) and "marker1 and marker2" (AND) syntax
+            def markerExpression = markers.trim()
+            // Replace comma with "or" for OR logic, or keep "and" for AND logic
+            if (!markerExpression.contains(' and ')) {
+                markerExpression = markerExpression.replace(',', ' or ')
+            }
+            echo "Running tests with markers: ${markerExpression}"
+            return "${baseCommand} -m \"${markerExpression}\" ${reportOptions}"
+        }
+    }
+    
+    // Otherwise use suite selection
+    def testPath = getTestPath(testSuite)
+    echo "Running test suite: ${testSuite} from path: ${testPath}"
+    return "${baseCommand} ${testPath} ${reportOptions}"
 }
 
 // Helper function to get test path based on suite selection

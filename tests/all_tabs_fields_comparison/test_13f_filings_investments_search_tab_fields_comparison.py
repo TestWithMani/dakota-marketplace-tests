@@ -8,6 +8,7 @@ from config.urls import URLs, get_url
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import pytest
 
 
 def remove_prefixes(text):
@@ -75,6 +76,8 @@ def generate_fields_comparison_csv(
         writer.writerow(["(none)"])
     writer.writerow([])
     return output.getvalue()
+@pytest.mark.13f_filings_investments_search
+@pytest.mark.fields_comparison
 
 
 def test_13f_filings_investments_search_tab_fields_comparison(driver, base_url, credentials):

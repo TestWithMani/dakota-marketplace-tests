@@ -7,6 +7,7 @@ from config.urls import URLs, get_url
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import pytest
 
 def click_all_move_buttons(driver, move_btn_xpaths):
     """
@@ -21,6 +22,8 @@ def click_all_move_buttons(driver, move_btn_xpaths):
             time.sleep(0.5)
         except Exception:
             pass
+@pytest.mark.portfolio_companies_contacts_default
+@pytest.mark.fields_display
 
 def test_portfolio_companies_contacts_default_fields_display_functionality(driver, base_url, credentials):
     """
