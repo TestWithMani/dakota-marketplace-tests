@@ -459,19 +459,7 @@ def getTestStatistics() {
             }
         }
         if (!summaryMatch) {
-            // Pattern 3: Just passed with deselected: "X passed, Y deselected in" (most common for filtered tests)
-            def deselectedMatch = reportContent =~ /(?i)=+\s+(\d+)\s+passed[,\s]+(\d+)\s+deselected[,\s]+in/
-            if (deselectedMatch) {
-                // For deselected tests, we only count passed, failed, and skipped (deselected are not counted)
-                stats.passed = deselectedMatch[0][1].toInteger()
-                stats.failed = 0
-                stats.skipped = 0
-                echo "Extracted statistics from summary format: Passed=${stats.passed}, Failed=${stats.failed}, Skipped=${stats.skipped} (${deselectedMatch[0][2]} deselected)"
-                summaryMatch = deselectedMatch // Set to continue with normal flow
-            }
-        }
-        if (!summaryMatch) {
-            // Pattern 3b: Failed, passed, and deselected: "X failed, Y passed, Z deselected in"
+            // Pattern 3b: Failed, passed, and deselected: "X failed, Y passed, Z deselected in" (check this FIRST as it's more specific)
             def failedDeselectedMatch = reportContent =~ /(?i)=+\s+(\d+)\s+failed[,\s]+(\d+)\s+passed[,\s]+(\d+)\s+deselected[,\s]+in/
             if (failedDeselectedMatch) {
                 // Swap the order: first group is failed, second is passed
@@ -482,6 +470,18 @@ def getTestStatistics() {
                 stats.skipped = 0
                 echo "Extracted statistics from summary format (failed first): Passed=${stats.passed}, Failed=${stats.failed}, Skipped=${stats.skipped} (${failedDeselectedMatch[0][3]} deselected)"
                 summaryMatch = failedDeselectedMatch // Set to continue with normal flow
+            }
+        }
+        if (!summaryMatch) {
+            // Pattern 3: Just passed with deselected: "X passed, Y deselected in" (most common for filtered tests)
+            def deselectedMatch = reportContent =~ /(?i)=+\s+(\d+)\s+passed[,\s]+(\d+)\s+deselected[,\s]+in/
+            if (deselectedMatch) {
+                // For deselected tests, we only count passed, failed, and skipped (deselected are not counted)
+                stats.passed = deselectedMatch[0][1].toInteger()
+                stats.failed = 0
+                stats.skipped = 0
+                echo "Extracted statistics from summary format: Passed=${stats.passed}, Failed=${stats.failed}, Skipped=${stats.skipped} (${deselectedMatch[0][2]} deselected)"
+                summaryMatch = deselectedMatch // Set to continue with normal flow
             }
         }
         if (!summaryMatch) {
@@ -527,17 +527,7 @@ def getTestStatistics() {
             }
         }
         if (!summaryMatch) {
-            // Pattern 7: Simple format with just passed and deselected: "X passed, Y deselected"
-            summaryMatch = reportContent =~ /(?i)(\d+)\s+passed[,\s]+(\d+)\s+deselected/
-            if (summaryMatch) {
-                stats.passed = summaryMatch[0][1].toInteger()
-                stats.failed = 0
-                stats.skipped = 0
-                echo "Extracted statistics from simple format: Passed=${stats.passed}, Failed=${stats.failed}, Skipped=${stats.skipped} (${summaryMatch[0][2]} deselected)"
-            }
-        }
-        if (!summaryMatch) {
-            // Pattern 7b: Simple format with failed, passed, and deselected: "X failed, Y passed, Z deselected"
+            // Pattern 7b: Simple format with failed, passed, and deselected: "X failed, Y passed, Z deselected" (check this FIRST as it's more specific)
             summaryMatch = reportContent =~ /(?i)(\d+)\s+failed[,\s]+(\d+)\s+passed[,\s]+(\d+)\s+deselected/
             if (summaryMatch) {
                 // Swap the order: first group is failed, second is passed
@@ -548,6 +538,16 @@ def getTestStatistics() {
                 stats.skipped = 0
                 echo "Extracted statistics from simple format (failed first): Passed=${stats.passed}, Failed=${stats.failed}, Skipped=${stats.skipped} (${summaryMatch[0][3]} deselected)"
                 summaryMatch = null // Reset to skip further processing
+            }
+        }
+        if (!summaryMatch) {
+            // Pattern 7: Simple format with just passed and deselected: "X passed, Y deselected"
+            summaryMatch = reportContent =~ /(?i)(\d+)\s+passed[,\s]+(\d+)\s+deselected/
+            if (summaryMatch) {
+                stats.passed = summaryMatch[0][1].toInteger()
+                stats.failed = 0
+                stats.skipped = 0
+                echo "Extracted statistics from simple format: Passed=${stats.passed}, Failed=${stats.failed}, Skipped=${stats.skipped} (${summaryMatch[0][2]} deselected)"
             }
         }
         if (!summaryMatch) {
