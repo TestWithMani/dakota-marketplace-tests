@@ -135,10 +135,45 @@ pipeline {
                     def testCommand = buildTestCommand(params.TEST_SUITE, params.MARKERS)
                     echo "Test command: ${testCommand}"
                     
+                    // Run tests and capture output
                     bat """
                         set ENV=${ENV}
-                        ${testCommand}
+                        ${testCommand} > test_output.txt 2>&1
+                        type test_output.txt
                     """
+                    
+                    // Try to parse test statistics from console output
+                    try {
+                        def outputContent = readFile("test_output.txt")
+                        echo "Parsing test statistics from console output..."
+                        
+                        // Look for pytest summary line: "=============== X passed, Y failed, Z skipped in ... ================"
+                        // Pattern 1: Full summary line with all three values
+                        def summaryPattern = outputContent =~ /(?i)=+\s+(\d+)\s+passed[,\s]+(\d+)\s+failed[,\s]+(\d+)\s+skipped[,\s]+in/
+                        if (!summaryPattern) {
+                            // Pattern 2: Summary without skipped (if skipped is 0, it might not appear)
+                            summaryPattern = outputContent =~ /(?i)=+\s+(\d+)\s+passed[,\s]+(\d+)\s+failed[,\s]+in/
+                        }
+                        if (!summaryPattern) {
+                            // Pattern 3: Just passed and failed
+                            summaryPattern = outputContent =~ /(?i)(\d+)\s+passed[,\s]+(\d+)\s+failed/
+                        }
+                        
+                        if (summaryPattern) {
+                            def passed = summaryPattern[0][1].toInteger()
+                            def failed = summaryPattern[0][2].toInteger()
+                            def skipped = summaryPattern[0].size() > 3 && summaryPattern[0][3] ? summaryPattern[0][3].toInteger() : 0
+                            def total = passed + failed + skipped
+                            echo "Parsed from console: Passed=${passed}, Failed=${failed}, Skipped=${skipped}, Total=${total}"
+                            
+                            // Write to a file that getTestStatistics can read
+                            writeFile file: "test_stats.txt", text: "passed=${passed}\nfailed=${failed}\nskipped=${skipped}\ntotal=${total}"
+                        } else {
+                            echo "Could not find test summary pattern in console output"
+                        }
+                    } catch (Exception e) {
+                        echo "Could not parse from console output: ${e.getMessage()}"
+                    }
                 }
             }
             post {
@@ -308,6 +343,26 @@ def getTestStatistics() {
         skipped: 0
     ]
     
+    // First, try to read from test_stats.txt if available (from console output parsing)
+    try {
+        def statsFile = readFile("test_stats.txt")
+        def passedMatch = statsFile =~ /passed=(\d+)/
+        def failedMatch = statsFile =~ /failed=(\d+)/
+        def skippedMatch = statsFile =~ /skipped=(\d+)/
+        def totalMatch = statsFile =~ /total=(\d+)/
+        
+        if (passedMatch && failedMatch && skippedMatch && totalMatch) {
+            stats.passed = passedMatch[0][1].toInteger()
+            stats.failed = failedMatch[0][1].toInteger()
+            stats.skipped = skippedMatch[0][1].toInteger()
+            stats.total = totalMatch[0][1].toInteger()
+            echo "Extracted test statistics from test_stats.txt: Total=${stats.total}, Passed=${stats.passed}, Failed=${stats.failed}, Skipped=${stats.skipped}"
+            return stats
+        }
+    } catch (Exception e) {
+        echo "test_stats.txt not found, trying HTML report..."
+    }
+    
     try {
         def reportPath = "reports/report.html"
         // Use readFile step instead of new File() for Jenkins script security
@@ -368,7 +423,7 @@ def getTestStatistics() {
         }
         
         // Final fallback: Try to parse from console output summary format
-        // Format: "5 passed, 0 failed, 0 skipped in 652.69s"
+        // Format: "5 passed, 0 failed, 0 skipped in 652.69s" or "=============== 5 passed, 0 failed, 0 skipped in 652.69s ================"
         if (stats.passed == 0 && stats.failed == 0 && stats.skipped == 0) {
             def summaryMatch = reportContent =~ /(?i)(\d+)\s+passed[,\s]+(\d+)\s+failed[,\s]+(\d+)\s+skipped/
             if (summaryMatch) {
@@ -376,6 +431,18 @@ def getTestStatistics() {
                 stats.failed = summaryMatch[0][2].toInteger()
                 stats.skipped = summaryMatch[0][3].toInteger()
                 echo "Extracted statistics from summary format"
+            }
+        }
+        
+        // Additional fallback: Try parsing from pytest summary line format
+        // Format: "=============== 5 passed, 0 failed, 0 skipped in 652.69s ================"
+        if (stats.passed == 0 && stats.failed == 0 && stats.skipped == 0) {
+            def summaryLineMatch = reportContent =~ /(?i)=+\s+(\d+)\s+passed[,\s]+(\d+)\s+failed[,\s]+(\d+)\s+skipped[,\s]+in[,\s]+\d+[.\d]*s\s+=+/
+            if (summaryLineMatch) {
+                stats.passed = summaryLineMatch[0][1].toInteger()
+                stats.failed = summaryLineMatch[0][2].toInteger()
+                stats.skipped = summaryLineMatch[0][3].toInteger()
+                echo "Extracted statistics from summary line format"
             }
         }
         
@@ -397,6 +464,28 @@ def getTestStatistics() {
 // Email notification function
 def sendEmailNotification(buildStatus) {
     def testStats = getTestStatistics()
+    
+    // Try to get user who triggered the build
+    def triggeredBy = 'System'
+    try {
+        def causes = currentBuild.rawBuild.getCauses()
+        for (cause in causes) {
+            if (cause instanceof hudson.model.Cause.UserIdCause) {
+                triggeredBy = cause.getUserName() ?: 'Muhammad Usman Arshad'
+                break
+            }
+        }
+        // Fallback to BUILD_USER_ID or default
+        if (triggeredBy == 'System' && env.BUILD_USER_ID) {
+            triggeredBy = env.BUILD_USER_ID
+        }
+        if (triggeredBy == 'System') {
+            triggeredBy = 'Muhammad Usman Arshad'
+        }
+    } catch (Exception e) {
+        triggeredBy = 'Muhammad Usman Arshad'
+    }
+    
     def statusColor = buildStatus == 'SUCCESS' ? '#28a745' : buildStatus == 'FAILURE' ? '#dc3545' : '#ffc107'
     def statusIcon = buildStatus == 'SUCCESS' ? '[SUCCESS]' : buildStatus == 'FAILURE' ? '[FAILURE]' : '[UNSTABLE]'
     
@@ -421,25 +510,25 @@ def sendEmailNotification(buildStatus) {
         }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
+            line-height: 1.5;
             color: #2c3e50;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
+            background: #f5f7fa;
+            padding: 15px;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
         .email-wrapper {
-            max-width: 700px;
+            max-width: 600px;
             margin: 0 auto;
             background-color: #ffffff;
-            border-radius: 16px;
+            border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         }
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 40px 30px;
+            padding: 25px 20px;
             text-align: center;
             position: relative;
             overflow: hidden;
@@ -463,110 +552,98 @@ def sendEmailNotification(buildStatus) {
             z-index: 1;
         }
         .header h1 {
-            font-size: 28px;
+            font-size: 22px;
             font-weight: 700;
-            margin-bottom: 10px;
-            letter-spacing: -0.5px;
+            margin-bottom: 6px;
+            letter-spacing: -0.3px;
         }
         .header-subtitle {
-            font-size: 14px;
+            font-size: 12px;
             opacity: 0.9;
             font-weight: 300;
         }
         .status-badge {
             display: inline-block;
-            padding: 10px 24px;
-            border-radius: 50px;
+            padding: 6px 16px;
+            border-radius: 20px;
             font-weight: 600;
-            font-size: 13px;
-            margin-top: 20px;
+            font-size: 11px;
+            margin-top: 12px;
             background-color: ${statusColor};
             color: white;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.5px;
         }
         .content {
-            padding: 40px 30px;
+            padding: 25px 20px;
         }
         .info-grid {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            margin-bottom: 35px;
+            gap: 12px;
+            margin-bottom: 20px;
         }
         .info-card {
-            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-            padding: 20px;
-            border-radius: 12px;
-            border: 1px solid #e9ecef;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-        .info-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            background: #f8f9fa;
+            padding: 14px;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+            transition: all 0.2s ease;
         }
         .info-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.15);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
         }
         .info-card h3 {
-            font-size: 11px;
+            font-size: 10px;
             color: #6c757d;
             text-transform: uppercase;
-            letter-spacing: 1.2px;
-            margin-bottom: 12px;
+            letter-spacing: 0.8px;
+            margin-bottom: 8px;
             font-weight: 600;
         }
         .info-card .value {
-            font-size: 24px;
+            font-size: 18px;
             font-weight: 700;
             color: #2c3e50;
             line-height: 1.2;
         }
         .test-results-section {
-            margin: 40px 0;
-            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-            padding: 30px;
-            border-radius: 16px;
+            margin: 25px 0;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
             border: 1px solid #e9ecef;
         }
         .section-title {
-            font-size: 20px;
+            font-size: 16px;
             font-weight: 700;
             color: #2c3e50;
-            margin-bottom: 25px;
+            margin-bottom: 18px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
         .section-title::before {
             content: '';
-            width: 4px;
-            height: 24px;
+            width: 3px;
+            height: 18px;
             background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
             border-radius: 2px;
         }
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            margin-bottom: 30px;
+            gap: 10px;
+            margin-bottom: 18px;
         }
         .stat-card {
             text-align: center;
-            padding: 25px 15px;
-            border-radius: 12px;
+            padding: 16px 10px;
+            border-radius: 8px;
             background: white;
             border: 2px solid transparent;
-            transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
         }
@@ -576,102 +653,96 @@ def sendEmailNotification(buildStatus) {
             top: 0;
             left: 0;
             right: 0;
-            height: 4px;
+            height: 3px;
             background: var(--stat-color);
         }
         .stat-card.total {
             --stat-color: #007bff;
             border-color: #007bff;
-            background: linear-gradient(135deg, #e7f3ff 0%, #ffffff 100%);
+            background: #e7f3ff;
         }
         .stat-card.passed {
             --stat-color: #28a745;
             border-color: #28a745;
-            background: linear-gradient(135deg, #d4edda 0%, #ffffff 100%);
+            background: #d4edda;
         }
         .stat-card.failed {
             --stat-color: #dc3545;
             border-color: #dc3545;
-            background: linear-gradient(135deg, #f8d7da 0%, #ffffff 100%);
+            background: #f8d7da;
         }
         .stat-card.skipped {
             --stat-color: #ffc107;
             border-color: #ffc107;
-            background: linear-gradient(135deg, #fff3cd 0%, #ffffff 100%);
-        }
-        .stat-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+            background: #fff3cd;
         }
         .stat-number {
-            font-size: 42px;
+            font-size: 32px;
             font-weight: 800;
-            margin: 10px 0;
+            margin: 6px 0;
             color: var(--stat-color);
             line-height: 1;
         }
         .stat-label {
-            font-size: 12px;
+            font-size: 10px;
             color: #6c757d;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.8px;
             font-weight: 600;
-            margin-top: 8px;
+            margin-top: 4px;
         }
         .progress-bar-container {
-            margin-top: 25px;
+            margin-top: 16px;
             background: #e9ecef;
-            border-radius: 50px;
-            height: 12px;
+            border-radius: 20px;
+            height: 8px;
             overflow: hidden;
-            position: relative;
         }
         .progress-bar {
             height: 100%;
-            border-radius: 50px;
+            border-radius: 20px;
             display: flex;
             overflow: hidden;
         }
         .progress-segment {
             height: 100%;
-            transition: width 0.5s ease;
         }
         .progress-segment.passed {
-            background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+            background: #28a745;
         }
         .progress-segment.failed {
-            background: linear-gradient(90deg, #dc3545 0%, #e83e8c 100%);
+            background: #dc3545;
         }
         .progress-segment.skipped {
-            background: linear-gradient(90deg, #ffc107 0%, #ff9800 100%);
+            background: #ffc107;
         }
         .progress-label {
-            margin-top: 12px;
-            font-size: 12px;
+            margin-top: 8px;
+            font-size: 11px;
             color: #6c757d;
             display: flex;
             justify-content: space-between;
         }
         .build-details {
             background: white;
-            border-radius: 12px;
-            padding: 25px;
-            margin: 30px 0;
+            border-radius: 8px;
+            padding: 18px;
+            margin: 20px 0;
             border: 1px solid #e9ecef;
         }
         .build-details h3 {
-            font-size: 16px;
+            font-size: 14px;
             font-weight: 700;
             color: #2c3e50;
-            margin-bottom: 20px;
+            margin-bottom: 14px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
         .build-details h3::before {
             content: '';
-            width: 4px;
-            height: 20px;
+            width: 3px;
+            height: 16px;
             background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
             border-radius: 2px;
         }
@@ -686,73 +757,65 @@ def sendEmailNotification(buildStatus) {
             border-bottom: none;
         }
         .detail-table td {
-            padding: 14px 0;
-            font-size: 14px;
+            padding: 10px 0;
+            font-size: 13px;
         }
         .detail-table td:first-child {
             font-weight: 600;
             color: #6c757d;
-            width: 140px;
+            width: 120px;
         }
         .detail-table td:last-child {
             color: #2c3e50;
             font-weight: 500;
         }
         .action-buttons {
-            margin: 35px 0;
+            margin: 20px 0;
             display: grid;
             grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
+            gap: 10px;
         }
         .action-btn {
             display: block;
-            padding: 14px 20px;
+            padding: 11px 16px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             text-decoration: none;
-            border-radius: 10px;
+            border-radius: 8px;
             font-weight: 600;
-            font-size: 14px;
+            font-size: 13px;
             text-align: center;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-        .action-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
         }
         .action-btn.secondary {
             background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
-            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
-        }
-        .action-btn.secondary:hover {
-            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+            box-shadow: 0 2px 8px rgba(108, 117, 125, 0.25);
         }
         .footer {
             background: #f8f9fa;
-            padding: 30px;
+            padding: 20px;
             text-align: center;
             border-top: 1px solid #e9ecef;
         }
         .footer-text {
-            font-size: 12px;
+            font-size: 11px;
             color: #6c757d;
-            line-height: 1.8;
+            line-height: 1.6;
         }
         .footer-brand {
             font-weight: 600;
             color: #667eea;
-            margin-top: 5px;
+            margin-top: 4px;
         }
         @media only screen and (max-width: 600px) {
             .info-grid, .stats-grid, .action-buttons {
                 grid-template-columns: 1fr;
             }
             .content {
-                padding: 25px 20px;
+                padding: 20px 15px;
             }
             .header {
-                padding: 30px 20px;
+                padding: 20px 15px;
             }
         }
     </style>
@@ -845,7 +908,7 @@ def sendEmailNotification(buildStatus) {
                     </tr>
                     <tr>
                         <td>Triggered By</td>
-                        <td>${env.BUILD_USER_ID ?: 'System'}</td>
+                        <td>${triggeredBy}</td>
                     </tr>
                 </table>
             </div>
