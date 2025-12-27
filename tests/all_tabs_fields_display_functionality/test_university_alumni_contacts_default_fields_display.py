@@ -22,6 +22,7 @@ def click_all_move_buttons(driver, move_btn_xpaths):
             time.sleep(0.5)
         except Exception:
             pass
+@pytest.mark.university_alumni_contacts
 @pytest.mark.university_alumni_contacts_default
 @pytest.mark.fields_display
 
