@@ -267,9 +267,32 @@ def buildTestCommand(testSuite, markers) {
     def baseCommand = "\"%PYTHON_EXE%\" -m pytest"
     def reportOptions = "--html=\"%HTML_REPORT%\" --self-contained-html --alluredir=\"%ALLURE_RESULTS%\" -v --tb=short"
     
-    // If markers are specified, use marker selection
-    if (markers && markers.trim()) {
-        def markersList = markers.split(',').collect { it.trim() }.findAll { it }
+    def hasMarkers = markers && markers.trim()
+    def hasSuite = testSuite && testSuite != 'all' && testSuite.trim()
+    
+    // If both suite and markers are specified, combine them (run specific suite filtered by markers)
+    if (hasSuite && hasMarkers) {
+        def testPath = getTestPath(testSuite)
+        // Build marker expression
+        def markerExpression = markers.trim()
+        // Replace comma with "or" for OR logic, or keep "and" for AND logic
+        if (!markerExpression.contains(' and ')) {
+            markerExpression = markerExpression.replace(',', ' or ')
+        }
+        echo "Running test suite: ${testSuite} from path: ${testPath} with markers: ${markerExpression}"
+        return "${baseCommand} ${testPath} -m \"${markerExpression}\" ${reportOptions}"
+    }
+    
+    // If only markers are specified, use marker selection (runs all suites with that marker)
+    if (hasMarkers) {
+        // Filter out empty strings manually to avoid findAll script security issues
+        def markersList = []
+        markers.split(',').each { marker ->
+            def trimmed = marker.trim()
+            if (trimmed) {
+                markersList.add(trimmed)
+            }
+        }
         if (markersList.size() > 0) {
             // Build marker expression
             // Support both "marker1,marker2" (OR) and "marker1 and marker2" (AND) syntax
@@ -283,7 +306,7 @@ def buildTestCommand(testSuite, markers) {
         }
     }
     
-    // Otherwise use suite selection
+    // Otherwise use suite selection (runs all markers in that suite)
     def testPath = getTestPath(testSuite)
     echo "Running test suite: ${testSuite} from path: ${testPath}"
     return "${baseCommand} ${testPath} ${reportOptions}"
@@ -398,20 +421,32 @@ def getTestStatistics() {
             }
         }
         
-        // Final fallback: Try to extract from JSON data (avoiding .size() on Matcher)
+        // Final fallback: Try to extract from JSON data (using regex instead of findAll to avoid script security issues)
         if (stats.passed == 0 && stats.failed == 0 && stats.skipped == 0) {
             def jsonMatch = reportContent =~ /data-jsonblob="([^"]+)"/ 
             if (jsonMatch) {
                 try {
                     def jsonStr = java.net.URLDecoder.decode(jsonMatch[0][1], "UTF-8")
-                    // Count tests by status in JSON using findAll (returns List, can use size())
-                    def passedList = jsonStr.findAll(/"result"\s*:\s*"passed"/)
-                    def failedList = jsonStr.findAll(/"result"\s*:\s*"failed"/)
-                    def skippedList = jsonStr.findAll(/"result"\s*:\s*"skipped"/)
+                    // Count tests by status in JSON using regex matcher (avoiding findAll for script security)
+                    def passedMatcher = jsonStr =~ /"result"\s*:\s*"passed"/
+                    def failedMatcher = jsonStr =~ /"result"\s*:\s*"failed"/
+                    def skippedMatcher = jsonStr =~ /"result"\s*:\s*"skipped"/
                     
-                    def passedCount = passedList ? passedList.size() : 0
-                    def failedCount = failedList ? failedList.size() : 0
-                    def skippedCount = skippedList ? skippedList.size() : 0
+                    // Count matches by iterating (avoiding .size() which may be blocked)
+                    def passedCount = 0
+                    while (passedMatcher.find()) {
+                        passedCount++
+                    }
+                    
+                    def failedCount = 0
+                    while (failedMatcher.find()) {
+                        failedCount++
+                    }
+                    
+                    def skippedCount = 0
+                    while (skippedMatcher.find()) {
+                        skippedCount++
+                    }
                     
                     if (passedCount > 0 || failedCount > 0 || skippedCount > 0) {
                         stats.passed = passedCount
