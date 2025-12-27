@@ -84,7 +84,7 @@ pipeline {
                     // Upgrade pip
                     bat '''
                         echo Upgrading pip...
-                        "%PIP_EXE%" install --upgrade pip
+                        "%PYTHON_EXE%" -m pip install --upgrade pip
                     '''
                     
                     echo "Python environment setup complete"
@@ -277,29 +277,30 @@ def getTestStatistics() {
     ]
     
     try {
-        def reportFile = new File("${env.WORKSPACE}\\reports\\report.html")
-        if (reportFile.exists()) {
-            def reportContent = reportFile.text
-            
-            // Extract test statistics from HTML report
-            def totalMatch = reportContent =~ /(\d+)\s+passed/
-            if (totalMatch) {
-                stats.passed = totalMatch[0][1].toInteger()
-            }
-            
-            def failedMatch = reportContent =~ /(\d+)\s+failed/
-            if (failedMatch) {
-                stats.failed = failedMatch[0][1].toInteger()
-            }
-            
-            def skippedMatch = reportContent =~ /(\d+)\s+skipped/
-            if (skippedMatch) {
-                stats.skipped = skippedMatch[0][1].toInteger()
-            }
-            
-            stats.total = stats.passed + stats.failed + stats.skipped
+        def reportPath = "reports/report.html"
+        // Use readFile step instead of new File() for Jenkins script security
+        // readFile will throw exception if file doesn't exist, which is handled by catch
+        def reportContent = readFile(reportPath)
+        
+        // Extract test statistics from HTML report
+        def totalMatch = reportContent =~ /(\d+)\s+passed/
+        if (totalMatch) {
+            stats.passed = totalMatch[0][1].toInteger()
         }
+        
+        def failedMatch = reportContent =~ /(\d+)\s+failed/
+        if (failedMatch) {
+            stats.failed = failedMatch[0][1].toInteger()
+        }
+        
+        def skippedMatch = reportContent =~ /(\d+)\s+skipped/
+        if (skippedMatch) {
+            stats.skipped = skippedMatch[0][1].toInteger()
+        }
+        
+        stats.total = stats.passed + stats.failed + stats.skipped
     } catch (Exception e) {
+        // File doesn't exist or couldn't be read - return default stats
         echo "Could not parse test statistics: ${e.getMessage()}"
     }
     
