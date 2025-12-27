@@ -460,7 +460,20 @@ def getTestStatistics() {
         }
         if (!summaryMatch) {
             // Pattern 3b: Failed, passed, and deselected: "X failed, Y passed, Z deselected in" (check this FIRST as it's more specific)
+            // Try multiple variations of the pattern to catch different formats
             def failedDeselectedMatch = reportContent =~ /(?i)=+\s+(\d+)\s+failed[,\s]+(\d+)\s+passed[,\s]+(\d+)\s+deselected[,\s]+in/
+            if (!failedDeselectedMatch) {
+                // Try without the "in" requirement at the end
+                failedDeselectedMatch = reportContent =~ /(?i)=+\s+(\d+)\s+failed[,\s]+(\d+)\s+passed[,\s]+(\d+)\s+deselected/
+            }
+            if (!failedDeselectedMatch) {
+                // Try without equals signs (more flexible)
+                failedDeselectedMatch = reportContent =~ /(?i)(\d+)\s+failed[,\s]+(\d+)\s+passed[,\s]+(\d+)\s+deselected[,\s]+in/
+            }
+            if (!failedDeselectedMatch) {
+                // Try without equals signs and without "in"
+                failedDeselectedMatch = reportContent =~ /(?i)(\d+)\s+failed[,\s]+(\d+)\s+passed[,\s]+(\d+)\s+deselected/
+            }
             if (failedDeselectedMatch) {
                 // Swap the order: first group is failed, second is passed
                 def tempFailed = failedDeselectedMatch[0][1].toInteger()
@@ -468,7 +481,8 @@ def getTestStatistics() {
                 stats.passed = tempPassed
                 stats.failed = tempFailed
                 stats.skipped = 0
-                echo "Extracted statistics from summary format (failed first): Passed=${stats.passed}, Failed=${stats.failed}, Skipped=${stats.skipped} (${failedDeselectedMatch[0][3]} deselected)"
+                def deselectedCount = failedDeselectedMatch[0].size() > 3 ? failedDeselectedMatch[0][3].toInteger() : 0
+                echo "Extracted statistics from summary format (failed first): Passed=${stats.passed}, Failed=${stats.failed}, Skipped=${stats.skipped} (${deselectedCount} deselected)"
                 summaryMatch = failedDeselectedMatch // Set to continue with normal flow
             }
         }
@@ -477,13 +491,24 @@ def getTestStatistics() {
             // But only if "failed" is NOT present before "passed" in the same summary line
             def deselectedMatch = reportContent =~ /(?i)=+\s+(\d+)\s+passed[,\s]+(\d+)\s+deselected[,\s]+in/
             if (deselectedMatch) {
-                // Find the position of the match and check the surrounding context for "failed"
+                // Find the position of the match and extract the full summary line
                 def matchPos = reportContent.indexOf(deselectedMatch[0][0])
-                // Look back up to 50 characters to find if "failed" appears before "passed"
-                def contextStart = Math.max(0, matchPos - 50)
-                def contextBefore = reportContent.substring(contextStart, matchPos).toLowerCase()
-                // Only use this match if "failed" is NOT in the context before "passed"
-                if (!contextBefore.contains('failed')) {
+                // Find the start of the line (previous = or start of string)
+                def lineStart = reportContent.lastIndexOf('=', matchPos - 1)
+                if (lineStart == -1) {
+                    lineStart = Math.max(0, matchPos - 100)
+                }
+                // Find the end of the line (next = or end of string)
+                def lineEnd = reportContent.indexOf('=', matchPos + deselectedMatch[0][0].length())
+                if (lineEnd == -1) {
+                    lineEnd = Math.min(reportContent.length(), matchPos + 200)
+                }
+                // Extract the full summary line
+                def summaryLine = reportContent.substring(lineStart, lineEnd).toLowerCase()
+                // Only use this match if "failed" is NOT in the summary line before "passed"
+                def failedIndex = summaryLine.indexOf('failed')
+                def passedIndex = summaryLine.indexOf('passed')
+                if (failedIndex == -1 || failedIndex > passedIndex) {
                     // For deselected tests, we only count passed, failed, and skipped (deselected are not counted)
                     stats.passed = deselectedMatch[0][1].toInteger()
                     stats.failed = 0
@@ -492,8 +517,21 @@ def getTestStatistics() {
                     summaryMatch = deselectedMatch // Set to continue with normal flow
                 } else {
                     // "failed" appears before "passed", so Pattern 3b should have matched instead
-                    // Don't use this match - let it fall through to check other patterns
-                    deselectedMatch = null
+                    // Try to extract both failed and passed from the summary line
+                    def failedMatch = summaryLine =~ /(\d+)\s+failed/
+                    def passedMatch = summaryLine =~ /(\d+)\s+passed/
+                    def deselectedMatch2 = summaryLine =~ /(\d+)\s+deselected/
+                    if (failedMatch && passedMatch) {
+                        stats.failed = failedMatch[0][1].toInteger()
+                        stats.passed = passedMatch[0][1].toInteger()
+                        stats.skipped = 0
+                        def deselectedCount = deselectedMatch2 ? deselectedMatch2[0][1].toInteger() : 0
+                        echo "Extracted statistics from summary line (fallback): Passed=${stats.passed}, Failed=${stats.failed}, Skipped=${stats.skipped} (${deselectedCount} deselected)"
+                        summaryMatch = passedMatch // Set to continue with normal flow
+                    } else {
+                        // Don't use this match - let it fall through to check other patterns
+                        deselectedMatch = null
+                    }
                 }
             }
         }
