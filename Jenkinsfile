@@ -135,45 +135,14 @@ pipeline {
                     def testCommand = buildTestCommand(params.TEST_SUITE, params.MARKERS)
                     echo "Test command: ${testCommand}"
                     
-                    // Run tests and capture output
+                    // Run tests (output will be visible in console, and we'll parse from HTML report)
                     bat """
                         set ENV=${ENV}
-                        ${testCommand} > test_output.txt 2>&1
-                        type test_output.txt
+                        ${testCommand}
                     """
                     
-                    // Try to parse test statistics from console output
-                    try {
-                        def outputContent = readFile("test_output.txt")
-                        echo "Parsing test statistics from console output..."
-                        
-                        // Look for pytest summary line: "=============== X passed, Y failed, Z skipped in ... ================"
-                        // Pattern 1: Full summary line with all three values
-                        def summaryPattern = outputContent =~ /(?i)=+\s+(\d+)\s+passed[,\s]+(\d+)\s+failed[,\s]+(\d+)\s+skipped[,\s]+in/
-                        if (!summaryPattern) {
-                            // Pattern 2: Summary without skipped (if skipped is 0, it might not appear)
-                            summaryPattern = outputContent =~ /(?i)=+\s+(\d+)\s+passed[,\s]+(\d+)\s+failed[,\s]+in/
-                        }
-                        if (!summaryPattern) {
-                            // Pattern 3: Just passed and failed
-                            summaryPattern = outputContent =~ /(?i)(\d+)\s+passed[,\s]+(\d+)\s+failed/
-                        }
-                        
-                        if (summaryPattern) {
-                            def passed = summaryPattern[0][1].toInteger()
-                            def failed = summaryPattern[0][2].toInteger()
-                            def skipped = summaryPattern[0].size() > 3 && summaryPattern[0][3] ? summaryPattern[0][3].toInteger() : 0
-                            def total = passed + failed + skipped
-                            echo "Parsed from console: Passed=${passed}, Failed=${failed}, Skipped=${skipped}, Total=${total}"
-                            
-                            // Write to a file that getTestStatistics can read
-                            writeFile file: "test_stats.txt", text: "passed=${passed}\nfailed=${failed}\nskipped=${skipped}\ntotal=${total}"
-                        } else {
-                            echo "Could not find test summary pattern in console output"
-                        }
-                    } catch (Exception e) {
-                        echo "Could not parse from console output: ${e.getMessage()}"
-                    }
+                    // Try to parse test statistics from HTML report after tests complete
+                    // The HTML report is more reliable than console output parsing
                 }
             }
             post {
