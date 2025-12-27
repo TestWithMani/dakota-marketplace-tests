@@ -314,26 +314,81 @@ def getTestStatistics() {
         // readFile will throw exception if file doesn't exist, which is handled by catch
         def reportContent = readFile(reportPath)
         
-        // Extract test statistics from HTML report
-        def totalMatch = reportContent =~ /(\d+)\s+passed/
-        if (totalMatch) {
-            stats.passed = totalMatch[0][1].toInteger()
+        // Try multiple patterns to extract test statistics from HTML report
+        // Pattern 1: HTML format like "<span class="passed">5 Passed,</span>"
+        def passedMatch = reportContent =~ /<span[^>]*class="passed"[^>]*>(\d+)\s+Passed/i
+        if (!passedMatch) {
+            // Pattern 2: Text format like "5 passed" or "5 Passed"
+            passedMatch = reportContent =~ /(\d+)\s+[Pp]assed/
+        }
+        if (passedMatch) {
+            stats.passed = passedMatch[0][1].toInteger()
         }
         
-        def failedMatch = reportContent =~ /(\d+)\s+failed/
+        // Extract failed count
+        def failedMatch = reportContent =~ /<span[^>]*class="failed"[^>]*>(\d+)\s+Failed/i
+        if (!failedMatch) {
+            failedMatch = reportContent =~ /(\d+)\s+[Ff]ailed/
+        }
         if (failedMatch) {
             stats.failed = failedMatch[0][1].toInteger()
         }
         
-        def skippedMatch = reportContent =~ /(\d+)\s+skipped/
+        // Extract skipped count
+        def skippedMatch = reportContent =~ /<span[^>]*class="skipped"[^>]*>(\d+)\s+Skipped/i
+        if (!skippedMatch) {
+            skippedMatch = reportContent =~ /(\d+)\s+[Ss]kipped/
+        }
         if (skippedMatch) {
             stats.skipped = skippedMatch[0][1].toInteger()
         }
         
+        // Also try to extract from JSON data if available (fallback method)
+        // This is more reliable as it counts actual test results
+        if (stats.passed == 0 && stats.failed == 0 && stats.skipped == 0) {
+            def jsonMatch = reportContent =~ /data-jsonblob="([^"]+)"/
+            if (jsonMatch) {
+                try {
+                    def jsonStr = java.net.URLDecoder.decode(jsonMatch[0][1], "UTF-8")
+                    // Count tests by status in JSON - look for result fields
+                    def passedCount = (jsonStr =~ /"result"\s*:\s*"passed"/).size()
+                    def failedCount = (jsonStr =~ /"result"\s*:\s*"failed"/).size()
+                    def skippedCount = (jsonStr =~ /"result"\s*:\s*"skipped"/).size()
+                    
+                    if (passedCount > 0 || failedCount > 0 || skippedCount > 0) {
+                        stats.passed = passedCount
+                        stats.failed = failedCount
+                        stats.skipped = skippedCount
+                        echo "Extracted statistics from JSON data: Passed=${passedCount}, Failed=${failedCount}, Skipped=${skippedCount}"
+                    }
+                } catch (Exception jsonEx) {
+                    echo "Could not parse JSON data: ${jsonEx.getMessage()}"
+                }
+            }
+        }
+        
+        // Final fallback: Try to parse from console output summary format
+        // Format: "5 passed, 0 failed, 0 skipped in 652.69s"
+        if (stats.passed == 0 && stats.failed == 0 && stats.skipped == 0) {
+            def summaryMatch = reportContent =~ /(\d+)\s+passed[,\s]+(\d+)\s+failed[,\s]+(\d+)\s+skipped/i
+            if (summaryMatch) {
+                stats.passed = summaryMatch[0][1].toInteger()
+                stats.failed = summaryMatch[0][2].toInteger()
+                stats.skipped = summaryMatch[0][3].toInteger()
+                echo "Extracted statistics from summary format"
+            }
+        }
+        
+        // Calculate total
         stats.total = stats.passed + stats.failed + stats.skipped
+        
+        // Log extracted statistics for debugging
+        echo "Extracted test statistics: Total=${stats.total}, Passed=${stats.passed}, Failed=${stats.failed}, Skipped=${stats.skipped}"
+        
     } catch (Exception e) {
         // File doesn't exist or couldn't be read - return default stats
         echo "Could not parse test statistics: ${e.getMessage()}"
+        echo "Stack trace: ${e.getStackTrace().join('\n')}"
     }
     
     return stats
@@ -530,8 +585,8 @@ def sendEmailNotification(buildStatus) {
                 <div class="value">${ENV.toUpperCase()}</div>
             </div>
             <div class="info-card">
-                <h3>Test Suite</h3>
-                <div class="value">${params.TEST_SUITE.toUpperCase()}</div>
+                <h3>Test Selection</h3>
+                <div class="value">${params.MARKERS && params.MARKERS.trim() ? "Markers: ${params.MARKERS}" : "Suite: ${params.TEST_SUITE.toUpperCase()}"}</div>
             </div>
         </div>
         
