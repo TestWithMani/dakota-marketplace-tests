@@ -72,7 +72,7 @@ pytest -m "column_names and (accounts or contact)"
 - `accounts`
 - `contact`
 - `all_documents`
-- `13f_filings_investments_search`
+- `filings_13f_investments_search` (Note: marker name cannot start with a number)
 - `conference_search`
 - `consultant_reviews`
 - `continuation_vehicle`

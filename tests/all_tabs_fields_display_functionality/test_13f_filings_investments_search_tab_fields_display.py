@@ -22,7 +22,7 @@ def click_all_move_buttons(driver, move_btn_xpaths):
             time.sleep(0.5)
         except Exception:
             pass
-@pytest.mark.13f_filings_investments_search
+@pytest.mark.filings_13f_investments_search
 @pytest.mark.fields_display
 
 def test_13f_filings_investments_search_tab_fields_display_functionality(driver, base_url, credentials):

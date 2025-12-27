@@ -76,7 +76,7 @@ def generate_fields_comparison_csv(
         writer.writerow(["(none)"])
     writer.writerow([])
     return output.getvalue()
-@pytest.mark.13f_filings_investments_search
+@pytest.mark.filings_13f_investments_search
 @pytest.mark.fields_comparison
 
 

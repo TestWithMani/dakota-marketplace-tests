@@ -8,7 +8,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import pytest
-@pytest.mark.13f_filings_investments_search
+@pytest.mark.filings_13f_investments_search
 @pytest.mark.pin_unpin
 
 

@@ -41,7 +41,17 @@ def extract_tab_name(filename):
 
 def normalize_tab_name(tab_name):
     """Normalize tab name for marker (replace underscores, make lowercase)."""
-    return tab_name.lower().replace(' ', '_')
+    # Python identifiers cannot start with a number, so prefix with 'f' if needed
+    normalized = tab_name.lower().replace(' ', '_')
+    if normalized and normalized[0].isdigit():
+        # If starts with number, prefix with 'f' (e.g., '13f_filings' -> 'f13_filings')
+        # But for '13f_filings_investments_search', we want 'filings_13f_investments_search'
+        # So check if it starts with '13f' and rearrange
+        if normalized.startswith('13f_'):
+            normalized = 'filings_' + normalized
+        else:
+            normalized = 'f' + normalized
+    return normalized
 
 def add_markers_to_file(filepath, tab_marker, suite_marker):
     """Add markers to a test file if they don't already exist."""
