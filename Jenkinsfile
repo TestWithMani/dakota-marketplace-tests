@@ -411,7 +411,7 @@ def getTestStatistics() {
         }
         if (!summaryMatch) {
             // Pattern 8: Most flexible - just "X passed" anywhere in the content
-            summaryMatch = reportContent =~ /(?i)(\d+)\s+passed(?:[,\s]|</|$|\s)/
+            summaryMatch = reportContent =~ /(?i)(\d+)\s+passed/
         }
         
         // Only process summaryMatch if stats haven't been set yet (to avoid overwriting deselected handling)
