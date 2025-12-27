@@ -402,253 +402,467 @@ def sendEmailNotification(buildStatus) {
     
     def subject = "${statusIcon} Dakota Marketplace Tests - ${buildStatus} - Build #${env.BUILD_NUMBER}"
     
+    // Calculate pass percentage for progress bar
+    def passPercentage = testStats.total > 0 ? (testStats.passed * 100 / testStats.total).intValue() : 0
+    def failPercentage = testStats.total > 0 ? (testStats.failed * 100 / testStats.total).intValue() : 0
+    def skipPercentage = testStats.total > 0 ? (testStats.skipped * 100 / testStats.total).intValue() : 0
+    
     def body = """
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            background-color: #f5f5f5;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        .container {
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #2c3e50;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        .email-wrapper {
+            max-width: 700px;
+            margin: 0 auto;
             background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            padding: 30px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
         }
         .header {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 20px;
-            border-radius: 8px 8px 0 0;
-            margin: -30px -30px 30px -30px;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 3s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        .header-content {
+            position: relative;
+            z-index: 1;
         }
         .header h1 {
-            margin: 0;
-            font-size: 24px;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            letter-spacing: -0.5px;
+        }
+        .header-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+            font-weight: 300;
         }
         .status-badge {
             display: inline-block;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 14px;
-            margin-top: 10px;
+            padding: 10px 24px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 13px;
+            margin-top: 20px;
             background-color: ${statusColor};
             color: white;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .content {
+            padding: 40px 30px;
         }
         .info-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin: 20px 0;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 35px;
         }
         .info-card {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 6px;
-            border-left: 4px solid #667eea;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .info-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+        }
+        .info-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.15);
         }
         .info-card h3 {
-            margin: 0 0 10px 0;
-            font-size: 14px;
-            color: #666;
+            font-size: 11px;
+            color: #6c757d;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1.2px;
+            margin-bottom: 12px;
+            font-weight: 600;
         }
         .info-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2c3e50;
+            line-height: 1.2;
+        }
+        .test-results-section {
+            margin: 40px 0;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+            padding: 30px;
+            border-radius: 16px;
+            border: 1px solid #e9ecef;
+        }
+        .section-title {
             font-size: 20px;
-            font-weight: bold;
-            color: #333;
-        }
-        .test-results {
-            margin: 30px 0;
-        }
-        .test-results h2 {
-            color: #667eea;
-            border-bottom: 2px solid #667eea;
-            padding-bottom: 10px;
-        }
-        .stats-container {
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 25px;
             display: flex;
-            justify-content: space-around;
-            margin: 20px 0;
-            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
         }
-        .stat-box {
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
             text-align: center;
-            padding: 20px;
-            border-radius: 8px;
-            min-width: 120px;
-            margin: 10px;
+            padding: 25px 15px;
+            border-radius: 12px;
+            background: white;
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
-        .stat-box.passed {
-            background-color: #d4edda;
-            border: 2px solid #28a745;
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--stat-color);
         }
-        .stat-box.failed {
-            background-color: #f8d7da;
-            border: 2px solid #dc3545;
+        .stat-card.total {
+            --stat-color: #007bff;
+            border-color: #007bff;
+            background: linear-gradient(135deg, #e7f3ff 0%, #ffffff 100%);
         }
-        .stat-box.skipped {
-            background-color: #fff3cd;
-            border: 2px solid #ffc107;
+        .stat-card.passed {
+            --stat-color: #28a745;
+            border-color: #28a745;
+            background: linear-gradient(135deg, #d4edda 0%, #ffffff 100%);
         }
-        .stat-box.total {
-            background-color: #e7f3ff;
-            border: 2px solid #007bff;
+        .stat-card.failed {
+            --stat-color: #dc3545;
+            border-color: #dc3545;
+            background: linear-gradient(135deg, #f8d7da 0%, #ffffff 100%);
+        }
+        .stat-card.skipped {
+            --stat-color: #ffc107;
+            border-color: #ffc107;
+            background: linear-gradient(135deg, #fff3cd 0%, #ffffff 100%);
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
         .stat-number {
-            font-size: 36px;
-            font-weight: bold;
+            font-size: 42px;
+            font-weight: 800;
             margin: 10px 0;
+            color: var(--stat-color);
+            line-height: 1;
         }
         .stat-label {
-            font-size: 14px;
-            color: #666;
-            text-transform: uppercase;
-        }
-        .links {
-            margin: 30px 0;
-            padding: 20px;
-            background-color: #f8f9fa;
-            border-radius: 6px;
-        }
-        .links a {
-            display: inline-block;
-            margin: 10px 10px 10px 0;
-            padding: 12px 24px;
-            background-color: #667eea;
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
-            font-weight: bold;
-            transition: background-color 0.3s;
-        }
-        .links a:hover {
-            background-color: #5568d3;
-        }
-        .footer {
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
-            text-align: center;
-            color: #666;
             font-size: 12px;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            margin-top: 8px;
         }
-        .build-info {
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 6px;
-            margin: 20px 0;
+        .progress-bar-container {
+            margin-top: 25px;
+            background: #e9ecef;
+            border-radius: 50px;
+            height: 12px;
+            overflow: hidden;
+            position: relative;
         }
-        .build-info table {
+        .progress-bar {
+            height: 100%;
+            border-radius: 50px;
+            display: flex;
+            overflow: hidden;
+        }
+        .progress-segment {
+            height: 100%;
+            transition: width 0.5s ease;
+        }
+        .progress-segment.passed {
+            background: linear-gradient(90deg, #28a745 0%, #20c997 100%);
+        }
+        .progress-segment.failed {
+            background: linear-gradient(90deg, #dc3545 0%, #e83e8c 100%);
+        }
+        .progress-segment.skipped {
+            background: linear-gradient(90deg, #ffc107 0%, #ff9800 100%);
+        }
+        .progress-label {
+            margin-top: 12px;
+            font-size: 12px;
+            color: #6c757d;
+            display: flex;
+            justify-content: space-between;
+        }
+        .build-details {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            margin: 30px 0;
+            border: 1px solid #e9ecef;
+        }
+        .build-details h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .build-details h3::before {
+            content: '';
+            width: 4px;
+            height: 20px;
+            background: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+        .detail-table {
             width: 100%;
             border-collapse: collapse;
         }
-        .build-info td {
-            padding: 8px;
-            border-bottom: 1px solid #ddd;
+        .detail-table tr {
+            border-bottom: 1px solid #f1f3f5;
         }
-        .build-info td:first-child {
-            font-weight: bold;
-            width: 40%;
-            color: #666;
+        .detail-table tr:last-child {
+            border-bottom: none;
+        }
+        .detail-table td {
+            padding: 14px 0;
+            font-size: 14px;
+        }
+        .detail-table td:first-child {
+            font-weight: 600;
+            color: #6c757d;
+            width: 140px;
+        }
+        .detail-table td:last-child {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        .action-buttons {
+            margin: 35px 0;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        .action-btn {
+            display: block;
+            padding: 14px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        .action-btn.secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+        }
+        .action-btn.secondary:hover {
+            box-shadow: 0 6px 20px rgba(108, 117, 125, 0.4);
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 30px;
+            text-align: center;
+            border-top: 1px solid #e9ecef;
+        }
+        .footer-text {
+            font-size: 12px;
+            color: #6c757d;
+            line-height: 1.8;
+        }
+        .footer-brand {
+            font-weight: 600;
+            color: #667eea;
+            margin-top: 5px;
+        }
+        @media only screen and (max-width: 600px) {
+            .info-grid, .stats-grid, .action-buttons {
+                grid-template-columns: 1fr;
+            }
+            .content {
+                padding: 25px 20px;
+            }
+            .header {
+                padding: 30px 20px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="email-wrapper">
         <div class="header">
-            <h1>Dakota Marketplace Test Automation</h1>
-            <div class="status-badge">${buildStatus}</div>
-        </div>
-        
-        <div class="info-grid">
-            <div class="info-card">
-                <h3>Build Number</h3>
-                <div class="value">#${env.BUILD_NUMBER}</div>
-            </div>
-            <div class="info-card">
-                <h3>Build Status</h3>
-                <div class="value" style="color: ${statusColor};">${buildStatus}</div>
-            </div>
-            <div class="info-card">
-                <h3>Environment</h3>
-                <div class="value">${ENV.toUpperCase()}</div>
-            </div>
-            <div class="info-card">
-                <h3>Test Selection</h3>
-                <div class="value">${params.MARKERS && params.MARKERS.trim() ? "Markers: ${params.MARKERS}" : "Suite: ${params.TEST_SUITE.toUpperCase()}"}</div>
+            <div class="header-content">
+                <h1>Dakota Marketplace</h1>
+                <div class="header-subtitle">Test Automation Report</div>
+                <div class="status-badge">${buildStatus}</div>
             </div>
         </div>
         
-        <div class="test-results">
-            <h2>Test Results Summary</h2>
-            <div class="stats-container">
-                <div class="stat-box total">
-                    <div class="stat-number" style="color: #007bff;">${testStats.total}</div>
-                    <div class="stat-label">Total Tests</div>
+        <div class="content">
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>Build Number</h3>
+                    <div class="value">#${env.BUILD_NUMBER}</div>
                 </div>
-                <div class="stat-box passed">
-                    <div class="stat-number" style="color: #28a745;">${testStats.passed}</div>
-                    <div class="stat-label">Passed</div>
+                <div class="info-card">
+                    <h3>Build Status</h3>
+                    <div class="value" style="color: ${statusColor};">${buildStatus}</div>
                 </div>
-                <div class="stat-box failed">
-                    <div class="stat-number" style="color: #dc3545;">${testStats.failed}</div>
-                    <div class="stat-label">Failed</div>
+                <div class="info-card">
+                    <h3>Environment</h3>
+                    <div class="value">${ENV.toUpperCase()}</div>
                 </div>
-                <div class="stat-box skipped">
-                    <div class="stat-number" style="color: #ffc107;">${testStats.skipped}</div>
-                    <div class="stat-label">Skipped</div>
+                <div class="info-card">
+                    <h3>Test Selection</h3>
+                    <div class="value" style="font-size: 16px;">${params.MARKERS && params.MARKERS.trim() ? params.MARKERS : params.TEST_SUITE.toUpperCase()}</div>
                 </div>
             </div>
-        </div>
-        
-        <div class="build-info">
-            <h3 style="margin-top: 0;">Build Information</h3>
-            <table>
-                <tr>
-                    <td>Branch:</td>
-                    <td>${env.BRANCH_NAME ?: 'N/A'}</td>
-                </tr>
-                <tr>
-                    <td>Commit:</td>
-                    <td>${env.GIT_COMMIT.take(7) ?: 'N/A'}</td>
-                </tr>
-                <tr>
-                    <td>Build Duration:</td>
-                    <td>${currentBuild.durationString ?: 'N/A'}</td>
-                </tr>
-                <tr>
-                    <td>Build Time:</td>
-                    <td>${new Date().format("yyyy-MM-dd HH:mm:ss")}</td>
-                </tr>
-                <tr>
-                    <td>Triggered By:</td>
-                    <td>${env.BUILD_USER_ID ?: 'System'}</td>
-                </tr>
-            </table>
-        </div>
-        
-        <div class="links">
-            <h3 style="margin-top: 0;">Quick Links</h3>
-            <a href="${env.BUILD_URL}">View Build Details</a>
-            <a href="${env.BUILD_URL}HTML_Report/">View HTML Report</a>
-            <a href="${env.BUILD_URL}allure/">View Allure Report</a>
-            <a href="${env.JOB_URL}">View Job Dashboard</a>
+            
+            <div class="test-results-section">
+                <div class="section-title">Test Results Summary</div>
+                
+                <div class="stats-grid">
+                    <div class="stat-card total">
+                        <div class="stat-number">${testStats.total}</div>
+                        <div class="stat-label">Total Tests</div>
+                    </div>
+                    <div class="stat-card passed">
+                        <div class="stat-number">${testStats.passed}</div>
+                        <div class="stat-label">Passed</div>
+                    </div>
+                    <div class="stat-card failed">
+                        <div class="stat-number">${testStats.failed}</div>
+                        <div class="stat-label">Failed</div>
+                    </div>
+                    <div class="stat-card skipped">
+                        <div class="stat-number">${testStats.skipped}</div>
+                        <div class="stat-label">Skipped</div>
+                    </div>
+                </div>
+                
+                ${testStats.total > 0 ? """
+                <div class="progress-bar-container">
+                    <div class="progress-bar">
+                        ${testStats.passed > 0 ? "<div class=\"progress-segment passed\" style=\"width: ${passPercentage}%;\"></div>" : ""}
+                        ${testStats.failed > 0 ? "<div class=\"progress-segment failed\" style=\"width: ${failPercentage}%;\"></div>" : ""}
+                        ${testStats.skipped > 0 ? "<div class=\"progress-segment skipped\" style=\"width: ${skipPercentage}%;\"></div>" : ""}
+                    </div>
+                    <div class="progress-label">
+                        <span>Pass Rate: ${passPercentage}%</span>
+                        <span>${testStats.failed > 0 ? "Fail Rate: ${failPercentage}%" : "All Tests Passed!"}</span>
+                    </div>
+                </div>
+                """ : ""}
+            </div>
+            
+            <div class="build-details">
+                <h3>Build Information</h3>
+                <table class="detail-table">
+                    <tr>
+                        <td>Branch</td>
+                        <td>${env.BRANCH_NAME ?: 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td>Commit</td>
+                        <td><code style="background: #f8f9fa; padding: 4px 8px; border-radius: 4px; font-family: 'Courier New', monospace;">${env.GIT_COMMIT.take(7) ?: 'N/A'}</code></td>
+                    </tr>
+                    <tr>
+                        <td>Build Duration</td>
+                        <td>${currentBuild.durationString ?: 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td>Build Time</td>
+                        <td>${new Date().format("yyyy-MM-dd HH:mm:ss")}</td>
+                    </tr>
+                    <tr>
+                        <td>Triggered By</td>
+                        <td>${env.BUILD_USER_ID ?: 'System'}</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="action-buttons">
+                <a href="${env.BUILD_URL}" class="action-btn">View Build Details</a>
+                <a href="${env.BUILD_URL}HTML_Report/" class="action-btn secondary">HTML Report</a>
+                <a href="${env.BUILD_URL}allure/" class="action-btn secondary">Allure Report</a>
+                <a href="${env.JOB_URL}" class="action-btn">Job Dashboard</a>
+            </div>
         </div>
         
         <div class="footer">
-            <p>This is an automated email from Jenkins CI/CD Pipeline</p>
-            <p>Dakota Marketplace Test Automation Framework</p>
+            <div class="footer-text">
+                This is an automated email from Jenkins CI/CD Pipeline<br>
+                <span class="footer-brand">Dakota Marketplace Test Automation Framework</span>
+            </div>
         </div>
     </div>
 </body>
