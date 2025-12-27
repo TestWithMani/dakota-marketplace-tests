@@ -338,46 +338,80 @@ def getTestStatistics() {
         // readFile will throw exception if file doesn't exist, which is handled by catch
         def reportContent = readFile(reportPath)
         
-        // Try multiple patterns to extract test statistics from HTML report
-        // Pattern 1: HTML format like "<span class="passed">5 Passed,</span>" (case-insensitive)
-        def passedMatch = reportContent =~ /(?i)<span[^>]*class=["']passed["'][^>]*>(\d+)\s+Passed/
-        if (!passedMatch) {
-            // Pattern 2: Text format like "5 passed" or "5 Passed"
-            passedMatch = reportContent =~ /(\d+)\s+[Pp]assed/
+        // Try to extract from pytest summary line format in HTML (most reliable)
+        // Format: "=============== 6 passed, 155 deselected in 893.13s ================"
+        // Or: "6 passed, 0 failed, 0 skipped in 652.69s"
+        // Pattern 1: Full summary with all three values: "X passed, Y failed, Z skipped"
+        def summaryMatch = reportContent =~ /(?i)=+\s+(\d+)\s+passed[,\s]+(\d+)\s+failed[,\s]+(\d+)\s+skipped[,\s]+in/
+        if (!summaryMatch) {
+            // Pattern 2: Summary with passed and failed only: "X passed, Y failed"
+            summaryMatch = reportContent =~ /(?i)=+\s+(\d+)\s+passed[,\s]+(\d+)\s+failed[,\s]+in/
         }
-        if (passedMatch) {
-            stats.passed = passedMatch[0][1].toInteger()
+        if (!summaryMatch) {
+            // Pattern 3: Just passed (no failed/skipped mentioned): "X passed"
+            summaryMatch = reportContent =~ /(?i)=+\s+(\d+)\s+passed[,\s]+in/
         }
-        
-        // Extract failed count
-        def failedMatch = reportContent =~ /(?i)<span[^>]*class=["']failed["'][^>]*>(\d+)\s+Failed/
-        if (!failedMatch) {
-            failedMatch = reportContent =~ /(\d+)\s+[Ff]ailed/
+        if (!summaryMatch) {
+            // Pattern 4: Simple format without equals signs: "X passed, Y failed, Z skipped"
+            summaryMatch = reportContent =~ /(?i)(\d+)\s+passed[,\s]+(\d+)\s+failed[,\s]+(\d+)\s+skipped/
         }
-        if (failedMatch) {
-            stats.failed = failedMatch[0][1].toInteger()
-        }
-        
-        // Extract skipped count
-        def skippedMatch = reportContent =~ /(?i)<span[^>]*class=["']skipped["'][^>]*>(\d+)\s+Skipped/
-        if (!skippedMatch) {
-            skippedMatch = reportContent =~ /(\d+)\s+[Ss]kipped/
-        }
-        if (skippedMatch) {
-            stats.skipped = skippedMatch[0][1].toInteger()
+        if (!summaryMatch) {
+            // Pattern 5: Simple format with just passed: "X passed"
+            summaryMatch = reportContent =~ /(?i)(\d+)\s+passed[,\s]+in/
         }
         
-        // Also try to extract from JSON data if available (fallback method)
-        // This is more reliable as it counts actual test results
+        if (summaryMatch) {
+            stats.passed = summaryMatch[0][1].toInteger()
+            if (summaryMatch[0].size() > 2 && summaryMatch[0][2]) {
+                stats.failed = summaryMatch[0][2].toInteger()
+            }
+            if (summaryMatch[0].size() > 3 && summaryMatch[0][3]) {
+                stats.skipped = summaryMatch[0][3].toInteger()
+            }
+            echo "Extracted statistics from summary format: Passed=${stats.passed}, Failed=${stats.failed}, Skipped=${stats.skipped}"
+        }
+        
+        // Fallback: Try HTML format like "<span class="passed">5 Passed,</span>"
         if (stats.passed == 0 && stats.failed == 0 && stats.skipped == 0) {
-            def jsonMatch = reportContent =~ /data-jsonblob="([^"]+)"/
+            def passedMatch = reportContent =~ /(?i)<span[^>]*class=["']passed["'][^>]*>(\d+)\s+Passed/
+            if (!passedMatch) {
+                passedMatch = reportContent =~ /(\d+)\s+[Pp]assed/
+            }
+            if (passedMatch) {
+                stats.passed = passedMatch[0][1].toInteger()
+            }
+            
+            def failedMatch = reportContent =~ /(?i)<span[^>]*class=["']failed["'][^>]*>(\d+)\s+Failed/
+            if (!failedMatch) {
+                failedMatch = reportContent =~ /(\d+)\s+[Ff]ailed/
+            }
+            if (failedMatch) {
+                stats.failed = failedMatch[0][1].toInteger()
+            }
+            
+            def skippedMatch = reportContent =~ /(?i)<span[^>]*class=["']skipped["'][^>]*>(\d+)\s+Skipped/
+            if (!skippedMatch) {
+                skippedMatch = reportContent =~ /(\d+)\s+[Ss]kipped/
+            }
+            if (skippedMatch) {
+                stats.skipped = skippedMatch[0][1].toInteger()
+            }
+        }
+        
+        // Final fallback: Try to extract from JSON data (avoiding .size() on Matcher)
+        if (stats.passed == 0 && stats.failed == 0 && stats.skipped == 0) {
+            def jsonMatch = reportContent =~ /data-jsonblob="([^"]+)"/ 
             if (jsonMatch) {
                 try {
                     def jsonStr = java.net.URLDecoder.decode(jsonMatch[0][1], "UTF-8")
-                    // Count tests by status in JSON - look for result fields
-                    def passedCount = (jsonStr =~ /"result"\s*:\s*"passed"/).size()
-                    def failedCount = (jsonStr =~ /"result"\s*:\s*"failed"/).size()
-                    def skippedCount = (jsonStr =~ /"result"\s*:\s*"skipped"/).size()
+                    // Count tests by status in JSON using findAll (returns List, can use size())
+                    def passedList = jsonStr.findAll(/"result"\s*:\s*"passed"/)
+                    def failedList = jsonStr.findAll(/"result"\s*:\s*"failed"/)
+                    def skippedList = jsonStr.findAll(/"result"\s*:\s*"skipped"/)
+                    
+                    def passedCount = passedList ? passedList.size() : 0
+                    def failedCount = failedList ? failedList.size() : 0
+                    def skippedCount = skippedList ? skippedList.size() : 0
                     
                     if (passedCount > 0 || failedCount > 0 || skippedCount > 0) {
                         stats.passed = passedCount
@@ -388,30 +422,6 @@ def getTestStatistics() {
                 } catch (Exception jsonEx) {
                     echo "Could not parse JSON data: ${jsonEx.getMessage()}"
                 }
-            }
-        }
-        
-        // Final fallback: Try to parse from console output summary format
-        // Format: "5 passed, 0 failed, 0 skipped in 652.69s" or "=============== 5 passed, 0 failed, 0 skipped in 652.69s ================"
-        if (stats.passed == 0 && stats.failed == 0 && stats.skipped == 0) {
-            def summaryMatch = reportContent =~ /(?i)(\d+)\s+passed[,\s]+(\d+)\s+failed[,\s]+(\d+)\s+skipped/
-            if (summaryMatch) {
-                stats.passed = summaryMatch[0][1].toInteger()
-                stats.failed = summaryMatch[0][2].toInteger()
-                stats.skipped = summaryMatch[0][3].toInteger()
-                echo "Extracted statistics from summary format"
-            }
-        }
-        
-        // Additional fallback: Try parsing from pytest summary line format
-        // Format: "=============== 5 passed, 0 failed, 0 skipped in 652.69s ================"
-        if (stats.passed == 0 && stats.failed == 0 && stats.skipped == 0) {
-            def summaryLineMatch = reportContent =~ /(?i)=+\s+(\d+)\s+passed[,\s]+(\d+)\s+failed[,\s]+(\d+)\s+skipped[,\s]+in[,\s]+\d+[.\d]*s\s+=+/
-            if (summaryLineMatch) {
-                stats.passed = summaryLineMatch[0][1].toInteger()
-                stats.failed = summaryLineMatch[0][2].toInteger()
-                stats.skipped = summaryLineMatch[0][3].toInteger()
-                echo "Extracted statistics from summary line format"
             }
         }
         
@@ -434,23 +444,14 @@ def getTestStatistics() {
 def sendEmailNotification(buildStatus) {
     def testStats = getTestStatistics()
     
-    // Try to get user who triggered the build
-    def triggeredBy = 'System'
+    // Try to get user who triggered the build (avoiding getRawBuild() for script security)
+    def triggeredBy = 'Muhammad Usman Arshad'
     try {
-        def causes = currentBuild.rawBuild.getCauses()
-        for (cause in causes) {
-            if (cause instanceof hudson.model.Cause.UserIdCause) {
-                triggeredBy = cause.getUserName() ?: 'Muhammad Usman Arshad'
-                break
-            }
-        }
-        // Fallback to BUILD_USER_ID or default
-        if (triggeredBy == 'System' && env.BUILD_USER_ID) {
+        // Try to get from BUILD_USER_ID environment variable first
+        if (env.BUILD_USER_ID && env.BUILD_USER_ID != 'null') {
             triggeredBy = env.BUILD_USER_ID
         }
-        if (triggeredBy == 'System') {
-            triggeredBy = 'Muhammad Usman Arshad'
-        }
+        // If BUILD_USER_ID is not available, use default
     } catch (Exception e) {
         triggeredBy = 'Muhammad Usman Arshad'
     }
