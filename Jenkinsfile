@@ -442,7 +442,7 @@ def getTestStatistics() {
             def passedMatch = reportContent =~ /(?i)<span[^>]*class=["']passed["'][^>]*>(\d+)\s+Passed/
             if (!passedMatch) {
                 // Try more flexible pattern for passed
-                passedMatch = reportContent =~ /(?i)(\d+)\s+passed(?:,|\s|</)/
+                passedMatch = reportContent =~ /(?i)(\d+)\s+passed/
             }
             if (passedMatch) {
                 stats.passed = passedMatch[0][1].toInteger()
@@ -452,7 +452,7 @@ def getTestStatistics() {
             def failedMatch = reportContent =~ /(?i)<span[^>]*class=["']failed["'][^>]*>(\d+)\s+Failed/
             if (!failedMatch) {
                 // Try more flexible pattern for failed
-                failedMatch = reportContent =~ /(?i)(\d+)\s+failed(?:,|\s|</)/
+                failedMatch = reportContent =~ /(?i)(\d+)\s+failed/
             }
             if (failedMatch) {
                 stats.failed = failedMatch[0][1].toInteger()
@@ -462,7 +462,7 @@ def getTestStatistics() {
             def skippedMatch = reportContent =~ /(?i)<span[^>]*class=["']skipped["'][^>]*>(\d+)\s+Skipped/
             if (!skippedMatch) {
                 // Try more flexible pattern for skipped
-                skippedMatch = reportContent =~ /(?i)(\d+)\s+skipped(?:,|\s|</)/
+                skippedMatch = reportContent =~ /(?i)(\d+)\s+skipped/
             }
             if (skippedMatch) {
                 stats.skipped = skippedMatch[0][1].toInteger()
