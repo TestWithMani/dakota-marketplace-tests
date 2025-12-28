@@ -255,13 +255,19 @@ pipeline {
                 }
                 def testSelection = testSelectionParts.size() > 0 ? testSelectionParts.join(' | ') : "All Tests"
                 
+                // Format duration - remove "and counting" if present
+                def durationDisplay = currentBuild.durationString ?: 'N/A'
+                if (durationDisplay.contains('and counting')) {
+                    durationDisplay = durationDisplay.replace(' and counting', '')
+                }
+                
                 currentBuild.description = """
                     Environment: ${ENV} | 
                     ${testSelection} | 
                     Tests: ${testStats.total} | 
                     Passed: ${testStats.passed} | 
                     Failed: ${testStats.failed} | 
-                    Duration: ${currentBuild.durationString}
+                    Duration: ${durationDisplay}
                 """.stripIndent().trim()
             }
         }
@@ -497,6 +503,12 @@ def sendEmailNotification(buildStatus) {
     def statusTextColor = buildStatus == 'SUCCESS' ? '#047857' : buildStatus == 'FAILURE' ? '#b91c1c' : '#b45309'
     def statusDarkTextColor = buildStatus == 'SUCCESS' ? '#065f46' : buildStatus == 'FAILURE' ? '#991b1b' : '#92400e'
     
+    // Format duration - remove "and counting" if present
+    def durationString = currentBuild.durationString ?: 'N/A'
+    if (durationString.contains('and counting')) {
+        durationString = durationString.replace(' and counting', '')
+    }
+    
     // Build test selection display
     def testSelectionHtml = ''
     if (testSelectionParts.size() > 0) {
@@ -617,7 +629,7 @@ Build Information
 <table width="100%" cellpadding="12" cellspacing="0" style="font-size:14px;background:#f8fafc;border-radius:10px;padding:16px;">
 <tr style="border-bottom:1px solid #e2e8f0;"><td width="35%" style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Build #</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${env.BUILD_NUMBER}</td></tr>
 <tr style="border-bottom:1px solid #e2e8f0;"><td style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Environment</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${ENV.toUpperCase()}</td></tr>
-<tr style="border-bottom:1px solid #e2e8f0;"><td style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Duration</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${currentBuild.durationString ?: 'N/A'}</td></tr>
+<tr style="border-bottom:1px solid #e2e8f0;"><td style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Duration</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${durationString}</td></tr>
 <tr><td style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Triggered By</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${triggeredBy}</td></tr>
 </table>
 </td>
