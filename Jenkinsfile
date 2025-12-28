@@ -522,11 +522,21 @@ def getTestStatistics() {
 def sendEmailNotification(buildStatus) {
     def testStats = getTestStatistics()
     
-    // Use actual build result instead of parameter to ensure accuracy
-    def actualStatus = currentBuild.result ?: buildStatus
-    if (!actualStatus) {
-        actualStatus = 'UNSTABLE'
+    // Determine actual status: verify with test statistics to ensure accuracy
+    def actualStatus = buildStatus
+    
+    // Override based on test statistics if they contradict the parameter
+    if (testStats.total > 0) {
+        if (testStats.failed > 0) {
+            // Tests failed - must be FAILURE
+            actualStatus = 'FAILURE'
+        } else if (testStats.passed > 0 && testStats.failed == 0) {
+            // All tests passed - should be SUCCESS
+            actualStatus = 'SUCCESS'
+        }
     }
+    
+    echo "Email notification - Parameter: ${buildStatus}, Final status: ${actualStatus}, Tests: ${testStats.passed}/${testStats.total} passed, ${testStats.failed} failed"
     
     // Try to get user who triggered the build (avoiding getRawBuild() for script security)
     def triggeredBy = 'Muhammad Usman Arshad'
