@@ -443,7 +443,7 @@ def sendEmailNotification(buildStatus) {
     }
     
     def statusColor = buildStatus == 'SUCCESS' ? '#28a745' : buildStatus == 'FAILURE' ? '#dc3545' : '#ffc107'
-    def statusIcon = buildStatus == 'SUCCESS' ? '[SUCCESS]' : buildStatus == 'FAILURE' ? '[FAILURE]' : '[UNSTABLE]'
+    def statusIcon = buildStatus == 'SUCCESS' ? '[PASS]' : buildStatus == 'FAILURE' ? '[FAIL]' : '[WARN]'
     
     def subject = "${statusIcon} Dakota Marketplace Tests - ${buildStatus} - Build #${env.BUILD_NUMBER}"
     
@@ -469,7 +469,6 @@ def sendEmailNotification(buildStatus) {
     def testSelectionDisplay = testSelectionParts.size() > 0 ? testSelectionParts.join('<br>') : 'All Tests'
     
     // Status configuration for template
-    def statusIcon = buildStatus == 'SUCCESS' ? '[PASS]' : buildStatus == 'FAILURE' ? '[FAIL]' : '[WARN]'
     def statusText = buildStatus == 'SUCCESS' ? 'SUCCESS' : buildStatus == 'FAILURE' ? 'FAILURE' : 'UNSTABLE'
     def statusBarBg = buildStatus == 'SUCCESS' ? '#d1fae5' : buildStatus == 'FAILURE' ? '#fee2e2' : '#fef3c7'
     def statusBarBorder = buildStatus == 'SUCCESS' ? '#86efac' : buildStatus == 'FAILURE' ? '#fca5a5' : '#fde68a'
