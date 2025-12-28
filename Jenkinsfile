@@ -30,26 +30,26 @@ pipeline {
         choice(
             name: 'ENVIRONMENT',
             choices: ['uat', 'prod'],
-            description: 'Select test environment'
+            description: '🌍 Select the test environment to run tests against'
         )
         extendedChoice(
             name: 'TEST_SUITE',
             type: 'PT_MULTI_SELECT',
-            value: 'all,column_names,fields_comparison,fields_display,lazy_loading,list_view_crud,pin_unpin',
-            description: 'Select one or more test suites to run. Hold Ctrl/Cmd to select multiple. If MARKERS are also selected, tests will be filtered by both suite and markers.',
+            value: 'all,Column Names Validation,Fields Comparison,Fields Display Functionality,Lazy Loading,List View CRUD Operations,Pin/Unpin Functionality',
+            description: '📦 Select one or more test suites to run:\n\n• Column Names Validation - Validates column names across all tabs\n• Fields Comparison - Compares fields between different views\n• Fields Display Functionality - Tests field display features\n• Lazy Loading - Tests lazy loading functionality\n• List View CRUD Operations - Tests Create, Read, Update, Delete operations\n• Pin/Unpin Functionality - Tests pin and unpin features\n\n💡 Hold Ctrl/Cmd to select multiple suites. If markers are also selected, tests will be filtered by both suite and markers.',
             multiSelectDelimiter: ','
         )
         extendedChoice(
             name: 'MARKERS',
             type: 'PT_MULTI_SELECT',
-            value: 'accounts,contact,all_documents,filings_13f_investments_search,accounts_default,contact_default,investment_allocator_accounts_default,investment_allocator_contacts_default,investment_firm_contacts_default,my_accounts_default,portfolio_companies_contacts_default,university_alumni_contacts_default,conference_search,consultant_reviews,continuation_vehicle,dakota_city_guides,dakota_searches,dakota_video_search,fee_schedules_dashboard,fund_family_memos,fund_launches,investment_allocator_accounts,investment_allocator_contacts,investment_firm_accounts,investment_firm_contacts,manager_presentation_dashboard,my_accounts,pension_documents,portfolio_companies,portfolio_companies_contacts,private_fund_search,public_company_search,public_investments_search,public_plan_minutes_search,recent_transactions,university_alumni_contacts,column_names,fields_comparison,fields_display,lazy_loading,list_view_crud,pin_unpin',
-            description: 'Select one or more markers (tabs or suites) to run. Hold Ctrl/Cmd to select multiple. Selected markers use OR logic. If TEST_SUITE is also selected, both will be combined.',
+            value: 'All Tests,Accounts Tab,Contact Tab,All Documents,13F Filings & Investments Search,Accounts (Default),Contact (Default),Investment Allocator - Accounts (Default),Investment Allocator - Contacts (Default),Investment Firm - Contacts (Default),My Accounts (Default),Portfolio Companies - Contacts (Default),University Alumni - Contacts (Default),Conference Search,Consultant Reviews,Continuation Vehicle,Dakota City Guides,Dakota Searches,Dakota Video Search,Fee Schedules Dashboard,Fund Family Memos,Fund Launches,Investment Allocator - Accounts,Investment Allocator - Contacts,Investment Firm - Accounts,Investment Firm - Contacts,Manager Presentation Dashboard,My Accounts,Pension Documents,Portfolio Companies,Portfolio Companies - Contacts,Private Fund Search,Public Company Search,Public Investments Search,Public Plan Minutes Search,Recent Transactions,University Alumni - Contacts',
+            description: '🏷️ Select one or more test markers (tabs or specific test categories) to run:\n\n• Accounts Tab - Tests for Accounts tab\n• Contact Tab - Tests for Contact tab\n• All Documents - Document-related tests\n• And many more specific test categories...\n\n💡 Hold Ctrl/Cmd to select multiple markers. Selected markers use OR logic. If test suites are also selected, both will be combined.',
             multiSelectDelimiter: ','
         )
         booleanParam(
             name: 'SEND_EMAIL',
             defaultValue: true,
-            description: 'Send email notification after build'
+            description: '📧 Send email notification after build completion'
         )
     }
     
@@ -241,14 +241,14 @@ pipeline {
                 
                 // Update build description
                 def testSelectionParts = []
-                if (params.TEST_SUITE && params.TEST_SUITE.trim() && params.TEST_SUITE != 'all') {
-                    def suites = params.TEST_SUITE.split(',').collect { it.trim() }.findAll { it && it != 'all' }
+                if (params.TEST_SUITE && params.TEST_SUITE.trim() && params.TEST_SUITE != 'all' && params.TEST_SUITE != 'All Tests') {
+                    def suites = params.TEST_SUITE.split(',').collect { it.trim() }.findAll { it && it != 'all' && it != 'All Tests' }
                     if (suites.size() > 0) {
                         testSelectionParts.add("Suites: ${suites.join(', ')}")
                     }
                 }
                 if (params.MARKERS && params.MARKERS.trim()) {
-                    def markers = params.MARKERS.split(',').collect { it.trim() }.findAll { it }
+                    def markers = params.MARKERS.split(',').collect { it.trim() }.findAll { it && it != 'All Tests' }
                     if (markers.size() > 0) {
                         testSelectionParts.add("Markers: ${markers.join(', ')}")
                     }
@@ -311,6 +311,66 @@ pipeline {
     }
 }
 
+// Helper function to map display names to internal suite names
+def mapSuiteDisplayToInternal(displayName) {
+    def suiteMapping = [
+        'All Tests': 'all',
+        'Column Names Validation': 'column_names',
+        'Fields Comparison': 'fields_comparison',
+        'Fields Display Functionality': 'fields_display',
+        'Lazy Loading': 'lazy_loading',
+        'List View CRUD Operations': 'list_view_crud',
+        'Pin/Unpin Functionality': 'pin_unpin'
+    ]
+    // Return mapped name or original if not found (for backward compatibility)
+    return suiteMapping.get(displayName, displayName)
+}
+
+// Helper function to map display names to internal marker names
+def mapMarkerDisplayToInternal(displayName) {
+    def markerMapping = [
+        'All Tests': 'all',
+        'Accounts Tab': 'accounts',
+        'Contact Tab': 'contact',
+        'All Documents': 'all_documents',
+        '13F Filings & Investments Search': 'filings_13f_investments_search',
+        'Accounts (Default)': 'accounts_default',
+        'Contact (Default)': 'contact_default',
+        'Investment Allocator - Accounts (Default)': 'investment_allocator_accounts_default',
+        'Investment Allocator - Contacts (Default)': 'investment_allocator_contacts_default',
+        'Investment Firm - Contacts (Default)': 'investment_firm_contacts_default',
+        'My Accounts (Default)': 'my_accounts_default',
+        'Portfolio Companies - Contacts (Default)': 'portfolio_companies_contacts_default',
+        'University Alumni - Contacts (Default)': 'university_alumni_contacts_default',
+        'Conference Search': 'conference_search',
+        'Consultant Reviews': 'consultant_reviews',
+        'Continuation Vehicle': 'continuation_vehicle',
+        'Dakota City Guides': 'dakota_city_guides',
+        'Dakota Searches': 'dakota_searches',
+        'Dakota Video Search': 'dakota_video_search',
+        'Fee Schedules Dashboard': 'fee_schedules_dashboard',
+        'Fund Family Memos': 'fund_family_memos',
+        'Fund Launches': 'fund_launches',
+        'Investment Allocator - Accounts': 'investment_allocator_accounts',
+        'Investment Allocator - Contacts': 'investment_allocator_contacts',
+        'Investment Firm - Accounts': 'investment_firm_accounts',
+        'Investment Firm - Contacts': 'investment_firm_contacts',
+        'Manager Presentation Dashboard': 'manager_presentation_dashboard',
+        'My Accounts': 'my_accounts',
+        'Pension Documents': 'pension_documents',
+        'Portfolio Companies': 'portfolio_companies',
+        'Portfolio Companies - Contacts': 'portfolio_companies_contacts',
+        'Private Fund Search': 'private_fund_search',
+        'Public Company Search': 'public_company_search',
+        'Public Investments Search': 'public_investments_search',
+        'Public Plan Minutes Search': 'public_plan_minutes_search',
+        'Recent Transactions': 'recent_transactions',
+        'University Alumni - Contacts': 'university_alumni_contacts'
+    ]
+    // Return mapped name or original if not found (for backward compatibility)
+    return markerMapping.get(displayName, displayName)
+}
+
 // Helper function to build test command based on suite or markers
 def buildTestCommand(testSuite, markers) {
     def baseCommand = "\"%PYTHON_EXE%\" -m pytest"
@@ -321,8 +381,10 @@ def buildTestCommand(testSuite, markers) {
     if (testSuite && testSuite.trim()) {
         testSuite.split(',').each { suite ->
             def trimmed = suite.trim()
-            if (trimmed && trimmed != 'all') {
-                suitesList.add(trimmed)
+            if (trimmed && trimmed != 'all' && trimmed != 'All Tests') {
+                // Map display name to internal name
+                def internalName = mapSuiteDisplayToInternal(trimmed)
+                suitesList.add(internalName)
             }
         }
     }
@@ -333,8 +395,10 @@ def buildTestCommand(testSuite, markers) {
     if (markers && markers.trim()) {
         markers.split(',').each { marker ->
             def trimmed = marker.trim()
-            if (trimmed) {
-                markersList.add(trimmed)
+            if (trimmed && trimmed != 'all' && trimmed != 'All Tests') {
+                // Map display name to internal name
+                def internalName = mapMarkerDisplayToInternal(trimmed)
+                markersList.add(internalName)
             }
         }
     }
@@ -482,14 +546,14 @@ def sendEmailNotification(buildStatus) {
     
     // Build test selection string for email
     def testSelectionParts = []
-    if (params.TEST_SUITE && params.TEST_SUITE.trim() && params.TEST_SUITE != 'all') {
-        def suites = params.TEST_SUITE.split(',').collect { it.trim() }.findAll { it && it != 'all' }
+    if (params.TEST_SUITE && params.TEST_SUITE.trim() && params.TEST_SUITE != 'all' && params.TEST_SUITE != 'All Tests') {
+        def suites = params.TEST_SUITE.split(',').collect { it.trim() }.findAll { it && it != 'all' && it != 'All Tests' }
         if (suites.size() > 0) {
             testSelectionParts.add("Suites: ${suites.join(', ')}")
         }
     }
     if (params.MARKERS && params.MARKERS.trim()) {
-        def markers = params.MARKERS.split(',').collect { it.trim() }.findAll { it }
+        def markers = params.MARKERS.split(',').collect { it.trim() }.findAll { it && it != 'All Tests' }
         if (markers.size() > 0) {
             testSelectionParts.add("Markers: ${markers.join(', ')}")
         }
@@ -514,14 +578,14 @@ def sendEmailNotification(buildStatus) {
     if (testSelectionParts.size() > 0) {
         def suitesHtml = ''
         def markersHtml = ''
-        if (params.TEST_SUITE && params.TEST_SUITE.trim() && params.TEST_SUITE != 'all') {
-            def suites = params.TEST_SUITE.split(',').collect { it.trim() }.findAll { it && it != 'all' }
+        if (params.TEST_SUITE && params.TEST_SUITE.trim() && params.TEST_SUITE != 'all' && params.TEST_SUITE != 'All Tests') {
+            def suites = params.TEST_SUITE.split(',').collect { it.trim() }.findAll { it && it != 'all' && it != 'All Tests' }
             if (suites.size() > 0) {
                 suitesHtml = "<strong>Suites:</strong> ${suites.join(', ')}"
             }
         }
         if (params.MARKERS && params.MARKERS.trim()) {
-            def markers = params.MARKERS.split(',').collect { it.trim() }.findAll { it }
+            def markers = params.MARKERS.split(',').collect { it.trim() }.findAll { it && it != 'All Tests' }
             if (markers.size() > 0) {
                 markersHtml = "<strong>Markers:</strong> ${markers.join(', ')}"
             }
