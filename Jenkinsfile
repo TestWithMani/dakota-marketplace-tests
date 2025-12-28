@@ -166,7 +166,7 @@ pipeline {
         
         stage('Generate Allure Report') {
             when {
-                always()
+                expression { true }
             }
             steps {
                 script {
@@ -206,7 +206,7 @@ pipeline {
         
         stage('Publish Test Results') {
             when {
-                always()
+                expression { true }
             }
             steps {
                 script {
