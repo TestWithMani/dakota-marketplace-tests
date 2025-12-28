@@ -468,402 +468,186 @@ def sendEmailNotification(buildStatus) {
     }
     def testSelectionDisplay = testSelectionParts.size() > 0 ? testSelectionParts.join('<br>') : 'All Tests'
     
-    def statusBgColor = buildStatus == 'SUCCESS' ? '#10b981' : buildStatus == 'FAILURE' ? '#ef4444' : '#f59e0b'
-    def statusLightColor = buildStatus == 'SUCCESS' ? '#d1fae5' : buildStatus == 'FAILURE' ? '#fee2e2' : '#fef3c7'
-    def statusTextColor = buildStatus == 'SUCCESS' ? '#065f46' : buildStatus == 'FAILURE' ? '#991b1b' : '#92400e'
+    // Status configuration for template
+    def statusIcon = buildStatus == 'SUCCESS' ? '✅' : buildStatus == 'FAILURE' ? '❌' : '⚠️'
+    def statusText = buildStatus == 'SUCCESS' ? 'SUCCESS' : buildStatus == 'FAILURE' ? 'FAILURE' : 'UNSTABLE'
+    def statusBarBg = buildStatus == 'SUCCESS' ? '#d1fae5' : buildStatus == 'FAILURE' ? '#fee2e2' : '#fef3c7'
+    def statusBarBorder = buildStatus == 'SUCCESS' ? '#86efac' : buildStatus == 'FAILURE' ? '#fca5a5' : '#fde68a'
+    def statusTextColor = buildStatus == 'SUCCESS' ? '#14532d' : buildStatus == 'FAILURE' ? '#991b1b' : '#92400e'
+    def statusDarkTextColor = buildStatus == 'SUCCESS' ? '#065f46' : buildStatus == 'FAILURE' ? '#7f1d1d' : '#78350f'
+    
+    // Build test selection display
+    def testSelectionHtml = ''
+    if (testSelectionParts.size() > 0) {
+        def suitesHtml = ''
+        def markersHtml = ''
+        if (params.TEST_SUITE && params.TEST_SUITE.trim() && params.TEST_SUITE != 'all') {
+            def suites = params.TEST_SUITE.split(',').collect { it.trim() }.findAll { it && it != 'all' }
+            if (suites.size() > 0) {
+                suitesHtml = "<strong>Suites:</strong> ${suites.join(', ')}"
+            }
+        }
+        if (params.MARKERS && params.MARKERS.trim()) {
+            def markers = params.MARKERS.split(',').collect { it.trim() }.findAll { it }
+            if (markers.size() > 0) {
+                markersHtml = "<strong>Markers:</strong> ${markers.join(', ')}"
+            }
+        }
+        if (suitesHtml || markersHtml) {
+            testSelectionHtml = """
+<!-- ================= TEST SELECTION ================= -->
+<tr>
+<td style="padding:0 32px 28px;">
+<h3 style="margin:0 0 12px;font-size:18px;color:#0f172a;border-left:4px solid #16a34a;padding-left:10px;">
+Test Scope
+</h3>
+
+<table width="100%" cellpadding="10" cellspacing="0" style="background:#f8fafc;border-radius:8px;font-size:14px;">
+<tr>
+<td>
+${suitesHtml ? suitesHtml + (markersHtml ? '<br>' : '') : ''}${markersHtml ? markersHtml : ''}
+</td>
+</tr>
+</table>
+</td>
+</tr>
+"""
+        }
+    }
     
     def body = """
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 30px 15px;
-            line-height: 1.6;
-            color: #1f2937;
-            -webkit-font-smoothing: antialiased;
-        }
-        .email-container {
-            max-width: 600px;
-            margin: 0 auto;
-            background: #ffffff;
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        .top-bar {
-            height: 4px;
-            background: linear-gradient(90deg, ${statusBgColor} 0%, ${statusBgColor}dd 100%);
-        }
-        .header {
-            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
-            color: #ffffff;
-            padding: 32px 28px;
-            text-align: center;
-            position: relative;
-        }
-        .header::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-        }
-        .logo {
-            font-size: 26px;
-            font-weight: 700;
-            margin-bottom: 6px;
-            letter-spacing: -0.5px;
-            background: linear-gradient(135deg, #ffffff 0%, #e5e7eb 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        .subtitle {
-            font-size: 13px;
-            color: #d1d5db;
-            font-weight: 400;
-            margin-bottom: 16px;
-        }
-        .status-badge {
-            display: inline-block;
-            padding: 8px 20px;
-            background: ${statusLightColor};
-            color: ${statusTextColor};
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            border: 2px solid ${statusBgColor};
-        }
-        .content {
-            padding: 28px;
-        }
-        .stats-container {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-        .stat-card {
-            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
-            border-radius: 10px;
-            padding: 18px 12px;
-            text-align: center;
-            border: 1px solid #e5e7eb;
-            transition: all 0.3s ease;
-        }
-        .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        }
-        .stat-number {
-            font-size: 32px;
-            font-weight: 800;
-            line-height: 1;
-            margin-bottom: 8px;
-            font-family: 'Courier New', monospace;
-        }
-        .stat-label {
-            font-size: 10px;
-            color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            font-weight: 600;
-        }
-        .stat-card.total { border-top: 3px solid #3b82f6; }
-        .stat-card.total .stat-number { color: #3b82f6; }
-        .stat-card.passed { border-top: 3px solid #10b981; }
-        .stat-card.passed .stat-number { color: #10b981; }
-        .stat-card.failed { border-top: 3px solid #ef4444; }
-        .stat-card.failed .stat-number { color: #ef4444; }
-        .stat-card.skipped { border-top: 3px solid #f59e0b; }
-        .stat-card.skipped .stat-number { color: #f59e0b; }
-        .progress-section {
-            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 24px;
-            border: 1px solid #e5e7eb;
-        }
-        .progress-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-        .progress-title {
-            font-size: 13px;
-            font-weight: 700;
-            color: #374151;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .progress-percentage {
-            font-size: 16px;
-            font-weight: 700;
-            color: ${statusBgColor};
-        }
-        .progress-bar-wrapper {
-            height: 10px;
-            background: #e5e7eb;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 8px;
-            position: relative;
-        }
-        .progress-bar-fill {
-            height: 100%;
-            border-radius: 10px;
-            transition: width 0.3s ease;
-        }
-        .progress-bar-fill.passed { background: linear-gradient(90deg, #10b981, #059669); }
-        .progress-bar-fill.failed { background: linear-gradient(90deg, #ef4444, #dc2626); }
-        .progress-bar-fill.skipped { background: linear-gradient(90deg, #f59e0b, #d97706); }
-        .progress-stats {
-            display: flex;
-            justify-content: space-between;
-            font-size: 11px;
-            color: #6b7280;
-            font-weight: 500;
-        }
-        .info-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-        .info-card {
-            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
-            border-radius: 10px;
-            padding: 16px;
-            border: 1px solid #e5e7eb;
-        }
-        .info-label {
-            font-size: 10px;
-            color: #6b7280;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            font-weight: 600;
-            margin-bottom: 6px;
-        }
-        .info-value {
-            font-size: 15px;
-            font-weight: 700;
-            color: #1f2937;
-        }
-        .info-value.code {
-            font-family: 'Courier New', monospace;
-            background: #1f2937;
-            color: #10b981;
-            padding: 4px 8px;
-            border-radius: 4px;
-            display: inline-block;
-            font-size: 13px;
-        }
-        .details-section {
-            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 24px;
-            border: 1px solid #e5e7eb;
-        }
-        .details-title {
-            font-size: 13px;
-            font-weight: 700;
-            color: #374151;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 2px solid #e5e7eb;
-        }
-        .detail-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid #e5e7eb;
-            font-size: 13px;
-        }
-        .detail-row:last-child { border-bottom: none; }
-        .detail-label {
-            color: #6b7280;
-            font-weight: 500;
-        }
-        .detail-value {
-            color: #1f2937;
-            font-weight: 600;
-            text-align: right;
-        }
-        .actions-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .action-btn {
-            display: block;
-            padding: 14px 20px;
-            text-align: center;
-            text-decoration: none;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 700;
-            transition: all 0.3s ease;
-            letter-spacing: 0.3px;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            color: #ffffff;
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
-        }
-        .btn-secondary {
-            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
-            color: #ffffff;
-            box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
-        }
-        .btn-secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(107, 114, 128, 0.4);
-        }
-        .footer {
-            background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-            color: #9ca3af;
-            padding: 24px 28px;
-            text-align: center;
-        }
-        .footer-text {
-            font-size: 11px;
-            line-height: 1.6;
-        }
-        .footer-brand {
-            color: #ffffff;
-            font-weight: 700;
-            margin-top: 6px;
-            display: block;
-        }
-        @media only screen and (max-width: 600px) {
-            body { padding: 15px 10px; }
-            .content { padding: 20px; }
-            .header { padding: 24px 20px; }
-            .stats-container { grid-template-columns: repeat(2, 1fr); }
-            .info-grid { grid-template-columns: 1fr; }
-            .actions-grid { grid-template-columns: 1fr; }
-        }
-    </style>
+<meta charset="UTF-8">
+<title>Dakota Marketplace | Automation Report</title>
 </head>
-<body>
-    <div class="email-container">
-        <div class="top-bar"></div>
-        <div class="header">
-            <div class="logo">Dakota Marketplace</div>
-            <div class="subtitle">Test Automation Report</div>
-            <div class="status-badge">${buildStatus}</div>
-        </div>
-        
-        <div class="content">
-            <div class="stats-container">
-                <div class="stat-card total">
-                    <div class="stat-number">${testStats.total}</div>
-                    <div class="stat-label">Total</div>
-                </div>
-                <div class="stat-card passed">
-                    <div class="stat-number">${testStats.passed}</div>
-                    <div class="stat-label">Passed</div>
-                </div>
-                <div class="stat-card failed">
-                    <div class="stat-number">${testStats.failed}</div>
-                    <div class="stat-label">Failed</div>
-                </div>
-                <div class="stat-card skipped">
-                    <div class="stat-number">${testStats.skipped}</div>
-                    <div class="stat-label">Skipped</div>
-                </div>
-            </div>
-            
-            ${testStats.total > 0 ? """
-            <div class="progress-section">
-                <div class="progress-header">
-                    <div class="progress-title">Test Results Overview</div>
-                    <div class="progress-percentage">${passPercentage}%</div>
-                </div>
-                <div class="progress-bar-wrapper">
-                    ${testStats.passed > 0 ? "<div class=\"progress-bar-fill passed\" style=\"width: ${passPercentage}%;\"></div>" : ""}
-                    ${testStats.failed > 0 ? "<div class=\"progress-bar-fill failed\" style=\"width: ${failPercentage}%;\"></div>" : ""}
-                    ${testStats.skipped > 0 ? "<div class=\"progress-bar-fill skipped\" style=\"width: ${skipPercentage}%;\"></div>" : ""}
-                </div>
-                <div class="progress-stats">
-                    <span>✓ Passed: ${testStats.passed}</span>
-                    <span>✗ Failed: ${testStats.failed}</span>
-                    <span>⊘ Skipped: ${testStats.skipped}</span>
-                </div>
-            </div>
-            """ : ""}
-            
-            <div class="info-grid">
-                <div class="info-card">
-                    <div class="info-label">Build Number</div>
-                    <div class="info-value">#${env.BUILD_NUMBER}</div>
-                </div>
-                <div class="info-card">
-                    <div class="info-label">Environment</div>
-                    <div class="info-value">${ENV.toUpperCase()}</div>
-                </div>
-            </div>
-            
-            <div class="details-section">
-                <div class="details-title">Build Information</div>
-                <div class="detail-row">
-                    <span class="detail-label">Branch</span>
-                    <span class="detail-value">${env.BRANCH_NAME ?: 'N/A'}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Commit</span>
-                    <span class="detail-value"><span class="info-value code">${env.GIT_COMMIT.take(7) ?: 'N/A'}</span></span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Duration</span>
-                    <span class="detail-value">${currentBuild.durationString ?: 'N/A'}</span>
-                </div>
-                <div class="detail-row">
-                    <span class="detail-label">Triggered By</span>
-                    <span class="detail-value">${triggeredBy}</span>
-                </div>
-                ${testSelectionParts.size() > 0 ? """
-                <div class="detail-row">
-                    <span class="detail-label">Test Selection</span>
-                    <span class="detail-value" style="font-size: 11px; text-align: right;">${testSelectionDisplay}</span>
-                </div>
-                """ : ""}
-            </div>
-            
-            <div class="actions-grid">
-                <a href="${env.BUILD_URL}" class="action-btn btn-primary">View Build</a>
-                <a href="${env.BUILD_URL}HTML_Report/" class="action-btn btn-secondary">HTML Report</a>
-                <a href="${env.BUILD_URL}allure/" class="action-btn btn-secondary">Allure Report</a>
-                <a href="${env.JOB_URL}" class="action-btn btn-primary">Dashboard</a>
-            </div>
-        </div>
-        
-        <div class="footer">
-            <div class="footer-text">
-                Automated by Jenkins CI/CD Pipeline<br>
-                <span class="footer-brand">Dakota Marketplace Test Framework</span>
-            </div>
-        </div>
-    </div>
+
+<body style="margin:0;padding:0;background:#0f172a;font-family:Segoe UI, Roboto, Arial, sans-serif;">
+
+<table width="100%" cellpadding="0" cellspacing="0">
+<tr>
+<td align="center" style="padding:40px 0;">
+
+<!-- ================= MAIN CARD ================= -->
+<table width="720" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 20px 45px rgba(0,0,0,0.35);">
+
+<!-- ================= HEADER ================= -->
+<tr>
+<td style="background:linear-gradient(135deg,#0f172a,#1e293b);padding:28px 32px;color:#ffffff;">
+    <h1 style="margin:0;font-size:26px;font-weight:600;letter-spacing:0.3px;">
+        Dakota Marketplace
+    </h1>
+    <p style="margin:6px 0 0;font-size:14px;opacity:0.85;">
+        Automated Test Execution Report
+    </p>
+</td>
+</tr>
+
+<!-- ================= STATUS BAR ================= -->
+<tr>
+<td style="background:${statusBarBg};padding:18px 32px;border-bottom:1px solid ${statusBarBorder};">
+    <table width="100%">
+        <tr>
+            <td>
+                <span style="font-size:20px;font-weight:700;color:${statusDarkTextColor};">${statusIcon} ${statusText}</span>
+            </td>
+            <td align="right" style="font-size:14px;color:${statusDarkTextColor};">
+                Pass Rate: <strong>${passPercentage}%</strong>
+            </td>
+        </tr>
+    </table>
+</td>
+</tr>
+
+<!-- ================= METRICS ================= -->
+<tr>
+<td style="padding:28px 32px;">
+<table width="100%" cellpadding="12" cellspacing="0">
+<tr align="center">
+<td style="background:#0f172a;color:#ffffff;border-radius:10px;">
+    <div style="font-size:13px;opacity:0.8;">TOTAL</div>
+    <div style="font-size:26px;font-weight:700;">${testStats.total}</div>
+</td>
+<td style="background:#dcfce7;color:#14532d;border-radius:10px;">
+    <div style="font-size:13px;">PASSED</div>
+    <div style="font-size:26px;font-weight:700;">${testStats.passed}</div>
+</td>
+<td style="background:#fee2e2;color:#7f1d1d;border-radius:10px;">
+    <div style="font-size:13px;">FAILED</div>
+    <div style="font-size:26px;font-weight:700;">${testStats.failed}</div>
+</td>
+<td style="background:#f1f5f9;color:#334155;border-radius:10px;">
+    <div style="font-size:13px;">SKIPPED</div>
+    <div style="font-size:26px;font-weight:700;">${testStats.skipped}</div>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+
+<!-- ================= BUILD DETAILS ================= -->
+<tr>
+<td style="padding:0 32px 28px;">
+<h3 style="margin:0 0 12px;font-size:18px;color:#0f172a;border-left:4px solid #2563eb;padding-left:10px;">
+Build Information
+</h3>
+
+<table width="100%" cellpadding="8" cellspacing="0" style="font-size:14px;color:#334155;">
+<tr><td width="35%"><strong>Build #</strong></td><td>${env.BUILD_NUMBER}</td></tr>
+<tr><td><strong>Environment</strong></td><td>${ENV.toUpperCase()}</td></tr>
+<tr><td><strong>Branch</strong></td><td>${env.BRANCH_NAME ?: 'N/A'}</td></tr>
+<tr><td><strong>Commit</strong></td><td>${env.GIT_COMMIT.take(7) ?: 'N/A'}</td></tr>
+<tr><td><strong>Duration</strong></td><td>${currentBuild.durationString ?: 'N/A'}</td></tr>
+<tr><td><strong>Triggered By</strong></td><td>${triggeredBy}</td></tr>
+</table>
+</td>
+</tr>
+
+${testSelectionHtml}
+
+<!-- ================= ACTION BUTTONS ================= -->
+<tr>
+<td style="padding:0 32px 32px;">
+<table width="100%" cellpadding="12" cellspacing="0">
+<tr>
+<td align="center" style="background:#2563eb;border-radius:8px;">
+<a href="${env.BUILD_URL}" style="color:#ffffff;text-decoration:none;font-weight:600;">
+View Jenkins Build
+</a>
+</td>
+<td align="center" style="background:#0f172a;border-radius:8px;">
+<a href="${env.BUILD_URL}HTML_Report/" style="color:#ffffff;text-decoration:none;font-weight:600;">
+HTML Report
+</a>
+</td>
+<td align="center" style="background:#16a34a;border-radius:8px;">
+<a href="${env.BUILD_URL}allure/" style="color:#ffffff;text-decoration:none;font-weight:600;">
+Allure Report
+</a>
+</td>
+</tr>
+</table>
+</td>
+</tr>
+
+<!-- ================= FOOTER ================= -->
+<tr>
+<td style="background:#020617;color:#94a3b8;padding:18px 32px;font-size:12px;">
+<p style="margin:0;">
+Automated by <strong>Jenkins CI/CD</strong><br>
+Dakota Marketplace Test Framework
+</p>
+</td>
+</tr>
+
+</table>
+<!-- ================= END CARD ================= -->
+
+</td>
+</tr>
+</table>
+
 </body>
 </html>
     """
