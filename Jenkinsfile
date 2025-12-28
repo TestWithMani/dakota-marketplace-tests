@@ -522,6 +522,12 @@ def getTestStatistics() {
 def sendEmailNotification(buildStatus) {
     def testStats = getTestStatistics()
     
+    // Use actual build result instead of parameter to ensure accuracy
+    def actualStatus = currentBuild.result ?: buildStatus
+    if (!actualStatus) {
+        actualStatus = 'UNSTABLE'
+    }
+    
     // Try to get user who triggered the build (avoiding getRawBuild() for script security)
     def triggeredBy = 'Muhammad Usman Arshad'
     try {
@@ -534,12 +540,12 @@ def sendEmailNotification(buildStatus) {
         triggeredBy = 'Muhammad Usman Arshad'
     }
     
-    def statusColor = buildStatus == 'SUCCESS' ? '#28a745' : buildStatus == 'FAILURE' ? '#dc3545' : '#ffc107'
-    def statusIcon = buildStatus == 'SUCCESS' ? '[PASS]' : buildStatus == 'FAILURE' ? '[FAIL]' : '[WARN]'
+    def statusColor = actualStatus == 'SUCCESS' ? '#28a745' : actualStatus == 'FAILURE' ? '#dc3545' : '#ffc107'
+    def statusIcon = actualStatus == 'SUCCESS' ? '[PASS]' : actualStatus == 'FAILURE' ? '[FAIL]' : '[WARN]'
     
     // Format current date
     def currentDate = new Date().format("yyyy-MM-dd")
-    def subject = "[${buildStatus}] Dakota Automation Report - ${currentDate}"
+    def subject = "[${actualStatus}] Dakota Automation Report - ${currentDate}"
     
     // Calculate pass percentage for progress bar
     def passPercentage = testStats.total > 0 ? (testStats.passed * 100 / testStats.total).intValue() : 0
@@ -563,11 +569,11 @@ def sendEmailNotification(buildStatus) {
     def testSelectionDisplay = testSelectionParts.size() > 0 ? testSelectionParts.join('<br>') : 'All Tests'
     
     // Status configuration for template - Professional color scheme
-    def statusText = buildStatus == 'SUCCESS' ? 'SUCCESS' : buildStatus == 'FAILURE' ? 'FAILURE' : 'UNSTABLE'
-    def statusBarBg = buildStatus == 'SUCCESS' ? '#ecfdf5' : buildStatus == 'FAILURE' ? '#fef2f2' : '#fffbeb'
-    def statusBarBorder = buildStatus == 'SUCCESS' ? '#10b981' : buildStatus == 'FAILURE' ? '#ef4444' : '#f59e0b'
-    def statusTextColor = buildStatus == 'SUCCESS' ? '#047857' : buildStatus == 'FAILURE' ? '#b91c1c' : '#b45309'
-    def statusDarkTextColor = buildStatus == 'SUCCESS' ? '#065f46' : buildStatus == 'FAILURE' ? '#991b1b' : '#92400e'
+    def statusText = actualStatus == 'SUCCESS' ? 'SUCCESS' : actualStatus == 'FAILURE' ? 'FAILURE' : 'UNSTABLE'
+    def statusBarBg = actualStatus == 'SUCCESS' ? '#ecfdf5' : actualStatus == 'FAILURE' ? '#fef2f2' : '#fffbeb'
+    def statusBarBorder = actualStatus == 'SUCCESS' ? '#10b981' : actualStatus == 'FAILURE' ? '#ef4444' : '#f59e0b'
+    def statusTextColor = actualStatus == 'SUCCESS' ? '#047857' : actualStatus == 'FAILURE' ? '#b91c1c' : '#b45309'
+    def statusDarkTextColor = actualStatus == 'SUCCESS' ? '#065f46' : actualStatus == 'FAILURE' ? '#991b1b' : '#92400e'
     
     // Format duration - remove "and counting" if present
     def durationString = currentBuild.durationString ?: 'N/A'
