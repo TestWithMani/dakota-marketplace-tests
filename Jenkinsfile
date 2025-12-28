@@ -625,31 +625,6 @@ Build Information
 
 ${testSelectionHtml}
 
-<!-- ================= ACTION BUTTONS ================= -->
-<tr>
-<td style="padding:0 32px 32px;background:#ffffff;">
-<table width="100%" cellpadding="14" cellspacing="12">
-<tr>
-<td align="center" style="background:linear-gradient(135deg,#3b82f6 0%,#2563eb 100%);border-radius:10px;box-shadow:0 4px 12px rgba(59,130,246,0.4);">
-<a href="${env.BUILD_URL}" style="color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;display:block;padding:12px;">
-View Jenkins Build
-</a>
-</td>
-<td align="center" style="background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);border-radius:10px;box-shadow:0 4px 12px rgba(15,23,42,0.4);">
-<a href="${env.BUILD_URL}HTML_Report/" style="color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;display:block;padding:12px;">
-HTML Report
-</a>
-</td>
-<td align="center" style="background:linear-gradient(135deg,#10b981 0%,#059669 100%);border-radius:10px;box-shadow:0 4px 12px rgba(16,185,129,0.4);">
-<a href="${env.BUILD_URL}allure/" style="color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;display:block;padding:12px;">
-Allure Report
-</a>
-</td>
-</tr>
-</table>
-</td>
-</tr>
-
 <!-- ================= FOOTER ================= -->
 <tr>
 <td style="background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);color:#cbd5e1;padding:24px 32px;font-size:13px;border-top:1px solid rgba(255,255,255,0.1);">
