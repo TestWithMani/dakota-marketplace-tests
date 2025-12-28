@@ -399,7 +399,10 @@ def getTestStatistics() {
     }
 
     try {
-        def report = readJSON file: jsonFile
+        // Read JSON file and parse using Groovy's JsonSlurper
+        def jsonContent = readFile jsonFile
+        def jsonSlurper = new groovy.json.JsonSlurper()
+        def report = jsonSlurper.parseText(jsonContent)
 
         stats.passed  = report.summary?.passed  ?: 0
         stats.failed  = report.summary?.failed  ?: 0
