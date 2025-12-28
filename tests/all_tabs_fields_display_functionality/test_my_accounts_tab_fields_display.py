@@ -22,13 +22,12 @@ def click_all_move_buttons(driver, move_btn_xpaths):
             time.sleep(0.5)
         except Exception:
             pass
-@pytest.mark.university_alumni_contacts
-@pytest.mark.university_alumni_contacts_default
+@pytest.mark.my_accounts
 @pytest.mark.fields_display
 
-def test_university_alumni_contacts_default_fields_display_functionality(driver, base_url, credentials):
+def test_my_accounts_tab_fields_display_functionality(driver, base_url, credentials):
     """
-    End-to-end validation for the University Alumni Contacts Default tab fields display functionality.
+    End-to-end validation for the My Accounts tab fields display functionality.
     Test Steps:
       1. Log in and capture the state.
       2. Navigate to the target tab.
@@ -55,12 +54,12 @@ def test_university_alumni_contacts_default_fields_display_functionality(driver,
         allure.attach(driver.get_screenshot_as_png(), name="after_login", attachment_type=allure.attachment_type.PNG)
     print("[✓] Login successful and screenshot taken.")
 
-    # Step 2: Navigate to University Alumni Contacts Default Tab
-    print("[Step 2] Navigating to University Alumni Contacts Default tab...")
-    driver.get(get_url(base_url, URLs.UNIVERSITY_ALUMNI_CONTACTS_DEFAULT))
+    # Step 2: Navigate to My Accounts Tab
+    print("[Step 2] Navigating to My Accounts tab...")
+    driver.get(get_url(base_url, URLs.MY_ACCOUNTS_DEFAULT))
     wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
     time.sleep(2)
-    print("[✓] University Alumni Contacts Default tab loaded.")
+    print("[✓] My Accounts tab loaded.")
 
     # Step 3: Try Unpin
     print("[Step 3] Checking for 'Unpin this List View' button...")

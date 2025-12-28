@@ -22,13 +22,12 @@ def click_all_move_buttons(driver, move_btn_xpaths):
             time.sleep(0.5)
         except Exception:
             pass
-@pytest.mark.portfolio_companies_contacts
-@pytest.mark.portfolio_companies_contacts_default
+@pytest.mark.contact
 @pytest.mark.fields_display
 
-def test_portfolio_companies_contacts_default_fields_display_functionality(driver, base_url, credentials):
+def test_contact_tab_fields_display_functionality(driver, base_url, credentials):
     """
-    End-to-end validation for the Portfolio Companies Contacts Default tab fields display functionality.
+    End-to-end validation for the Contact tab fields display functionality.
     Test Steps:
       1. Log in and capture the state.
       2. Navigate to the target tab.
@@ -55,12 +54,12 @@ def test_portfolio_companies_contacts_default_fields_display_functionality(drive
         allure.attach(driver.get_screenshot_as_png(), name="after_login", attachment_type=allure.attachment_type.PNG)
     print("[✓] Login successful and screenshot taken.")
 
-    # Step 2: Navigate to Portfolio Companies Contacts Default Tab
-    print("[Step 2] Navigating to Portfolio Companies Contacts Default tab...")
-    driver.get(get_url(base_url, URLs.PORTFOLIO_COMPANIES_CONTACTS_DEFAULT))
+    # Step 2: Navigate to Contact Tab
+    print("[Step 2] Navigating to Contact tab...")
+    driver.get(get_url(base_url, URLs.CONTACT_DEFAULT))
     wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
     time.sleep(2)
-    print("[✓] Portfolio Companies Contacts Default tab loaded.")
+    print("[✓] Contact tab loaded.")
 
     # Step 3: Try Unpin
     print("[Step 3] Checking for 'Unpin this List View' button...")
@@ -91,7 +90,7 @@ def test_portfolio_companies_contacts_default_fields_display_functionality(drive
     original_column_names = [elem.text.strip() for elem in header_span_elems if elem.text.strip()]
     if not original_column_names:
         raise AssertionError("No table column headers found before changing Select Fields To Display.")
-    print(f"    ({len(original_column_names)}) columns: {', '.join(original_column_names)}")
+    print(f"    ({len(original_column_names)}) columns:", ', '.join(original_column_names))
 
     # Step 5: Open Select Fields To Display
     print("[Step 5] Opening 'Select Fields To Display' dialog...")
@@ -277,3 +276,4 @@ def test_portfolio_companies_contacts_default_fields_display_functionality(drive
     print(f"    - Original columns: {', '.join(original_column_names)}")
     print(f"    - Columns after change: {', '.join(new_column_names)}")
     print(f"    - Custom list view '{new_list_view_name}' was created and deleted as part of verification.")
+

@@ -22,13 +22,12 @@ def click_all_move_buttons(driver, move_btn_xpaths):
             time.sleep(0.5)
         except Exception:
             pass
-@pytest.mark.investment_firm_contacts
-@pytest.mark.investment_firm_contacts_default
+@pytest.mark.portfolio_companies_contacts
 @pytest.mark.fields_display
 
-def test_investment_firm_contacts_default_fields_display_functionality(driver, base_url, credentials):
+def test_portfolio_companies_contacts_tab_fields_display_functionality(driver, base_url, credentials):
     """
-    End-to-end validation for the Investment Firm Contacts Default tab fields display functionality.
+    End-to-end validation for the Portfolio Companies Contacts tab fields display functionality.
     Test Steps:
       1. Log in and capture the state.
       2. Navigate to the target tab.
@@ -55,12 +54,12 @@ def test_investment_firm_contacts_default_fields_display_functionality(driver, b
         allure.attach(driver.get_screenshot_as_png(), name="after_login", attachment_type=allure.attachment_type.PNG)
     print("[✓] Login successful and screenshot taken.")
 
-    # Step 2: Navigate to Investment Firm Contacts Default Tab
-    print("[Step 2] Navigating to Investment Firm Contacts Default tab...")
-    driver.get(get_url(base_url, URLs.INVESTMENT_FIRM_CONTACTS_DEFAULT))
+    # Step 2: Navigate to Portfolio Companies Contacts Tab
+    print("[Step 2] Navigating to Portfolio Companies Contacts tab...")
+    driver.get(get_url(base_url, URLs.PORTFOLIO_COMPANIES_CONTACTS_DEFAULT))
     wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
     time.sleep(2)
-    print("[✓] Investment Firm Contacts Default tab loaded.")
+    print("[✓] Portfolio Companies Contacts tab loaded.")
 
     # Step 3: Try Unpin
     print("[Step 3] Checking for 'Unpin this List View' button...")

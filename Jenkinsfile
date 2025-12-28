@@ -42,7 +42,7 @@ pipeline {
         extendedChoice(
             name: 'MARKERS',
             type: 'PT_MULTI_SELECT',
-            value: 'All Tests,Accounts Tab,Contact Tab,All Documents,13F Filings & Investments Search,Accounts (Default),Contact (Default),Investment Allocator - Accounts (Default),Investment Allocator - Contacts (Default),Investment Firm - Contacts (Default),My Accounts (Default),Portfolio Companies - Contacts (Default),University Alumni - Contacts (Default),Conference Search,Consultant Reviews,Continuation Vehicle,Dakota City Guides,Dakota Searches,Dakota Video Search,Fee Schedules Dashboard,Fund Family Memos,Fund Launches,Investment Allocator - Accounts,Investment Allocator - Contacts,Investment Firm - Accounts,Investment Firm - Contacts,Manager Presentation Dashboard,My Accounts,Pension Documents,Portfolio Companies,Portfolio Companies - Contacts,Private Fund Search,Public Company Search,Public Investments Search,Public Plan Minutes Search,Recent Transactions,University Alumni - Contacts',
+            value: 'All Tests,Accounts Tab,Contact Tab,All Documents,13F Filings & Investments Search,Conference Search,Consultant Reviews,Continuation Vehicle,Dakota City Guides,Dakota Searches,Dakota Video Search,Fee Schedules Dashboard,Fund Family Memos,Fund Launches,Investment Allocator - Accounts,Investment Allocator - Contacts,Investment Firm - Accounts,Investment Firm - Contacts,Manager Presentation Dashboard,My Accounts,Pension Documents,Portfolio Companies,Portfolio Companies - Contacts,Private Fund Search,Public Company Search,Public Investments Search,Public Plan Minutes Search,Recent Transactions,University Alumni - Contacts',
             description: 'Select one or more test markers (tabs or specific test categories) to run:\n\n- Accounts Tab - Tests for Accounts tab\n- Contact Tab - Tests for Contact tab\n- All Documents - Document-related tests\n- And many more specific test categories...\n\nNote: Hold Ctrl/Cmd to select multiple markers. Selected markers use OR logic. If test suites are also selected, both will be combined.',
             multiSelectDelimiter: ','
         )
@@ -344,14 +344,6 @@ def mapMarkerDisplayToInternal(displayName) {
         'Contact Tab': 'contact',
         'All Documents': 'all_documents',
         '13F Filings & Investments Search': 'filings_13f_investments_search',
-        'Accounts (Default)': 'accounts_default',
-        'Contact (Default)': 'contact_default',
-        'Investment Allocator - Accounts (Default)': 'investment_allocator_accounts_default',
-        'Investment Allocator - Contacts (Default)': 'investment_allocator_contacts_default',
-        'Investment Firm - Contacts (Default)': 'investment_firm_contacts_default',
-        'My Accounts (Default)': 'my_accounts_default',
-        'Portfolio Companies - Contacts (Default)': 'portfolio_companies_contacts_default',
-        'University Alumni - Contacts (Default)': 'university_alumni_contacts_default',
         'Conference Search': 'conference_search',
         'Consultant Reviews': 'consultant_reviews',
         'Continuation Vehicle': 'continuation_vehicle',
