@@ -215,16 +215,6 @@ pipeline {
                         allowMissing: true
                     ])
                     
-                    // Check test results and set build status accordingly
-                    def testStats = getTestStatistics()
-                    if (testStats.total > 0 && testStats.failed == 0 && testStats.passed > 0) {
-                        echo "All tests passed! Setting build status to SUCCESS."
-                        currentBuild.result = 'SUCCESS'
-                    } else if (testStats.failed > 0) {
-                        echo "Some tests failed. Build status will be FAILURE."
-                        currentBuild.result = 'FAILURE'
-                    }
-                    
                     echo "Test results published"
                 }
             }
@@ -236,6 +226,18 @@ pipeline {
             script {
                 // Collect test statistics
                 def testStats = getTestStatistics()
+                
+                // Override build status based on actual test results
+                // This ensures builds are marked SUCCESS when all tests pass, even if junit marks them as UNSTABLE
+                if (testStats.total > 0) {
+                    if (testStats.failed == 0 && testStats.passed > 0) {
+                        echo "All tests passed (${testStats.passed}/${testStats.total}). Setting build status to SUCCESS."
+                        currentBuild.result = 'SUCCESS'
+                    } else if (testStats.failed > 0) {
+                        echo "Tests failed (${testStats.failed}/${testStats.total}). Setting build status to FAILURE."
+                        currentBuild.result = 'FAILURE'
+                    }
+                }
                 
                 // Update build description
                 def testSelectionParts = []
