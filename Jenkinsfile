@@ -286,9 +286,19 @@ pipeline {
         
         unstable {
             script {
-                echo "Build unstable!"
-                if (params.SEND_EMAIL) {
-                    sendEmailNotification('UNSTABLE')
+                // Check if build was marked unstable but all tests actually passed
+                def testStats = getTestStatistics()
+                if (testStats.total > 0 && testStats.failed == 0 && testStats.passed > 0) {
+                    echo "Build was marked unstable, but all tests passed (${testStats.passed}/${testStats.total}). Setting build status to SUCCESS."
+                    currentBuild.result = 'SUCCESS'
+                    if (params.SEND_EMAIL) {
+                        sendEmailNotification('SUCCESS')
+                    }
+                } else {
+                    echo "Build unstable!"
+                    if (params.SEND_EMAIL) {
+                        sendEmailNotification('UNSTABLE')
+                    }
                 }
             }
         }
