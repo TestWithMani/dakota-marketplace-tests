@@ -30,26 +30,26 @@ pipeline {
         choice(
             name: 'ENVIRONMENT',
             choices: ['uat', 'prod'],
-            description: '🌍 Select the test environment to run tests against'
+            description: 'Select the test environment to run tests against'
         )
         extendedChoice(
             name: 'TEST_SUITE',
             type: 'PT_MULTI_SELECT',
             value: 'all,Column Names Validation,Fields Comparison,Fields Display Functionality,Lazy Loading,List View CRUD Operations,Pin/Unpin Functionality',
-            description: '📦 Select one or more test suites to run:\n\n• Column Names Validation - Validates column names across all tabs\n• Fields Comparison - Compares fields between different views\n• Fields Display Functionality - Tests field display features\n• Lazy Loading - Tests lazy loading functionality\n• List View CRUD Operations - Tests Create, Read, Update, Delete operations\n• Pin/Unpin Functionality - Tests pin and unpin features\n\n💡 Hold Ctrl/Cmd to select multiple suites. If markers are also selected, tests will be filtered by both suite and markers.',
+            description: 'Select one or more test suites to run:\n\n- Column Names Validation - Validates column names across all tabs\n- Fields Comparison - Compares fields between different views\n- Fields Display Functionality - Tests field display features\n- Lazy Loading - Tests lazy loading functionality\n- List View CRUD Operations - Tests Create, Read, Update, Delete operations\n- Pin/Unpin Functionality - Tests pin and unpin features\n\nNote: Hold Ctrl/Cmd to select multiple suites. If markers are also selected, tests will be filtered by both suite and markers.',
             multiSelectDelimiter: ','
         )
         extendedChoice(
             name: 'MARKERS',
             type: 'PT_MULTI_SELECT',
             value: 'All Tests,Accounts Tab,Contact Tab,All Documents,13F Filings & Investments Search,Accounts (Default),Contact (Default),Investment Allocator - Accounts (Default),Investment Allocator - Contacts (Default),Investment Firm - Contacts (Default),My Accounts (Default),Portfolio Companies - Contacts (Default),University Alumni - Contacts (Default),Conference Search,Consultant Reviews,Continuation Vehicle,Dakota City Guides,Dakota Searches,Dakota Video Search,Fee Schedules Dashboard,Fund Family Memos,Fund Launches,Investment Allocator - Accounts,Investment Allocator - Contacts,Investment Firm - Accounts,Investment Firm - Contacts,Manager Presentation Dashboard,My Accounts,Pension Documents,Portfolio Companies,Portfolio Companies - Contacts,Private Fund Search,Public Company Search,Public Investments Search,Public Plan Minutes Search,Recent Transactions,University Alumni - Contacts',
-            description: '🏷️ Select one or more test markers (tabs or specific test categories) to run:\n\n• Accounts Tab - Tests for Accounts tab\n• Contact Tab - Tests for Contact tab\n• All Documents - Document-related tests\n• And many more specific test categories...\n\n💡 Hold Ctrl/Cmd to select multiple markers. Selected markers use OR logic. If test suites are also selected, both will be combined.',
+            description: 'Select one or more test markers (tabs or specific test categories) to run:\n\n- Accounts Tab - Tests for Accounts tab\n- Contact Tab - Tests for Contact tab\n- All Documents - Document-related tests\n- And many more specific test categories...\n\nNote: Hold Ctrl/Cmd to select multiple markers. Selected markers use OR logic. If test suites are also selected, both will be combined.',
             multiSelectDelimiter: ','
         )
         booleanParam(
             name: 'SEND_EMAIL',
             defaultValue: true,
-            description: '📧 Send email notification after build completion'
+            description: 'Send email notification after build completion'
         )
     }
     
