@@ -607,8 +607,6 @@ Build Information
 <table width="100%" cellpadding="12" cellspacing="0" style="font-size:14px;background:#f8fafc;border-radius:10px;padding:16px;">
 <tr style="border-bottom:1px solid #e2e8f0;"><td width="35%" style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Build #</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${env.BUILD_NUMBER}</td></tr>
 <tr style="border-bottom:1px solid #e2e8f0;"><td style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Environment</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${ENV.toUpperCase()}</td></tr>
-<tr style="border-bottom:1px solid #e2e8f0;"><td style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Branch</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${env.BRANCH_NAME ?: 'N/A'}</td></tr>
-<tr style="border-bottom:1px solid #e2e8f0;"><td style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Commit</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;"><code style="background:#e2e8f0;padding:4px 8px;border-radius:4px;font-family:monospace;color:#3b82f6;">${env.GIT_COMMIT.take(7) ?: 'N/A'}</code></td></tr>
 <tr style="border-bottom:1px solid #e2e8f0;"><td style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Duration</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${currentBuild.durationString ?: 'N/A'}</td></tr>
 <tr><td style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Triggered By</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${triggeredBy}</td></tr>
 </table>
