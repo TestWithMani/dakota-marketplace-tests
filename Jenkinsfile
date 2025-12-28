@@ -457,7 +457,7 @@ def sendEmailNotification(buildStatus) {
     def statusColor = buildStatus == 'SUCCESS' ? '#28a745' : buildStatus == 'FAILURE' ? '#dc3545' : '#ffc107'
     def statusIcon = buildStatus == 'SUCCESS' ? '[PASS]' : buildStatus == 'FAILURE' ? '[FAIL]' : '[WARN]'
     
-    def subject = "${statusIcon} Dakota Marketplace Tests - ${buildStatus} - Build #${env.BUILD_NUMBER}"
+    def subject = "Dakota Marketplace Tests - ${buildStatus}"
     
     // Calculate pass percentage for progress bar
     def passPercentage = testStats.total > 0 ? (testStats.passed * 100 / testStats.total).intValue() : 0
@@ -561,7 +561,7 @@ ${suitesHtml ? suitesHtml + (markersHtml ? '<br>' : '') : ''}${markersHtml ? mar
     <table width="100%">
         <tr>
             <td>
-                <span style="font-size:20px;font-weight:700;color:${statusDarkTextColor};">${statusIcon} ${statusText}</span>
+                <span style="font-size:20px;font-weight:700;color:${statusDarkTextColor};">${statusText}</span>
             </td>
             <td align="right" style="font-size:14px;color:${statusDarkTextColor};">
                 Pass Rate: <strong>${passPercentage}%</strong>
