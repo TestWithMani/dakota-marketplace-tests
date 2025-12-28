@@ -1,78 +1,79 @@
 # Pytest Markers Usage Guide
 
+**Status: This file is up to date with current test and CI marker usage.**
+
 This guide explains how to use pytest markers to run specific tests in the Dakota Marketplace test suite.
 
 ## Overview
 
-Each test file has been tagged with two types of markers:
-1. **Tab Marker**: Identifies which tab the test belongs to (e.g., `@pytest.mark.accounts`)
-2. **Suite Marker**: Identifies which test suite it belongs to (e.g., `@pytest.mark.column_names`)
+Each test file uses two kinds of markers:
+1. **Tab Marker**: Shows which tab a test targets (e.g., `@pytest.mark.accounts`)
+2. **Suite Marker**: Shows which kind of suite/test the test is (e.g., `@pytest.mark.column_names`)
 
 ## Running Tests with Markers
 
 ### Local Execution
 
-#### Run all tests for a specific tab (all 6 test cases)
+**Run all tests for a specific tab:**
 ```bash
-# Run all tests for Accounts tab
+# Accounts tab
 pytest -m accounts
 
-# Run all tests for Contact tab
+# Contact tab
 pytest -m contact
 
-# Run all tests for multiple tabs (OR logic)
+# Multiple tabs (OR logic)
 pytest -m "accounts or contact"
 ```
 
-#### Run specific suite for a specific tab
+**Run a specific suite for a given tab:**
 ```bash
-# Run only column_names tests for Accounts tab
+# Only column_names tests for Accounts
 pytest -m "accounts and column_names"
 
-# Run only lazy_loading tests for Contact tab
+# Only lazy_loading for Contact tab
 pytest -m "contact and lazy_loading"
 ```
 
-#### Run all tests in a specific suite
+**Run all tests of a specific suite:**
 ```bash
-# Run all column_names tests
 pytest -m column_names
-
-# Run all lazy_loading tests
 pytest -m lazy_loading
 ```
 
-#### Run multiple tabs with AND/OR logic
+**Use AND/OR logic for multiple tabs/suites:**
 ```bash
-# Run all tests for Accounts OR Contact tabs
+# All tests for Accounts OR Contact
 pytest -m "accounts or contact"
 
-# Run column_names tests for Accounts AND Contact tabs
+# Only column_names tests across Accounts AND Contact
 pytest -m "column_names and (accounts or contact)"
 ```
 
 ### Jenkins Execution
 
-1. **Go to Jenkins Job** → **Build with Parameters**
+1. Go to **Jenkins Job** → **Build with Parameters**
 
-2. **Option 1: Use Markers (Recommended for tab-based selection)**
-   - Leave **TEST_SUITE** as default (it will be ignored)
-   - In **MARKERS** field, enter:
-     - Single tab: `accounts`
-     - Multiple tabs: `accounts,contact` (comma-separated, uses OR logic)
-     - Tab + Suite: `accounts and column_names`
-     - Complex: `(accounts or contact) and column_names`
+2. **Option 1: Use Markers (recommended for tab selection)**
+    - Leave **TEST_SUITE** at default (it’s ignored)
+    - In **MARKERS**:
+        - Enter a single tab: `accounts`
+        - Or multiple tabs (OR logic): `accounts,contact`
+        - Tab + suite: `accounts and column_names`
+        - Complex: `(accounts or contact) and column_names`
 
-3. **Option 2: Use Test Suite (Traditional method)**
-   - Leave **MARKERS** empty
-   - Select **TEST_SUITE** from dropdown
+3. **Option 2: Use Test Suite (legacy method)**
+    - Leave **MARKERS** empty
+    - Select a **TEST_SUITE** from the dropdown
+
+---
 
 ## Available Tab Markers
 
 - `accounts`
 - `contact`
 - `all_documents`
-- `filings_13f_investments_search` (Note: marker name cannot start with a number)
+- `filings_13f_investments_search` *(marker names cannot start with digits)*
 - `conference_search`
 - `consultant_reviews`
 - `continuation_vehicle`
@@ -107,43 +108,48 @@ pytest -m "column_names and (accounts or contact)"
 - `list_view_crud`
 - `pin_unpin`
 
+---
+
 ## Examples
 
-### Example 1: Run all tests for Accounts tab
+**1. All Accounts tab tests:**
 ```bash
 pytest -m accounts
 ```
-**Jenkins**: Set MARKERS = `accounts`
+Jenkins: `MARKERS = accounts`
 
-### Example 2: Run all tests for Accounts and Contact tabs
+**2. All Accounts OR Contact tab tests:**
 ```bash
 pytest -m "accounts or contact"
 ```
-**Jenkins**: Set MARKERS = `accounts,contact`
+Jenkins: `MARKERS = accounts,contact`
 
-### Example 3: Run only column_names tests for Accounts tab
+**3. Only column_names for Accounts:**
 ```bash
 pytest -m "accounts and column_names"
 ```
-**Jenkins**: Set MARKERS = `accounts and column_names`
+Jenkins: `MARKERS = accounts and column_names`
 
-### Example 4: Run lazy_loading tests for Accounts OR Contact tabs
+**4. Only lazy_loading for Accounts OR Contact:**
 ```bash
-pytest -m "lazy_loading and (accounts or contact)"
+pytest -m "lazy_loading and (accounts or contact)"`
 ```
-**Jenkins**: Set MARKERS = `lazy_loading and (accounts or contact)`
+Jenkins: `MARKERS = lazy_loading and (accounts or contact)`
 
-### Example 5: Run all column_names tests (traditional suite method)
+**5. All column_names (using suite):**
 ```bash
 pytest -m column_names
 ```
-**Jenkins**: Set TEST_SUITE = `column_names` (leave MARKERS empty)
+Jenkins: `TEST_SUITE = column_names` (leave MARKERS empty)
+
+---
 
 ## Notes
 
-- When MARKERS is specified in Jenkins, TEST_SUITE selection is ignored
-- Comma-separated markers in Jenkins are treated as OR logic
-- Use "and" for AND logic, "or" for OR logic
-- Parentheses can be used for complex expressions
-- All markers are case-sensitive and use lowercase with underscores
+- If **MARKERS** is set in Jenkins, **TEST_SUITE** is ignored.
+- Comma-separated values in MARKERS = OR logic.
+- Use "and"/"or" for advanced logic; parentheses are supported.
+- All marker names are **case-sensitive** and must use lowercase/underscores.
+
+*This file is kept current. If you notice inconsistencies, confirm with latest marker usage in Jenkins parameters or test decorators.*
 
