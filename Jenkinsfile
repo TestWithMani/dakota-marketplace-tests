@@ -301,13 +301,13 @@ pipeline {
                         sendEmailNotification('SUCCESS')
                     }
                 } else {
-                    echo "Build unstable!"
-                    if (params.SEND_EMAIL) {
-                        sendEmailNotification('UNSTABLE')
-                    }
+                echo "Build unstable!"
+                if (params.SEND_EMAIL) {
+                    sendEmailNotification('UNSTABLE')
                 }
             }
         }
+    }
     }
 }
 
@@ -537,7 +537,9 @@ def sendEmailNotification(buildStatus) {
     def statusColor = buildStatus == 'SUCCESS' ? '#28a745' : buildStatus == 'FAILURE' ? '#dc3545' : '#ffc107'
     def statusIcon = buildStatus == 'SUCCESS' ? '[PASS]' : buildStatus == 'FAILURE' ? '[FAIL]' : '[WARN]'
     
-    def subject = "Dakota Marketplace Tests - ${buildStatus}"
+    // Format current date
+    def currentDate = new Date().format("yyyy-MM-dd")
+    def subject = "Dakota Automation Result - ${buildStatus} - ${currentDate}"
     
     // Calculate pass percentage for progress bar
     def passPercentage = testStats.total > 0 ? (testStats.passed * 100 / testStats.total).intValue() : 0
@@ -655,7 +657,7 @@ ${suitesHtml ? suitesHtml + (markersHtml ? '<br>' : '') : ''}${markersHtml ? mar
         </tr>
     </table>
 </td>
-</tr>
+                    </tr>
 
 <!-- ================= METRICS ================= -->
 <tr>
@@ -681,7 +683,7 @@ ${suitesHtml ? suitesHtml + (markersHtml ? '<br>' : '') : ''}${markersHtml ? mar
 </tr>
 </table>
 </td>
-</tr>
+                    </tr>
 
 <!-- ================= BUILD DETAILS ================= -->
 <tr>
@@ -697,7 +699,7 @@ Build Information
 <tr><td style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Triggered By</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${triggeredBy}</td></tr>
 </table>
 </td>
-</tr>
+                    </tr>
 
 ${testSelectionHtml}
 
@@ -709,14 +711,14 @@ Automated by <strong style="color:#ffffff;font-weight:700;">Jenkins CI/CD</stron
 <span style="color:#94a3b8;">Dakota Marketplace Test Framework</span>
 </p>
 </td>
-</tr>
+                    </tr>
 
 </table>
 <!-- ================= END CARD ================= -->
 
 </td>
-</tr>
-</table>
+                    </tr>
+                </table>
 
 </body>
 </html>
