@@ -215,6 +215,16 @@ pipeline {
                         allowMissing: true
                     ])
                     
+                    // Check test results and set build status accordingly
+                    def testStats = getTestStatistics()
+                    if (testStats.total > 0 && testStats.failed == 0 && testStats.passed > 0) {
+                        echo "All tests passed! Setting build status to SUCCESS."
+                        currentBuild.result = 'SUCCESS'
+                    } else if (testStats.failed > 0) {
+                        echo "Some tests failed. Build status will be FAILURE."
+                        currentBuild.result = 'FAILURE'
+                    }
+                    
                     echo "Test results published"
                 }
             }
