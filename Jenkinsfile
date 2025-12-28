@@ -480,12 +480,12 @@ def sendEmailNotification(buildStatus) {
     }
     def testSelectionDisplay = testSelectionParts.size() > 0 ? testSelectionParts.join('<br>') : 'All Tests'
     
-    // Status configuration for template
+    // Status configuration for template - Professional color scheme
     def statusText = buildStatus == 'SUCCESS' ? 'SUCCESS' : buildStatus == 'FAILURE' ? 'FAILURE' : 'UNSTABLE'
-    def statusBarBg = buildStatus == 'SUCCESS' ? '#d1fae5' : buildStatus == 'FAILURE' ? '#fee2e2' : '#fef3c7'
-    def statusBarBorder = buildStatus == 'SUCCESS' ? '#86efac' : buildStatus == 'FAILURE' ? '#fca5a5' : '#fde68a'
-    def statusTextColor = buildStatus == 'SUCCESS' ? '#14532d' : buildStatus == 'FAILURE' ? '#991b1b' : '#92400e'
-    def statusDarkTextColor = buildStatus == 'SUCCESS' ? '#065f46' : buildStatus == 'FAILURE' ? '#7f1d1d' : '#78350f'
+    def statusBarBg = buildStatus == 'SUCCESS' ? '#ecfdf5' : buildStatus == 'FAILURE' ? '#fef2f2' : '#fffbeb'
+    def statusBarBorder = buildStatus == 'SUCCESS' ? '#10b981' : buildStatus == 'FAILURE' ? '#ef4444' : '#f59e0b'
+    def statusTextColor = buildStatus == 'SUCCESS' ? '#047857' : buildStatus == 'FAILURE' ? '#b91c1c' : '#b45309'
+    def statusDarkTextColor = buildStatus == 'SUCCESS' ? '#065f46' : buildStatus == 'FAILURE' ? '#991b1b' : '#92400e'
     
     // Build test selection display
     def testSelectionHtml = ''
@@ -508,14 +508,14 @@ def sendEmailNotification(buildStatus) {
             testSelectionHtml = """
 <!-- ================= TEST SELECTION ================= -->
 <tr>
-<td style="padding:0 32px 28px;">
-<h3 style="margin:0 0 12px;font-size:18px;color:#0f172a;border-left:4px solid #16a34a;padding-left:10px;">
+<td style="padding:0 32px 28px;background:#ffffff;">
+<h3 style="margin:0 0 16px;font-size:20px;color:#1e293b;border-left:5px solid #10b981;padding-left:14px;font-weight:700;">
 Test Scope
 </h3>
 
-<table width="100%" cellpadding="10" cellspacing="0" style="background:#f8fafc;border-radius:8px;font-size:14px;">
+<table width="100%" cellpadding="14" cellspacing="0" style="background:linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%);border-radius:10px;border:2px solid #10b981;font-size:14px;">
 <tr>
-<td>
+<td style="color:#065f46;line-height:1.8;">
 ${suitesHtml ? suitesHtml + (markersHtml ? '<br>' : '') : ''}${markersHtml ? markersHtml : ''}
 </td>
 </tr>
@@ -534,22 +534,22 @@ ${suitesHtml ? suitesHtml + (markersHtml ? '<br>' : '') : ''}${markersHtml ? mar
 <title>Dakota Marketplace | Automation Report</title>
 </head>
 
-<body style="margin:0;padding:0;background:#0f172a;font-family:Segoe UI, Roboto, Arial, sans-serif;">
+<body style="margin:0;padding:0;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);font-family:Segoe UI, Roboto, Arial, sans-serif;">
 
 <table width="100%" cellpadding="0" cellspacing="0">
 <tr>
 <td align="center" style="padding:40px 0;">
 
 <!-- ================= MAIN CARD ================= -->
-<table width="720" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 20px 45px rgba(0,0,0,0.35);">
+<table width="720" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 25px 50px rgba(0,0,0,0.25);">
 
 <!-- ================= HEADER ================= -->
 <tr>
-<td style="background:linear-gradient(135deg,#0f172a,#1e293b);padding:28px 32px;color:#ffffff;">
-    <h1 style="margin:0;font-size:26px;font-weight:600;letter-spacing:0.3px;">
+<td style="background:linear-gradient(135deg,#1e40af 0%,#3b82f6 50%,#60a5fa 100%);padding:32px 32px;color:#ffffff;">
+    <h1 style="margin:0;font-size:28px;font-weight:700;letter-spacing:0.3px;text-shadow:0 2px 4px rgba(0,0,0,0.2);">
         Dakota Marketplace
     </h1>
-    <p style="margin:6px 0 0;font-size:14px;opacity:0.85;">
+    <p style="margin:8px 0 0;font-size:15px;opacity:0.95;font-weight:400;">
         Automated Test Execution Report
     </p>
 </td>
@@ -573,24 +573,24 @@ ${suitesHtml ? suitesHtml + (markersHtml ? '<br>' : '') : ''}${markersHtml ? mar
 
 <!-- ================= METRICS ================= -->
 <tr>
-<td style="padding:28px 32px;">
-<table width="100%" cellpadding="12" cellspacing="0">
+<td style="padding:28px 32px;background:#f8fafc;">
+<table width="100%" cellpadding="14" cellspacing="12">
 <tr align="center">
-<td style="background:#0f172a;color:#ffffff;border-radius:10px;">
-    <div style="font-size:13px;opacity:0.8;">TOTAL</div>
-    <div style="font-size:26px;font-weight:700;">${testStats.total}</div>
+<td style="background:linear-gradient(135deg,#3b82f6 0%,#2563eb 100%);color:#ffffff;border-radius:12px;box-shadow:0 4px 12px rgba(59,130,246,0.3);">
+    <div style="font-size:12px;opacity:0.9;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:6px;">TOTAL</div>
+    <div style="font-size:32px;font-weight:800;line-height:1;">${testStats.total}</div>
 </td>
-<td style="background:#dcfce7;color:#14532d;border-radius:10px;">
-    <div style="font-size:13px;">PASSED</div>
-    <div style="font-size:26px;font-weight:700;">${testStats.passed}</div>
+<td style="background:linear-gradient(135deg,#10b981 0%,#059669 100%);color:#ffffff;border-radius:12px;box-shadow:0 4px 12px rgba(16,185,129,0.3);">
+    <div style="font-size:12px;opacity:0.9;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:6px;">PASSED</div>
+    <div style="font-size:32px;font-weight:800;line-height:1;">${testStats.passed}</div>
 </td>
-<td style="background:#fee2e2;color:#7f1d1d;border-radius:10px;">
-    <div style="font-size:13px;">FAILED</div>
-    <div style="font-size:26px;font-weight:700;">${testStats.failed}</div>
+<td style="background:linear-gradient(135deg,#ef4444 0%,#dc2626 100%);color:#ffffff;border-radius:12px;box-shadow:0 4px 12px rgba(239,68,68,0.3);">
+    <div style="font-size:12px;opacity:0.9;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:6px;">FAILED</div>
+    <div style="font-size:32px;font-weight:800;line-height:1;">${testStats.failed}</div>
 </td>
-<td style="background:#f1f5f9;color:#334155;border-radius:10px;">
-    <div style="font-size:13px;">SKIPPED</div>
-    <div style="font-size:26px;font-weight:700;">${testStats.skipped}</div>
+<td style="background:linear-gradient(135deg,#8b5cf6 0%,#7c3aed 100%);color:#ffffff;border-radius:12px;box-shadow:0 4px 12px rgba(139,92,246,0.3);">
+    <div style="font-size:12px;opacity:0.9;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:6px;">SKIPPED</div>
+    <div style="font-size:32px;font-weight:800;line-height:1;">${testStats.skipped}</div>
 </td>
 </tr>
 </table>
@@ -599,18 +599,18 @@ ${suitesHtml ? suitesHtml + (markersHtml ? '<br>' : '') : ''}${markersHtml ? mar
 
 <!-- ================= BUILD DETAILS ================= -->
 <tr>
-<td style="padding:0 32px 28px;">
-<h3 style="margin:0 0 12px;font-size:18px;color:#0f172a;border-left:4px solid #2563eb;padding-left:10px;">
+<td style="padding:0 32px 28px;background:#ffffff;">
+<h3 style="margin:0 0 16px;font-size:20px;color:#1e293b;border-left:5px solid #3b82f6;padding-left:14px;font-weight:700;">
 Build Information
 </h3>
 
-<table width="100%" cellpadding="8" cellspacing="0" style="font-size:14px;color:#334155;">
-<tr><td width="35%"><strong>Build #</strong></td><td>${env.BUILD_NUMBER}</td></tr>
-<tr><td><strong>Environment</strong></td><td>${ENV.toUpperCase()}</td></tr>
-<tr><td><strong>Branch</strong></td><td>${env.BRANCH_NAME ?: 'N/A'}</td></tr>
-<tr><td><strong>Commit</strong></td><td>${env.GIT_COMMIT.take(7) ?: 'N/A'}</td></tr>
-<tr><td><strong>Duration</strong></td><td>${currentBuild.durationString ?: 'N/A'}</td></tr>
-<tr><td><strong>Triggered By</strong></td><td>${triggeredBy}</td></tr>
+<table width="100%" cellpadding="12" cellspacing="0" style="font-size:14px;background:#f8fafc;border-radius:10px;padding:16px;">
+<tr style="border-bottom:1px solid #e2e8f0;"><td width="35%" style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Build #</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${env.BUILD_NUMBER}</td></tr>
+<tr style="border-bottom:1px solid #e2e8f0;"><td style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Environment</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${ENV.toUpperCase()}</td></tr>
+<tr style="border-bottom:1px solid #e2e8f0;"><td style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Branch</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${env.BRANCH_NAME ?: 'N/A'}</td></tr>
+<tr style="border-bottom:1px solid #e2e8f0;"><td style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Commit</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;"><code style="background:#e2e8f0;padding:4px 8px;border-radius:4px;font-family:monospace;color:#3b82f6;">${env.GIT_COMMIT.take(7) ?: 'N/A'}</code></td></tr>
+<tr style="border-bottom:1px solid #e2e8f0;"><td style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Duration</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${currentBuild.durationString ?: 'N/A'}</td></tr>
+<tr><td style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Triggered By</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${triggeredBy}</td></tr>
 </table>
 </td>
 </tr>
@@ -619,21 +619,21 @@ ${testSelectionHtml}
 
 <!-- ================= ACTION BUTTONS ================= -->
 <tr>
-<td style="padding:0 32px 32px;">
-<table width="100%" cellpadding="12" cellspacing="0">
+<td style="padding:0 32px 32px;background:#ffffff;">
+<table width="100%" cellpadding="14" cellspacing="12">
 <tr>
-<td align="center" style="background:#2563eb;border-radius:8px;">
-<a href="${env.BUILD_URL}" style="color:#ffffff;text-decoration:none;font-weight:600;">
+<td align="center" style="background:linear-gradient(135deg,#3b82f6 0%,#2563eb 100%);border-radius:10px;box-shadow:0 4px 12px rgba(59,130,246,0.4);">
+<a href="${env.BUILD_URL}" style="color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;display:block;padding:12px;">
 View Jenkins Build
 </a>
 </td>
-<td align="center" style="background:#0f172a;border-radius:8px;">
-<a href="${env.BUILD_URL}HTML_Report/" style="color:#ffffff;text-decoration:none;font-weight:600;">
+<td align="center" style="background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);border-radius:10px;box-shadow:0 4px 12px rgba(15,23,42,0.4);">
+<a href="${env.BUILD_URL}HTML_Report/" style="color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;display:block;padding:12px;">
 HTML Report
 </a>
 </td>
-<td align="center" style="background:#16a34a;border-radius:8px;">
-<a href="${env.BUILD_URL}allure/" style="color:#ffffff;text-decoration:none;font-weight:600;">
+<td align="center" style="background:linear-gradient(135deg,#10b981 0%,#059669 100%);border-radius:10px;box-shadow:0 4px 12px rgba(16,185,129,0.4);">
+<a href="${env.BUILD_URL}allure/" style="color:#ffffff;text-decoration:none;font-weight:700;font-size:14px;display:block;padding:12px;">
 Allure Report
 </a>
 </td>
@@ -644,10 +644,10 @@ Allure Report
 
 <!-- ================= FOOTER ================= -->
 <tr>
-<td style="background:#020617;color:#94a3b8;padding:18px 32px;font-size:12px;">
-<p style="margin:0;">
-Automated by <strong>Jenkins CI/CD</strong><br>
-Dakota Marketplace Test Framework
+<td style="background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);color:#cbd5e1;padding:24px 32px;font-size:13px;border-top:1px solid rgba(255,255,255,0.1);">
+<p style="margin:0;line-height:1.8;">
+Automated by <strong style="color:#ffffff;font-weight:700;">Jenkins CI/CD</strong><br>
+<span style="color:#94a3b8;">Dakota Marketplace Test Framework</span>
 </p>
 </td>
 </tr>
