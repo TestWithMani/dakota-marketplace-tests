@@ -539,7 +539,7 @@ def sendEmailNotification(buildStatus) {
     
     // Format current date
     def currentDate = new Date().format("yyyy-MM-dd")
-    def subject = "Dakota Automation Result - ${buildStatus} - ${currentDate}"
+    def subject = "[${buildStatus}] Dakota Automation Report - ${currentDate}"
     
     // Calculate pass percentage for progress bar
     def passPercentage = testStats.total > 0 ? (testStats.passed * 100 / testStats.total).intValue() : 0
