@@ -140,10 +140,14 @@ pipeline {
                     echo "Test command: ${testCommand}"
                     
                     // Run tests (output will be visible in console, and we'll parse from HTML report)
-                    bat """
+                    // Capture exit code but don't fail the stage - we want to generate reports even if tests fail
+                    def exitCode = bat(returnStatus: true, script: """
                         set ENV=${ENV}
                         ${testCommand}
-                    """
+                    """)
+                    
+                    // Store exit code for later use in post actions
+                    env.TEST_EXIT_CODE = "${exitCode}"
                     
                     // Try to parse test statistics from HTML report after tests complete
                     // The HTML report is more reliable than console output parsing
@@ -161,6 +165,9 @@ pipeline {
         }
         
         stage('Generate Allure Report') {
+            when {
+                always()
+            }
             steps {
                 script {
                     echo "Generating Allure report..."
@@ -198,6 +205,9 @@ pipeline {
         }
         
         stage('Publish Test Results') {
+            when {
+                always()
+            }
             steps {
                 script {
                     echo "Publishing test results..."
