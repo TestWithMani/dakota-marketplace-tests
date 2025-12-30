@@ -51,6 +51,11 @@ pipeline {
             defaultValue: true,
             description: 'Send email notification after build completion'
         )
+        text(
+            name: 'ADDITIONAL_EMAILS',
+            defaultValue: '',
+            description: 'Additional email addresses to receive notifications (comma-separated).\n\nExample: user1@example.com, user2@example.com\n\nNote: By default, emails are sent to usman.arshad@rolustech.com. Add additional recipients here if needed. Leave empty to send only to the default recipient.'
+        )
     }
     
     stages {
@@ -742,11 +747,30 @@ Automated by <strong style="color:#ffffff;font-weight:700;">Jenkins CI/CD</stron
 </html>
     """
     
+    // Build recipient list: default email + additional emails
+    def recipients = [EMAIL_RECIPIENT]
+    
+    // Parse additional emails if provided
+    if (params.ADDITIONAL_EMAILS && params.ADDITIONAL_EMAILS.trim()) {
+        params.ADDITIONAL_EMAILS.split(',').each { email ->
+            def trimmedEmail = email.trim()
+            if (trimmedEmail && trimmedEmail.length() > 0) {
+                // Avoid duplicates
+                if (!recipients.contains(trimmedEmail)) {
+                    recipients.add(trimmedEmail)
+                }
+            }
+        }
+    }
+    
+    def recipientList = recipients.join(', ')
+    echo "Sending email to: ${recipientList}"
+    
     emailext(
         subject: subject,
         body: body,
         mimeType: 'text/html',
-        to: "${EMAIL_RECIPIENT}",
+        to: recipientList,
         attachLog: true,
         compressLog: true
     )
