@@ -24,12 +24,12 @@ def click_all_move_buttons(driver, move_btn_xpaths):
             pass
 @pytest.mark.consultant_reviews
 @pytest.mark.fields_display
-    @pytest.mark.fa_portal
-    @pytest.mark.ria_portal
-    @pytest.mark.fo_portal
-    @pytest.mark.benchmark_portal
-    @pytest.mark.recommends_portal
-    @pytest.mark.fa_ria_portal
+@pytest.mark.fa_portal
+@pytest.mark.ria_portal
+@pytest.mark.fo_portal
+@pytest.mark.benchmark_portal
+@pytest.mark.recommends_portal
+@pytest.mark.fa_ria_portal
 
 def test_consultant_reviews_fields_display_functionality(driver, base_url, credentials):
     """

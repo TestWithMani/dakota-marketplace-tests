@@ -68,12 +68,12 @@ def generate_fields_comparison_csv(
     return output.getvalue()
 @pytest.mark.investment_allocator_accounts
 @pytest.mark.fields_comparison
-    @pytest.mark.fa_portal
-    @pytest.mark.ria_portal
-    @pytest.mark.fo_portal
-    @pytest.mark.benchmark_portal
-    @pytest.mark.recommends_portal
-    @pytest.mark.fa_ria_portal
+@pytest.mark.fa_portal
+@pytest.mark.ria_portal
+@pytest.mark.fo_portal
+@pytest.mark.benchmark_portal
+@pytest.mark.recommends_portal
+@pytest.mark.fa_ria_portal
 
 
 def test_investment_allocator_accounts_tab_fields_comparison(driver, base_url, credentials):
