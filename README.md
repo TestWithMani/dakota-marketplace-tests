@@ -78,7 +78,16 @@ pytest
 
 ### Run with specific environment
 ```powershell
+# Run with original UAT
 $env:ENV="uat"
+.\venv\Scripts\python.exe -m pytest
+
+# Run with UAT FA Portal
+$env:ENV="uat_fa_portal"
+.\venv\Scripts\python.exe -m pytest
+
+# Run with PROD RIA Portal
+$env:ENV="prod_ria_portal"
 .\venv\Scripts\python.exe -m pytest
 ```
 
@@ -89,7 +98,7 @@ $env:ENV="uat"
 
 ## ⚙️ Configuration
 
-Edit `config/config.json` to configure different environments (UAT, PROD, etc.).
+Edit `config/config.json` to configure different environments (UAT, PROD) and portals (FA Portal, RIA Portal, FO Portal, Benchmark Portal, Recommends Portal, FA and RIA Portal).
 
 ## 📦 Dependencies
 

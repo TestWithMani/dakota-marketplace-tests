@@ -8,6 +8,12 @@ from selenium.webdriver.support import expected_conditions as EC
 import pytest
 @pytest.mark.contact
 @pytest.mark.column_names
+    @pytest.mark.fa_portal
+    @pytest.mark.ria_portal
+    @pytest.mark.fo_portal
+    @pytest.mark.benchmark_portal
+    @pytest.mark.recommends_portal
+    @pytest.mark.fa_ria_portal
 
 def test_verify_contact_tab_column_names(driver, base_url, credentials):
     """

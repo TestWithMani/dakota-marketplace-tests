@@ -15,18 +15,42 @@ with open(CONFIG_PATH) as f:
 
 @pytest.fixture(scope="session")
 def base_url():
-    env = os.environ.get("ENV", "uat")  # default environment
+    # Support both old format (uat/prod) and new format (uat_fa_portal, prod_ria_portal, etc.)
+    env = os.environ.get("ENV", "uat")  # default to original uat
+    # If old format is used (uat/prod), use as-is (no portal suffix)
+    # If new format is used (uat_fa_portal, etc.), use as-is
+    if env not in ["uat", "prod"] and not env.startswith(("uat_", "prod_")):
+        # Fallback: if invalid format, use uat
+        env = "uat"
+    
+    if env not in config:
+        raise ValueError(f"Configuration not found for environment: {env}. Available: {list(config.keys())}")
     return config[env]["url"]
 
 @pytest.fixture(scope="session")
 def credentials():
-    env = os.environ.get("ENV", "uat")
+    # Support both old format (uat/prod) and new format (uat_fa_portal, prod_ria_portal, etc.)
+    env = os.environ.get("ENV", "uat")  # default to original uat
+    # If old format is used (uat/prod), use as-is (no portal suffix)
+    # If new format is used (uat_fa_portal, etc.), use as-is
+    if env not in ["uat", "prod"] and not env.startswith(("uat_", "prod_")):
+        # Fallback: if invalid format, use uat
+        env = "uat"
+    
+    if env not in config:
+        raise ValueError(f"Configuration not found for environment: {env}. Available: {list(config.keys())}")
     return config[env]["username"], config[env]["password"]
 
 @pytest.fixture(scope="session")
 def environment():
     """Get the current environment name"""
-    return os.environ.get("ENV", "uat")
+    env = os.environ.get("ENV", "uat")  # default to original uat
+    # If old format is used (uat/prod), use as-is (no portal suffix)
+    # If new format is used (uat_fa_portal, etc.), use as-is
+    if env not in ["uat", "prod"] and not env.startswith(("uat_", "prod_")):
+        # Fallback: if invalid format, use uat
+        env = "uat"
+    return env
 
 @pytest.fixture(scope="function")
 def driver():

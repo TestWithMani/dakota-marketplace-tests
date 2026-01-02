@@ -14,8 +14,7 @@ pipeline {
         PYTHON_EXE = "${VENV_PATH}\\Scripts\\python.exe"
         PIP_EXE = "${VENV_PATH}\\Scripts\\pip.exe"
         
-        // Test environment (default: uat)
-        ENV = "${params.ENVIRONMENT ?: 'uat'}"
+        // Test environment and portal will be set in script block
         
         // Report paths
         HTML_REPORT = "${WORKSPACE}\\reports\\report.html"
@@ -32,6 +31,11 @@ pipeline {
             choices: ['uat', 'prod'],
             description: 'Select the test environment to run tests against'
         )
+        choice(
+            name: 'PORTAL',
+            choices: ['Default', 'FA Portal', 'RIA Portal', 'FO Portal', 'Benchmark Portal', 'Recommends Portal', 'FA and RIA Portal'],
+            description: 'Select the portal to run tests against. "Default" uses the original uat/prod configuration (normal uat/prod that was already present).'
+        )
         extendedChoice(
             name: 'TEST_SUITE',
             type: 'PT_CHECKBOX',
@@ -42,8 +46,8 @@ pipeline {
         extendedChoice(
             name: 'MARKERS',
             type: 'PT_CHECKBOX',
-            value: 'All Tests,Accounts Tab,Contact Tab,All Documents,13F Filings & Investments Search,Conference Search,Consultant Reviews,Continuation Vehicle,Dakota City Guides,Dakota Searches,Dakota Video Search,Fee Schedules Dashboard,Fund Family Memos,Fund Launches,Investment Allocator - Accounts,Investment Allocator - Contacts,Investment Firm - Accounts,Investment Firm - Contacts,Manager Presentation Dashboard,My Accounts,Pension Documents,Portfolio Companies,Portfolio Companies - Contacts,Private Fund Search,Public Company Search,Public Investments Search,Public Plan Minutes Search,Recent Transactions,University Alumni - Contacts',
-            description: 'Select one or more test markers (tabs or specific test categories) to run:\n\n- Accounts Tab - Tests for Accounts tab\n- Contact Tab - Tests for Contact tab\n- All Documents - Document-related tests\n- And many more specific test categories...\n\nNote: Check the boxes for the markers you want to run. Selected markers use OR logic. If test suites are also selected, both will be combined.',
+            value: 'All Tests,Accounts Tab,Contact Tab,All Documents,13F Filings & Investments Search,Conference Search,Consultant Reviews,Continuation Vehicle,Dakota City Guides,Dakota Searches,Dakota Video Search,Fee Schedules Dashboard,Fund Family Memos,Fund Launches,Investment Allocator - Accounts,Investment Allocator - Contacts,Investment Firm - Accounts,Investment Firm - Contacts,Manager Presentation Dashboard,My Accounts,Pension Documents,Portfolio Companies,Portfolio Companies - Contacts,Private Fund Search,Public Company Search,Public Investments Search,Public Plan Minutes Search,Recent Transactions,University Alumni - Contacts,FA Portal,RIA Portal,FO Portal,Benchmark Portal,Recommends Portal,FA and RIA Portal',
+            description: 'Select one or more test markers (tabs or specific test categories) to run:\n\n- Accounts Tab - Tests for Accounts tab\n- Contact Tab - Tests for Contact tab\n- All Documents - Document-related tests\n- Portal Markers: FA Portal, RIA Portal, FO Portal, Benchmark Portal, Recommends Portal, FA and RIA Portal\n- And many more specific test categories...\n\nNote: Check the boxes for the markers you want to run. Selected markers use OR logic. If test suites are also selected, both will be combined.',
             multiSelectDelimiter: ','
         )
         booleanParam(
@@ -59,6 +63,36 @@ pipeline {
     }
     
     stages {
+        stage('Setup Environment') {
+            steps {
+                script {
+                    // Map portal name to config key
+                    def portalMap = [
+                        'Default': '',
+                        'FA Portal': 'fa_portal',
+                        'RIA Portal': 'ria_portal',
+                        'FO Portal': 'fo_portal',
+                        'Benchmark Portal': 'benchmark_portal',
+                        'Recommends Portal': 'recommends_portal',
+                        'FA and RIA Portal': 'fa_ria_portal'
+                    ]
+                    
+                    def envName = params.ENVIRONMENT ?: 'uat'
+                    def portalName = params.PORTAL ?: 'Default'
+                    def portalKey = portalMap[portalName] ?: ''
+                    
+                    // If Default is selected, use just the environment name (uat/prod)
+                    // Otherwise, combine environment and portal (uat_fa_portal, etc.)
+                    if (portalKey == '') {
+                        env.ENV = envName
+                    } else {
+                        env.ENV = "${envName}_${portalKey}"
+                    }
+                    echo "Environment configured: ${env.ENV}"
+                }
+            }
+        }
+        
         stage('Checkout') {
             steps {
                 script {
@@ -276,8 +310,17 @@ pipeline {
                     durationDisplay = durationDisplay.replace(' and counting', '')
                 }
                 
+                // Format environment and portal display
+                def envDisplay = params.ENVIRONMENT ?: 'uat'
+                def portalDisplay = params.PORTAL ?: 'Default'
+                if (portalDisplay == 'Default') {
+                    envDisplay = "${envDisplay.toUpperCase()}"
+                } else {
+                    envDisplay = "${envDisplay.toUpperCase()} - ${portalDisplay}"
+                }
+                
                 currentBuild.description = """
-                    Environment: ${ENV} | 
+                    Environment: ${envDisplay} | 
                     ${testSelection} | 
                     Tests: ${testStats.total} | 
                     Passed: ${testStats.passed} | 
@@ -372,7 +415,13 @@ def mapMarkerDisplayToInternal(displayName) {
         'Public Investments Search': 'public_investments_search',
         'Public Plan Minutes Search': 'public_plan_minutes_search',
         'Recent Transactions': 'recent_transactions',
-        'University Alumni - Contacts': 'university_alumni_contacts'
+        'University Alumni - Contacts': 'university_alumni_contacts',
+        'FA Portal': 'fa_portal',
+        'RIA Portal': 'ria_portal',
+        'FO Portal': 'fo_portal',
+        'Benchmark Portal': 'benchmark_portal',
+        'Recommends Portal': 'recommends_portal',
+        'FA and RIA Portal': 'fa_ria_portal'
     ]
     // Return mapped name or original if not found (for backward compatibility)
     return markerMapping.get(displayName, displayName)
@@ -717,7 +766,8 @@ Build Information
 
 <table width="100%" cellpadding="12" cellspacing="0" style="font-size:14px;background:#f8fafc;border-radius:10px;padding:16px;">
 <tr style="border-bottom:1px solid #e2e8f0;"><td width="35%" style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Build #</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${env.BUILD_NUMBER}</td></tr>
-<tr style="border-bottom:1px solid #e2e8f0;"><td style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Environment</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${ENV.toUpperCase()}</td></tr>
+<tr style="border-bottom:1px solid #e2e8f0;"><td style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Environment</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${(params.ENVIRONMENT ?: 'uat').toUpperCase()}</td></tr>
+<tr style="border-bottom:1px solid #e2e8f0;"><td style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Portal</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${params.PORTAL ?: 'Default'}</td></tr>
 <tr style="border-bottom:1px solid #e2e8f0;"><td style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Duration</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${durationString}</td></tr>
 <tr><td style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Triggered By</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${triggeredBy}</td></tr>
 </table>

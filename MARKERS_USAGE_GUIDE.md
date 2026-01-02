@@ -108,6 +108,15 @@ pytest -m "column_names and (accounts or contact)"
 - `list_view_crud`
 - `pin_unpin`
 
+## Available Portal Markers
+
+- `fa_portal` - Run tests for FA Portal
+- `ria_portal` - Run tests for RIA Portal
+- `fo_portal` - Run tests for FO Portal
+- `benchmark_portal` - Run tests for Benchmark Portal
+- `recommends_portal` - Run tests for Recommends Portal
+- `fa_ria_portal` - Run tests for FA and RIA Portal
+
 ---
 
 ## Examples
@@ -141,6 +150,18 @@ Jenkins: `MARKERS = lazy_loading and (accounts or contact)`
 pytest -m column_names
 ```
 Jenkins: `TEST_SUITE = column_names` (leave MARKERS empty)
+
+**6. Run tests for FA Portal:**
+```bash
+pytest -m fa_portal
+```
+Jenkins: `MARKERS = FA Portal` (or use portal selection in PORTAL parameter)
+
+**7. Run tests for Accounts tab on FA Portal:**
+```bash
+pytest -m "accounts and fa_portal"
+```
+Jenkins: `MARKERS = Accounts Tab,FA Portal` (or use PORTAL = FA Portal and MARKERS = Accounts Tab)
 
 ---
 

@@ -1,7 +1,7 @@
 """
 URL Configuration File
 All application URLs are stored here for easy maintenance.
-Supports environment-specific URLs (UAT, PROD, etc.)
+Supports environment-specific URLs (UAT, PROD) and portal-specific URLs (UAT_FA_PORTAL, PROD_RIA_PORTAL, etc.)
 """
 
 import os
@@ -57,7 +57,7 @@ class URLs:
         
         Args:
             url_key: The URL key (e.g., URLs.ACCOUNTS_DEFAULT)
-            environment: Environment name (uat, prod, etc.). 
+            environment: Environment name (uat, prod, uat_fa_portal, prod_ria_portal, etc.). 
                         If None, uses ENV environment variable or defaults to 'uat'
         
         Returns:
@@ -87,7 +87,7 @@ class URLs:
         Args:
             base_url: The base URL (e.g., from config)
             url_key: The URL key (e.g., URLs.ACCOUNTS_DEFAULT)
-            environment: Environment name (uat, prod, etc.). 
+            environment: Environment name (uat, prod, uat_fa_portal, prod_ria_portal, etc.). 
                         If None, uses ENV environment variable or defaults to 'uat'
         
         Returns:
@@ -114,7 +114,7 @@ def get_url(base_url, url_key, environment=None):
     Args:
         base_url: The base URL (e.g., from config)
         url_key: The URL key (e.g., URLs.ACCOUNTS_DEFAULT)
-        environment: Environment name (uat, prod, etc.). 
+        environment: Environment name (uat, prod, uat_fa_portal, prod_ria_portal, etc.). 
                     If None, uses ENV environment variable or defaults to 'uat'
     
     Returns:

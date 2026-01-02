@@ -10,6 +10,12 @@ from selenium.webdriver.support import expected_conditions as EC
 import pytest
 @pytest.mark.recent_transactions
 @pytest.mark.list_view_crud
+    @pytest.mark.fa_portal
+    @pytest.mark.ria_portal
+    @pytest.mark.fo_portal
+    @pytest.mark.benchmark_portal
+    @pytest.mark.recommends_portal
+    @pytest.mark.fa_ria_portal
 
 
 def test_recent_transactions_list_view_crud(driver, base_url, credentials):

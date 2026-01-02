@@ -143,8 +143,11 @@ For automatic builds on push to GitHub:
    - Click **Build with Parameters** (this option appears after Jenkins successfully loads the Jenkinsfile)
    - Select parameters:
      - **ENVIRONMENT**: `uat` (or `prod`)
+     - **PORTAL**: `Default` (or select a specific portal like `FA Portal`, `RIA Portal`, etc.)
      - **TEST_SUITE**: `all` (or specific suite)
+     - **MARKERS**: (optional) Leave empty or specify tab markers
      - **SEND_EMAIL**: `true`
+     - **ADDITIONAL_EMAILS**: (optional) Add comma-separated email addresses
    - Click **Build**
 
 3. **Monitor Build**
@@ -197,9 +200,11 @@ The pipeline supports the following parameters:
 | Parameter | Options | Description |
 |-----------|---------|-------------|
 | **ENVIRONMENT** | `uat`, `prod` | Test environment to run against |
-| **TEST_SUITE** | `all`, `column_names`, `fields_comparison`, `fields_display`, `lazy_loading`, `list_view_crud`, `pin_unpin` | Test suite to execute (ignored if MARKERS is specified) |
-| **MARKERS** | Text input | Optional: Run tests by markers (comma-separated). Examples: `accounts` (runs all 6 tests for accounts tab), `accounts,contact` (runs all tests for accounts and contact tabs), `accounts and column_names` (runs accounts column_names test only). Leave empty to use TEST_SUITE selection. |
+| **PORTAL** | `Default`, `FA Portal`, `RIA Portal`, `FO Portal`, `Benchmark Portal`, `Recommends Portal`, `FA and RIA Portal` | Portal to run tests against. "Default" uses the original uat/prod configuration. Other options use portal-specific credentials. |
+| **TEST_SUITE** | Checkboxes | Select one or more test suites: Column Names Validation, Fields Comparison, Fields Display Functionality, Lazy Loading, List View CRUD Operations, Pin/Unpin Functionality |
+| **MARKERS** | Checkboxes | Select one or more test markers (tabs or portal markers). Examples: `Accounts Tab`, `Contact Tab`, `FA Portal`, `RIA Portal`. Selected markers use OR logic. |
 | **SEND_EMAIL** | `true`, `false` | Send email notification after build |
+| **ADDITIONAL_EMAILS** | Text input | Optional: Additional email addresses (comma-separated) to receive notifications. By default, emails are sent to usman.arshad@rolustech.com |
 
 ### Using Markers in Jenkins
 

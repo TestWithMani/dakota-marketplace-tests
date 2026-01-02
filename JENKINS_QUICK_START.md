@@ -41,8 +41,11 @@ Password: [App Password]
 1. Click **Build with Parameters**
 2. Select:
    - ENVIRONMENT: `uat`
-   - TEST_SUITE: `all`
+   - PORTAL: `Default` (or select a specific portal)
+   - TEST_SUITE: Check `all` or select specific suites
+   - MARKERS: (optional) Select specific tab or portal markers
    - SEND_EMAIL: `true`
+   - ADDITIONAL_EMAILS: (optional) Add comma-separated email addresses
 3. Click **Build**
 
 ### Step 5: Verify
@@ -75,7 +78,12 @@ Build with Parameters → TEST_SUITE: column_names
 
 ### Run on Production
 ```
-Build with Parameters → ENVIRONMENT: prod
+Build with Parameters → ENVIRONMENT: prod → PORTAL: Default
+```
+
+### Run on Specific Portal
+```
+Build with Parameters → ENVIRONMENT: uat → PORTAL: FA Portal
 ```
 
 ## 🔗 Important Links
@@ -95,6 +103,8 @@ Build with Parameters → ENVIRONMENT: prod
 - ✅ Test result archiving
 - ✅ Multiple test suite support
 - ✅ Environment selection (UAT/PROD)
+- ✅ Portal selection (Default, FA Portal, RIA Portal, FO Portal, Benchmark Portal, Recommends Portal, FA and RIA Portal)
+- ✅ Portal-specific test markers
 
 ---
 
