@@ -186,7 +186,7 @@ pipeline {
         stage('Run Tests') {
             steps {
                 script {
-                    echo "Environment: ${ENV}"
+                    echo "Environment: ${env.ENV}"
                     
                     def testCommand = buildTestCommand(params.TEST_SUITE, params.MARKERS)
                     echo "Test command: ${testCommand}"
@@ -194,7 +194,7 @@ pipeline {
                     // Run tests (output will be visible in console, and we'll parse from HTML report)
                     // Capture exit code but don't fail the stage - we want to generate reports even if tests fail
                     def exitCode = bat(returnStatus: true, script: """
-                        set ENV=${ENV}
+                        set ENV=${env.ENV}
                         ${testCommand}
                     """)
                     
@@ -222,14 +222,12 @@ pipeline {
                     echo "Generating Allure report..."
                     try {
                         // Check if Allure is installed
-                        bat '''
-                            allure --version
-                            if errorlevel 1 (
-                                echo Allure CLI not found. Skipping Allure report generation.
-                                echo Install Allure: https://github.com/allure-framework/allure2/releases
-                                exit /b 0
-                            )
-                        '''
+                        def allureInstalled = bat(returnStatus: true, script: 'allure --version') == 0
+                        if (!allureInstalled) {
+                            echo "Allure CLI not found. Skipping Allure report generation."
+                            echo "Install Allure: https://github.com/allure-framework/allure2/releases"
+                            return
+                        }
                         
                         // Generate Allure report
                         bat '''
@@ -651,16 +649,19 @@ def sendEmailNotification(buildStatus) {
     
     // Build test selection display
     def testSelectionHtml = ''
-    if (testSelectionParts.size() > 0) {
+    def hasSuites = params.TEST_SUITE && params.TEST_SUITE.trim() && params.TEST_SUITE != 'all' && params.TEST_SUITE != 'All Tests'
+    def hasMarkers = params.MARKERS && params.MARKERS.trim() && params.MARKERS != 'All Tests'
+    
+    if (hasSuites || hasMarkers) {
         def suitesHtml = ''
         def markersHtml = ''
-        if (params.TEST_SUITE && params.TEST_SUITE.trim() && params.TEST_SUITE != 'all' && params.TEST_SUITE != 'All Tests') {
+        if (hasSuites) {
             def suites = params.TEST_SUITE.split(',').collect { it.trim() }.findAll { it && it != 'all' && it != 'All Tests' }
             if (suites.size() > 0) {
                 suitesHtml = "<strong>Suites:</strong> ${suites.join(', ')}"
             }
         }
-        if (params.MARKERS && params.MARKERS.trim()) {
+        if (hasMarkers) {
             def markers = params.MARKERS.split(',').collect { it.trim() }.findAll { it && it != 'All Tests' }
             if (markers.size() > 0) {
                 markersHtml = "<strong>Markers:</strong> ${markers.join(', ')}"
