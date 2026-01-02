@@ -159,13 +159,21 @@ pipeline {
         stage('Create Directories') {
             steps {
                 script {
-                    echo "Creating report directories..."
+                    echo "Cleaning and creating report directories..."
                     bat '''
                         if not exist "%WORKSPACE%\\reports" mkdir "%WORKSPACE%\\reports"
-                        if not exist "%WORKSPACE%\\allure-results" mkdir "%WORKSPACE%\\allure-results"
-                        if not exist "%WORKSPACE%\\allure-report" mkdir "%WORKSPACE%\\allure-report"
+                        if exist "%WORKSPACE%\\allure-results" (
+                            echo Cleaning previous Allure results...
+                            rmdir /s /q "%WORKSPACE%\\allure-results"
+                        )
+                        mkdir "%WORKSPACE%\\allure-results"
+                        if exist "%WORKSPACE%\\allure-report" (
+                            echo Cleaning previous Allure report...
+                            rmdir /s /q "%WORKSPACE%\\allure-report"
+                        )
+                        mkdir "%WORKSPACE%\\allure-report"
                     '''
-                    echo "Directories created"
+                    echo "Directories cleaned and created"
                 }
             }
         }
@@ -227,12 +235,15 @@ pipeline {
                         '''
                         
                         // Publish Allure report
+                        // reportBuildPolicy: 'ALWAYS' - Always generate report
+                        // Keep only current build results (no history preservation)
                         allure([
                             includeProperties: false,
                             jdk: '',
                             properties: [],
                             reportBuildPolicy: 'ALWAYS',
-                            results: [[path: 'allure-results']]
+                            results: [[path: 'allure-results']],
+                            reportName: 'Allure Report'
                         ])
                         
                         echo "Allure report generated successfully"
