@@ -99,8 +99,9 @@ pipeline {
                     echo "Checking out code from GitHub..."
                     checkout scm
                     echo "Code checked out successfully"
-                    echo "Branch: ${env.BRANCH_NAME}"
-                    echo "Commit: ${env.GIT_COMMIT.take(7)}"
+                    echo "Branch: ${env.BRANCH_NAME ?: 'N/A'}"
+                    def commitHash = env.GIT_COMMIT ? env.GIT_COMMIT.take(7) : 'N/A'
+                    echo "Commit: ${commitHash}"
                 }
             }
         }
@@ -124,6 +125,10 @@ pipeline {
                         if not exist "%VENV_PATH%" (
                             echo Creating virtual environment...
                             python -m venv "%VENV_PATH%"
+                            if errorlevel 1 (
+                                echo Failed to create virtual environment
+                                exit /b 1
+                            )
                         ) else (
                             echo Virtual environment already exists
                         )
@@ -212,9 +217,6 @@ pipeline {
         }
         
         stage('Generate Allure Report') {
-            when {
-                expression { true }
-            }
             steps {
                 script {
                     echo "Generating Allure report..."
@@ -255,9 +257,6 @@ pipeline {
         }
         
         stage('Publish Test Results') {
-            when {
-                expression { true }
-            }
             steps {
                 script {
                     echo "Publishing test results..."
@@ -300,20 +299,7 @@ pipeline {
                 }
                 
                 // Update build description
-                def testSelectionParts = []
-                if (params.TEST_SUITE && params.TEST_SUITE.trim() && params.TEST_SUITE != 'all' && params.TEST_SUITE != 'All Tests') {
-                    def suites = params.TEST_SUITE.split(',').collect { it.trim() }.findAll { it && it != 'all' && it != 'All Tests' }
-                    if (suites.size() > 0) {
-                        testSelectionParts.add("Suites: ${suites.join(', ')}")
-                    }
-                }
-                if (params.MARKERS && params.MARKERS.trim()) {
-                    def markers = params.MARKERS.split(',').collect { it.trim() }.findAll { it && it != 'All Tests' }
-                    if (markers.size() > 0) {
-                        testSelectionParts.add("Markers: ${markers.join(', ')}")
-                    }
-                }
-                def testSelection = testSelectionParts.size() > 0 ? testSelectionParts.join(' | ') : "All Tests"
+                def testSelection = parseTestSelection(' | ')
                 
                 // Format duration - remove "and counting" if present
                 def durationDisplay = currentBuild.durationString ?: 'N/A'
@@ -370,14 +356,32 @@ pipeline {
                         sendEmailNotification('SUCCESS')
                     }
                 } else {
-                echo "Build unstable!"
-                if (params.SEND_EMAIL) {
-                    sendEmailNotification('UNSTABLE')
+                    echo "Build unstable!"
+                    if (params.SEND_EMAIL) {
+                        sendEmailNotification('UNSTABLE')
+                    }
                 }
             }
         }
     }
+}
+
+// Helper function to parse test selection (suites and markers) for display
+def parseTestSelection(separator = ' | ') {
+    def testSelectionParts = []
+    if (params.TEST_SUITE && params.TEST_SUITE.trim() && params.TEST_SUITE != 'all' && params.TEST_SUITE != 'All Tests') {
+        def suites = params.TEST_SUITE.split(',').collect { it.trim() }.findAll { it && it != 'all' && it != 'All Tests' }
+        if (suites.size() > 0) {
+            testSelectionParts.add("Suites: ${suites.join(', ')}")
+        }
     }
+    if (params.MARKERS && params.MARKERS.trim()) {
+        def markers = params.MARKERS.split(',').collect { it.trim() }.findAll { it && it != 'All Tests' }
+        if (markers.size() > 0) {
+            testSelectionParts.add("Markers: ${markers.join(', ')}")
+        }
+    }
+    return testSelectionParts.size() > 0 ? testSelectionParts.join(separator) : "All Tests"
 }
 
 // Helper function to map display names to internal suite names
@@ -630,20 +634,7 @@ def sendEmailNotification(buildStatus) {
     def skipPercentage = testStats.total > 0 ? (testStats.skipped * 100 / testStats.total).intValue() : 0
     
     // Build test selection string for email
-    def testSelectionParts = []
-    if (params.TEST_SUITE && params.TEST_SUITE.trim() && params.TEST_SUITE != 'all' && params.TEST_SUITE != 'All Tests') {
-        def suites = params.TEST_SUITE.split(',').collect { it.trim() }.findAll { it && it != 'all' && it != 'All Tests' }
-        if (suites.size() > 0) {
-            testSelectionParts.add("Suites: ${suites.join(', ')}")
-        }
-    }
-    if (params.MARKERS && params.MARKERS.trim()) {
-        def markers = params.MARKERS.split(',').collect { it.trim() }.findAll { it && it != 'All Tests' }
-        if (markers.size() > 0) {
-            testSelectionParts.add("Markers: ${markers.join(', ')}")
-        }
-    }
-    def testSelectionDisplay = testSelectionParts.size() > 0 ? testSelectionParts.join('<br>') : 'All Tests'
+    def testSelectionDisplay = parseTestSelection('<br>')
     
     // Status configuration for template - Professional color scheme
     def statusText = actualStatus == 'SUCCESS' ? 'SUCCESS' : actualStatus == 'FAILURE' ? 'FAILURE' : 'UNSTABLE'
