@@ -71,8 +71,8 @@
     },
     "uat_fo_portal": {
         "url": "https://dakotanetworks--uat.sandbox.my.site.com/dakotaMarketplace/s/",
-        "username": "fo_uat_username",
-        "password": "fo_uat_password",
+        "username": "family.office.mani@rolustech.com",
+        "password": "@a123123",
         "urls": {
             "accounts_default": "account/Account/Default",
             "contact_default": "contact/Contact/Default",
