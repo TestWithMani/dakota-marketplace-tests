@@ -176,8 +176,8 @@
     },
     "uat_fa_ria_portal": {
         "url": "https://dakotanetworks--uat.sandbox.my.site.com/dakotaMarketplace/s/",
-        "username": "fa_ria_uat_username",
-        "password": "fa_ria_uat_password",
+        "username": "ria.fo.mani@dakota.com",
+        "password": "@a1234567",
         "urls": {
             "accounts_default": "account/Account/Default",
             "contact_default": "contact/Contact/Default",
