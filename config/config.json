@@ -316,8 +316,8 @@
     },
     "prod_benchmark_portal": {
         "url": "https://dakotanetworks.my.site.com/dakotaMarketplace/s/",
-        "username": "benchmark_prod_username",
-        "password": "benchmark_prod_password",
+        "username": "usman.arshad.pbportal@dakota.com",
+        "password": "@a123123",
         "urls": {
             "accounts_default": "account/Account/Default",
             "contact_default": "contact/Contact/Default",
