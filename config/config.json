@@ -421,8 +421,8 @@
     },
     "uat": {
         "url": "https://dakotanetworks--uat.sandbox.my.site.com/dakotaMarketplace/s/",
-        "username": "manibest@gmail.com",
-        "password": "@a1234567",
+        "username": "scenario7@dakota.com",
+        "password": "Rolus889$",
         "urls": {
             "accounts_default": "account/Account/Default",
             "contact_default": "contact/Contact/Default",
