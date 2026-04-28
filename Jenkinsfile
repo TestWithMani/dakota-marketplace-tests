@@ -19,15 +19,15 @@ pipeline {
             choices: ['Default', 'FA Portal', 'RIA Portal', 'FO Portal', 'Benchmark Portal', 'Recommends Portal', 'FA and RIA Portal'],
             description: 'Select the portal to run tests against. "Default" uses base uat/prod.'
         )
-        string(
+        choice(
             name: 'TEST_SUITE',
-            defaultValue: 'all',
-            description: 'Comma-separated suites. Options: all, Column Names Validation, Fields Comparison, Fields Display Functionality, Lazy Loading, List View CRUD Operations, Pin/Unpin Functionality'
+            choices: ['all', 'Column Names Validation', 'Fields Comparison', 'Fields Display Functionality', 'Lazy Loading', 'List View CRUD Operations', 'Pin/Unpin Functionality'],
+            description: 'Select one test suite. Use "all" to run all suites.'
         )
-        string(
+        choice(
             name: 'MARKERS',
-            defaultValue: 'All Tests',
-            description: 'Comma-separated markers. Example: Accounts Tab, Contact Tab, Public Company Search. Use "All Tests" for no marker filtering.'
+            choices: ['All Tests', 'Accounts Tab', 'Contact Tab', 'All Documents', '13F Filings & Investments Search', 'Conference Search', 'Consultant Reviews', 'Continuation Vehicle', 'Dakota City Guides', 'Dakota Searches', 'Dakota Video Search', 'Fee Schedules Dashboard', 'Fund Family Memos', 'Fund Launches', 'Investment Allocator - Accounts', 'Investment Allocator - Contacts', 'Investment Firm - Accounts', 'Investment Firm - Contacts', 'Manager Presentation Dashboard', 'My Accounts', 'Pension Documents', 'Portfolio Companies', 'Portfolio Companies - Contacts', 'Private Fund Search', 'Public Company Search', 'Public Investments Search', 'Public Plan Minutes Search', 'Recent Transactions', 'University Alumni - Contacts'],
+            description: 'Select one marker. Use "All Tests" for no marker filtering.'
         )
         booleanParam(
             name: 'RUN_ALLURE',
