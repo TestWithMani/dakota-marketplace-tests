@@ -12,7 +12,75 @@ from webdriver_manager.microsoft import EdgeChromiumDriverManager
 from webdriver_manager.firefox import GeckoDriverManager
 import os
 import logging
+import re
+import threading
+import time
+import uuid
+from pathlib import Path
+
+import allure
+import imageio
+import mss
+import numpy as np
 from config.settings import resolve_runtime_config
+
+VIDEO_DIR = Path("reports") / "videos"
+VIDEO_FPS = 6
+VIDEO_CODEC = "libx264"
+
+
+class _TestVideoRecorder:
+    def __init__(self, driver, output_path):
+        self.driver = driver
+        self.output_path = output_path
+        self._stop_event = threading.Event()
+        self._thread = None
+        self._writer = None
+        self._error = None
+
+    def start(self):
+        self.output_path.parent.mkdir(parents=True, exist_ok=True)
+        self._writer = imageio.get_writer(
+            str(self.output_path),
+            fps=VIDEO_FPS,
+            codec=VIDEO_CODEC,
+            quality=6,
+            macro_block_size=None,
+        )
+        self._thread = threading.Thread(target=self._record_loop, daemon=True)
+        self._thread.start()
+
+    def stop(self):
+        self._stop_event.set()
+        if self._thread:
+            self._thread.join(timeout=3)
+        if self._writer:
+            self._writer.close()
+
+    def _record_loop(self):
+        with mss.mss() as screen:
+            while not self._stop_event.is_set():
+                try:
+                    rect = self.driver.get_window_rect()
+                    monitor = {
+                        "left": max(int(rect.get("x", 0)), 0),
+                        "top": max(int(rect.get("y", 0)), 0),
+                        "width": max(int(rect.get("width", 1)), 1),
+                        "height": max(int(rect.get("height", 1)), 1),
+                    }
+                    frame = np.array(screen.grab(monitor))
+                    # Convert BGRA -> RGB for encoder
+                    frame = frame[:, :, :3][:, :, ::-1]
+                    self._writer.append_data(frame)
+                except Exception as exc:
+                    self._error = exc
+                    break
+                time.sleep(1 / VIDEO_FPS)
+
+
+def _safe_test_name(nodeid):
+    name = re.sub(r"[^a-zA-Z0-9_.-]+", "_", nodeid)
+    return name[:160]
 
 def pytest_addoption(parser):
     parser.addoption(
@@ -111,3 +179,38 @@ def driver(browser_name):
 def wait(driver):
     """Provides WebDriverWait instance for explicit waits"""
     return WebDriverWait(driver, 30)
+
+
+@pytest.fixture(scope="function", autouse=True)
+def attach_test_video_to_allure(request, driver):
+    """
+    Record every test and always attach video to Allure.
+    Works for pass/fail/skip as teardown always executes.
+    """
+    video_name = f"{_safe_test_name(request.node.nodeid)}_{uuid.uuid4().hex[:8]}.mp4"
+    video_path = VIDEO_DIR / video_name
+    recorder = _TestVideoRecorder(driver, video_path)
+
+    try:
+        recorder.start()
+    except Exception as exc:
+        logging.warning("Video recorder failed to start for %s: %s", request.node.nodeid, exc)
+        recorder = None
+
+    yield
+
+    if recorder:
+        try:
+            recorder.stop()
+        except Exception as exc:
+            logging.warning("Video recorder failed to stop for %s: %s", request.node.nodeid, exc)
+
+        if recorder._error:
+            logging.warning("Video recorder runtime error for %s: %s", request.node.nodeid, recorder._error)
+
+    if video_path.exists() and video_path.stat().st_size > 0:
+        allure.attach.file(
+            str(video_path),
+            name=f"Test Video - {request.node.name}",
+            attachment_type=allure.attachment_type.MP4,
+        )
