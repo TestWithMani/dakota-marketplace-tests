@@ -455,35 +455,63 @@ def sendEmailNotification(String buildStatus) {
         return
     }
     def subject = "Dakota Smoke Automation Report - ${new Date().format('yyyy-MM-dd')}"
-    def statusColor = actualStatus == 'SUCCESS' ? '#0f9d58' : (actualStatus == 'FAILURE' ? '#d93025' : '#f9ab00')
+    def statusColor = actualStatus == 'SUCCESS' ? '#16a34a' : (actualStatus == 'FAILURE' ? '#dc2626' : '#f59e0b')
+    def durationString = (currentBuild.durationString ?: 'N/A').replace(' and counting', '')
+    def passRate = testStats.total > 0 ? ((testStats.passed * 100) / testStats.total) as int : 0
+    def jobUrl = env.BUILD_URL ?: ''
+    def allureUrl = "${jobUrl}allure"
     def body = """
 <html>
-  <body style="font-family: Arial, sans-serif; color: #1f2937; line-height: 1.4; margin: 0; padding: 0;">
-    <div style="max-width: 760px; margin: 0 auto; padding: 18px; border: 1px solid #e5e7eb; border-radius: 10px;">
-      <h2 style="margin: 0 0 12px 0;">Dakota Smoke Automation Report</h2>
-      <div style="margin-bottom: 12px;">
-        <strong>Build:</strong> #${env.BUILD_NUMBER}<br/>
-        <strong>Status:</strong> <span style="color: ${statusColor}; font-weight: bold;">${actualStatus}</span><br/>
-        <strong>Environment:</strong> ${(params.ENVIRONMENT ?: 'uat').toUpperCase()}<br/>
-        <strong>Portal:</strong> ${params.PORTAL ?: 'Default'}<br/>
-        <strong>Selection:</strong> ${parseTestSelection(' | ')}
-      </div>
-      <table cellpadding="8" cellspacing="0" border="0" style="border-collapse: collapse; width: 100%; margin-bottom: 12px;">
-        <tr style="background: #f9fafb;">
-          <th align="left" style="border: 1px solid #e5e7eb;">Total</th>
-          <th align="left" style="border: 1px solid #e5e7eb;">Passed</th>
-          <th align="left" style="border: 1px solid #e5e7eb;">Failed</th>
-          <th align="left" style="border: 1px solid #e5e7eb;">Skipped</th>
-        </tr>
-        <tr>
-          <td style="border: 1px solid #e5e7eb;">${testStats.total}</td>
-          <td style="border: 1px solid #e5e7eb; color: #0f9d58; font-weight: bold;">${testStats.passed}</td>
-          <td style="border: 1px solid #e5e7eb; color: #d93025; font-weight: bold;">${testStats.failed}</td>
-          <td style="border: 1px solid #e5e7eb;">${testStats.skipped}</td>
-        </tr>
-      </table>
-      <a href="${env.BUILD_URL ?: ''}" style="display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 8px 12px; border-radius: 6px;">Open Build in Jenkins</a>
-    </div>
+  <body style="margin:0;padding:0;background:linear-gradient(140deg,#e0ecff 0%,#efe7ff 45%,#fff6e5 100%);font-family:'Segoe UI',Roboto,Arial,sans-serif;">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td align="center" style="padding:24px;">
+          <table width="760" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #dbe3ee;box-shadow:0 14px 32px rgba(30,64,175,0.14);">
+            <tr>
+              <td style="padding:22px 30px;background:linear-gradient(135deg,#0f172a 0%,#1e40af 52%,#7c3aed 100%);color:#ffffff;">
+                <h2 style="margin:0;font-size:30px;letter-spacing:0.2px;">Dakota Smoke Automation</h2>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:20px 30px 10px;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#1e293b;border:1px solid #bfdbfe;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,#f8fbff 0%,#ffffff 100%);margin-bottom:12px;">
+                  <tr><td width="32%" style="padding:10px 12px;background:#dbeafe;"><strong>Build</strong></td><td style="padding:10px 12px;">#${env.BUILD_NUMBER}</td></tr>
+                  <tr><td style="padding:10px 12px;background:#dbeafe;"><strong>Status</strong></td><td style="padding:10px 12px;color:${statusColor};font-weight:700;">${actualStatus}</td></tr>
+                  <tr><td style="padding:10px 12px;background:#dbeafe;"><strong>Environment</strong></td><td style="padding:10px 12px;">${(params.ENVIRONMENT ?: 'uat').toUpperCase()}</td></tr>
+                  <tr><td style="padding:10px 12px;background:#dbeafe;"><strong>Portal</strong></td><td style="padding:10px 12px;">${params.PORTAL ?: 'Default'}</td></tr>
+                  <tr><td style="padding:10px 12px;background:#dbeafe;"><strong>Selection</strong></td><td style="padding:10px 12px;">${parseTestSelection(' | ')}</td></tr>
+                  <tr><td style="padding:10px 12px;background:#dbeafe;"><strong>Duration</strong></td><td style="padding:10px 12px;">${durationString}</td></tr>
+                  <tr><td style="padding:10px 12px;background:#dbeafe;"><strong>Pass Percentage</strong></td><td style="padding:10px 12px;color:#0f766e;font-weight:700;">${passRate}%</td></tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0 30px 18px;">
+                <table width="100%" cellpadding="8" cellspacing="8" style="font-size:13px;">
+                  <tr align="center">
+                    <td style="background:linear-gradient(180deg,#ccfbf1 0%,#99f6e4 100%);color:#134e4a;border-radius:12px;"><div style="font-size:11px;">TOTAL</div><div style="font-size:24px;font-weight:800;">${testStats.total}</div></td>
+                    <td style="background:linear-gradient(180deg,#dcfce7 0%,#86efac 100%);color:#14532d;border-radius:12px;"><div style="font-size:11px;">PASSED</div><div style="font-size:24px;font-weight:800;">${testStats.passed}</div></td>
+                    <td style="background:linear-gradient(180deg,#fee2e2 0%,#fca5a5 100%);color:#7f1d1d;border-radius:12px;"><div style="font-size:11px;">FAILED</div><div style="font-size:24px;font-weight:800;">${testStats.failed}</div></td>
+                    <td style="background:linear-gradient(180deg,#ede9fe 0%,#c4b5fd 100%);color:#4c1d95;border-radius:12px;"><div style="font-size:11px;">SKIPPED</div><div style="font-size:24px;font-weight:800;">${testStats.skipped}</div></td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0 30px 24px;">
+                <a href="${jobUrl}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:8px 12px;border-radius:6px;margin-right:8px;">Open Build</a>
+                <a href="${allureUrl}" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:8px 12px;border-radius:6px;">Open Allure</a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:13px 30px;background:#0f172a;color:#cbd5e1;font-size:12px;">
+                Jenkins CI/CD - Dakota Smoke Automation
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
   </body>
 </html>
 """
