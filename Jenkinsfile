@@ -1,30 +1,13 @@
 pipeline {
     agent any
-    
+
     options {
-        buildDiscarder(logRotator(numToKeepStr: '30'))
-        timeout(time: 12, unit: 'HOURS')
         timestamps()
-        ansiColor('xterm')
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30'))
+        timeout(time: 720, unit: 'MINUTES')
     }
-    
-    environment {
-        // Python virtual environment path
-        VENV_PATH = "${WORKSPACE}\\venv"
-        PYTHON_EXE = "${VENV_PATH}\\Scripts\\python.exe"
-        PIP_EXE = "${VENV_PATH}\\Scripts\\pip.exe"
-        
-        // Test environment and portal will be set in script block
-        
-        // Report paths
-        HTML_REPORT = "${WORKSPACE}\\reports\\report.html"
-        ALLURE_RESULTS = "${WORKSPACE}\\allure-results"
-        ALLURE_REPORT = "${WORKSPACE}\\allure-report"
-        
-        // Email configuration
-        EMAIL_RECIPIENT = 'usman.arshad@rolustech.com'
-    }
-    
+
     parameters {
         choice(
             name: 'ENVIRONMENT',
@@ -34,21 +17,26 @@ pipeline {
         choice(
             name: 'PORTAL',
             choices: ['Default', 'FA Portal', 'RIA Portal', 'FO Portal', 'Benchmark Portal', 'Recommends Portal', 'FA and RIA Portal'],
-            description: 'Select the portal to run tests against. "Default" uses the original uat/prod configuration (normal uat/prod that was already present).'
+            description: 'Select the portal to run tests against. "Default" uses base uat/prod.'
         )
         extendedChoice(
             name: 'TEST_SUITE',
             type: 'PT_CHECKBOX',
             value: 'all,Column Names Validation,Fields Comparison,Fields Display Functionality,Lazy Loading,List View CRUD Operations,Pin/Unpin Functionality',
-            description: 'Select one or more test suites to run:\n\n- Column Names Validation - Validates column names across all tabs\n- Fields Comparison - Compares fields between different views\n- Fields Display Functionality - Tests field display features\n- Lazy Loading - Tests lazy loading functionality\n- List View CRUD Operations - Tests Create, Read, Update, Delete operations\n- Pin/Unpin Functionality - Tests pin and unpin features\n\nNote: Check the boxes for the test suites you want to run. If markers are also selected, tests will be filtered by both suite and markers.',
+            description: 'Select one or more test suites.',
             multiSelectDelimiter: ','
         )
         extendedChoice(
             name: 'MARKERS',
             type: 'PT_CHECKBOX',
             value: 'All Tests,Accounts Tab,Contact Tab,All Documents,13F Filings & Investments Search,Conference Search,Consultant Reviews,Continuation Vehicle,Dakota City Guides,Dakota Searches,Dakota Video Search,Fee Schedules Dashboard,Fund Family Memos,Fund Launches,Investment Allocator - Accounts,Investment Allocator - Contacts,Investment Firm - Accounts,Investment Firm - Contacts,Manager Presentation Dashboard,My Accounts,Pension Documents,Portfolio Companies,Portfolio Companies - Contacts,Private Fund Search,Public Company Search,Public Investments Search,Public Plan Minutes Search,Recent Transactions,University Alumni - Contacts',
-            description: 'Select one or more test markers (tabs) to run:\n\n- Accounts Tab - Tests for Accounts tab\n- Contact Tab - Tests for Contact tab\n- All Documents - Document-related tests\n- 13F Filings & Investments Search - Tests for 13F Filings & Investments Search tab\n- Conference Search - Tests for Conference Search tab\n- Consultant Reviews - Tests for Consultant Reviews tab\n- Continuation Vehicle - Tests for Continuation Vehicle tab\n- Dakota City Guides - Tests for Dakota City Guides tab\n- Dakota Searches - Tests for Dakota Searches tab\n- Dakota Video Search - Tests for Dakota Video Search tab\n- Fee Schedules Dashboard - Tests for Fee Schedules Dashboard tab\n- Fund Family Memos - Tests for Fund Family Memos tab\n- Fund Launches - Tests for Fund Launches tab\n- Investment Allocator - Accounts - Tests for Investment Allocator Accounts tab\n- Investment Allocator - Contacts - Tests for Investment Allocator Contacts tab\n- Investment Firm - Accounts - Tests for Investment Firm Accounts tab\n- Investment Firm - Contacts - Tests for Investment Firm Contacts tab\n- Manager Presentation Dashboard - Tests for Manager Presentation Dashboard tab\n- My Accounts - Tests for My Accounts tab\n- Pension Documents - Tests for Pension Documents tab\n- Portfolio Companies - Tests for Portfolio Companies tab\n- Portfolio Companies - Contacts - Tests for Portfolio Companies Contacts tab\n- Private Fund Search - Tests for Private Fund Search tab\n- Public Company Search - Tests for Public Company Search tab\n- Public Investments Search - Tests for Public Investments Search tab\n- Public Plan Minutes Search - Tests for Public Plan Minutes Search tab\n- Recent Transactions - Tests for Recent Transactions tab\n- University Alumni - Contacts - Tests for University Alumni Contacts tab\n\nNote: Check the boxes for the tabs you want to run. Selected markers use OR logic. If test suites are also selected, both will be combined. Portal selection is handled separately by the PORTAL parameter.',
+            description: 'Select one or more tab markers.',
             multiSelectDelimiter: ','
+        )
+        booleanParam(
+            name: 'RUN_ALLURE',
+            defaultValue: true,
+            description: 'Generate and publish Allure report in Jenkins.'
         )
         booleanParam(
             name: 'SEND_EMAIL',
@@ -58,15 +46,38 @@ pipeline {
         text(
             name: 'ADDITIONAL_EMAILS',
             defaultValue: '',
-            description: 'Additional email addresses to receive notifications (comma-separated).\n\nExample: user1@example.com, user2@example.com\n\nNote: By default, emails are sent to usman.arshad@rolustech.com. Add additional recipients here if needed. Leave empty to send only to the default recipient.'
+            description: 'Additional recipients (comma-separated).'
+        )
+        string(
+            name: 'DEFAULT_EMAIL',
+            defaultValue: 'usman.arshad@rolustech.com',
+            description: 'Primary recipient.'
         )
     }
-    
+
+    environment {
+        VENV_DIR = '.venv-jenkins'
+        PYTEST_JUNIT = 'reports/junit.xml'
+        PYTEST_HTML = 'reports/report.html'
+        PYTEST_JSON = 'reports/report.json'
+        ALLURE_DIR = 'allure-results'
+        EMAIL_RECIPIENT = 'usman.arshad@rolustech.com'
+    }
+
     stages {
+        stage('Checkout') {
+            steps {
+                script {
+                    checkout scm
+                    def shortCommit = env.GIT_COMMIT ? env.GIT_COMMIT.take(7) : 'N/A'
+                    echo "Branch: ${env.BRANCH_NAME ?: 'N/A'} | Commit: ${shortCommit}"
+                }
+            }
+        }
+
         stage('Setup Environment') {
             steps {
                 script {
-                    // Map portal name to config key
                     def portalMap = [
                         'Default': '',
                         'FA Portal': 'fa_portal',
@@ -76,295 +87,231 @@ pipeline {
                         'Recommends Portal': 'recommends_portal',
                         'FA and RIA Portal': 'fa_ria_portal'
                     ]
-                    
                     def envName = params.ENVIRONMENT ?: 'uat'
                     def portalName = params.PORTAL ?: 'Default'
                     def portalKey = portalMap[portalName] ?: ''
-                    
-                    // If Default is selected, use just the environment name (uat/prod)
-                    // Otherwise, combine environment and portal (uat_fa_portal, etc.)
-                    if (portalKey == '') {
-                        env.ENV = envName
-                    } else {
-                        env.ENV = "${envName}_${portalKey}"
-                    }
+                    env.ENV = portalKey ? "${envName}_${portalKey}" : envName
                     echo "Environment configured: ${env.ENV}"
                 }
             }
         }
-        
-        stage('Checkout') {
-            steps {
-                script {
-                    echo "Checking out code from GitHub..."
-                    checkout scm
-                    echo "Code checked out successfully"
-                    echo "Branch: ${env.BRANCH_NAME ?: 'N/A'}"
-                    def commitHash = env.GIT_COMMIT ? env.GIT_COMMIT.take(7) : 'N/A'
-                    echo "Commit: ${commitHash}"
-                }
-            }
-        }
-        
+
         stage('Setup Python Environment') {
             steps {
                 script {
-                    echo "Setting up Python virtual environment..."
-                    
-                    // Check if Python is available
-                    bat '''
-                        python --version
-                        if errorlevel 1 (
-                            echo Python is not installed or not in PATH
-                            exit /b 1
-                        )
-                    '''
-                    
-                    // Create virtual environment if it doesn't exist
-                    bat '''
-                        if not exist "%VENV_PATH%" (
-                            echo Creating virtual environment...
-                            python -m venv "%VENV_PATH%"
-                            if errorlevel 1 (
-                                echo Failed to create virtual environment
-                                exit /b 1
-                            )
-                        ) else (
-                            echo Virtual environment already exists
-                        )
-                    '''
-                    
-                    // Upgrade pip
-                    bat '''
-                        echo Upgrading pip...
-                        "%PYTHON_EXE%" -m pip install --upgrade pip
-                    '''
-                    
-                    echo "Python environment setup complete"
+                    runShell(
+                        """
+                            python3 -m venv ${env.VENV_DIR}
+                            ${env.VENV_DIR}/bin/python -m pip install --upgrade pip
+                            ${env.VENV_DIR}/bin/python -m pip install -r requirements.txt
+                            ${env.VENV_DIR}/bin/python -m pip install pytest-html pytest-json-report allure-pytest
+                        """,
+                        """
+                            py -m venv %VENV_DIR%
+                            %VENV_DIR%\\Scripts\\python -m pip install --upgrade pip
+                            %VENV_DIR%\\Scripts\\python -m pip install -r requirements.txt
+                            %VENV_DIR%\\Scripts\\python -m pip install pytest-html pytest-json-report allure-pytest
+                        """
+                    )
                 }
             }
         }
-        
-        stage('Install Dependencies') {
+
+        stage('Prepare Report Directories') {
             steps {
                 script {
-                    echo "Installing Python dependencies..."
-                    bat '''
-                        "%PIP_EXE%" install -r requirements.txt
-                        if errorlevel 1 (
-                            echo Failed to install dependencies
-                            exit /b 1
-                        )
-                    '''
-                    echo "Dependencies installed successfully"
+                    runShell(
+                        """
+                            rm -rf reports ${env.ALLURE_DIR} || true
+                            mkdir -p reports ${env.ALLURE_DIR}
+                        """,
+                        """
+                            if exist reports rmdir /s /q reports
+                            if exist %ALLURE_DIR% rmdir /s /q %ALLURE_DIR%
+                            mkdir reports
+                            mkdir %ALLURE_DIR%
+                        """
+                    )
                 }
             }
         }
-        
-        stage('Create Directories') {
+
+        stage('Static Validation') {
             steps {
                 script {
-                    echo "Cleaning and creating report directories..."
-                    bat '''
-                        if not exist "%WORKSPACE%\\reports" mkdir "%WORKSPACE%\\reports"
-                        if exist "%WORKSPACE%\\allure-results" (
-                            echo Cleaning previous Allure results...
-                            rmdir /s /q "%WORKSPACE%\\allure-results"
-                        )
-                        mkdir "%WORKSPACE%\\allure-results"
-                        if exist "%WORKSPACE%\\allure-report" (
-                            echo Cleaning previous Allure report...
-                            rmdir /s /q "%WORKSPACE%\\allure-report"
-                        )
-                        mkdir "%WORKSPACE%\\allure-report"
-                    '''
-                    echo "Directories cleaned and created"
+                    validateRuntimeParameters(params.TEST_SUITE as String, params.MARKERS as String)
+                    def selectedPaths = resolveSelectedTestPaths(params.TEST_SUITE as String)
+                    def markerExpr = resolveMarkerExpression(params.MARKERS as String)
+                    def collectCmd = buildPytestCommand(selectedPaths, markerExpr, false, true)
+                    runPytest('--version')
+                    runPytest(collectCmd)
                 }
             }
         }
-        
+
         stage('Run Tests') {
             steps {
                 script {
-                    echo "Environment: ${env.ENV}"
-                    
-                    def testCommand = buildTestCommand(params.TEST_SUITE, params.MARKERS)
-                    echo "Test command: ${testCommand}"
-                    
-                    // Run tests (output will be visible in console, and we'll parse from HTML report)
-                    // Capture exit code but don't fail the stage - we want to generate reports even if tests fail
-                    def exitCode = bat(returnStatus: true, script: """
-                        set ENV=${env.ENV}
-                        ${testCommand}
-                    """)
-                    
-                    // Store exit code for later use in post actions
-                    env.TEST_EXIT_CODE = "${exitCode}"
-                    
-                    // Try to parse test statistics from HTML report after tests complete
-                    // The HTML report is more reliable than console output parsing
-                }
-            }
-            post {
-                always {
-                    script {
-                        // Archive test results
-                        archiveArtifacts artifacts: 'reports/report.html', allowEmptyArchive: true
-                        archiveArtifacts artifacts: 'allure-results/**/*', allowEmptyArchive: true
+                    def selectedPaths = resolveSelectedTestPaths(params.TEST_SUITE as String)
+                    def markerExpr = resolveMarkerExpression(params.MARKERS as String)
+                    def runCmd = buildPytestCommand(selectedPaths, markerExpr, params.RUN_ALLURE as boolean, false)
+                    echo "Pytest command: pytest ${runCmd}"
+
+                    withEnv(["ENV=${env.ENV}"]) {
+                        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                            runPytest(runCmd)
+                        }
                     }
                 }
             }
         }
-        
-        stage('Generate Allure Report') {
+
+        stage('Publish Reports') {
             steps {
                 script {
-                    echo "Generating Allure report..."
+                    if (fileExists(env.PYTEST_JUNIT)) {
+                        junit allowEmptyResults: true, testResults: env.PYTEST_JUNIT
+                    }
+
                     try {
-                        // Check if Allure is installed
-                        def allureInstalled = bat(returnStatus: true, script: 'allure --version') == 0
-                        if (!allureInstalled) {
-                            echo "Allure CLI not found. Skipping Allure report generation."
-                            echo "Install Allure: https://github.com/allure-framework/allure2/releases"
-                            return
-                        }
-                        
-                        // Generate Allure report
-                        bat '''
-                            allure generate "%ALLURE_RESULTS%" -o "%ALLURE_REPORT%" --clean
-                        '''
-                        
-                        // Publish Allure report
-                        // reportBuildPolicy: 'ALWAYS' - Always generate report
-                        // Keep only current build results (no history preservation)
+                        publishHTML(target: [
+                            reportName: 'Pytest HTML Report',
+                            reportDir: 'reports',
+                            reportFiles: 'report.html',
+                            keepAll: true,
+                            alwaysLinkToLastBuild: true,
+                            allowMissing: true
+                        ])
+                    } catch (Exception ex) {
+                        echo "HTML Publisher not available or failed: ${ex.getMessage()}"
+                    }
+
+                    if (params.RUN_ALLURE && fileExists(env.ALLURE_DIR)) {
                         allure([
                             includeProperties: false,
                             jdk: '',
                             properties: [],
                             reportBuildPolicy: 'ALWAYS',
-                            results: [[path: 'allure-results']],
+                            results: [[path: env.ALLURE_DIR]],
                             reportName: 'Allure Report'
                         ])
-                        
-                        echo "Allure report generated successfully"
-                    } catch (Exception e) {
-                        echo "WARNING: Allure report generation skipped: ${e.getMessage()}"
+                    } else if (params.RUN_ALLURE) {
+                        echo "Skipping Allure publish: ${env.ALLURE_DIR} not found."
                     }
-                }
-            }
-        }
-        
-        stage('Publish Test Results') {
-            steps {
-                script {
-                    echo "Publishing test results..."
-                    
-                    // Publish JUnit XML for Jenkins trends and history
-                    junit allowEmptyResults: true, testResults: 'reports/junit.xml'
-                    
-                    // Publish HTML report
-                    publishHTML([
-                        reportName: 'Test Report',
-                        reportDir: 'reports',
-                        reportFiles: 'report.html',
-                        keepAll: true,
-                        alwaysLinkToLastBuild: true,
-                        allowMissing: true
-                    ])
-                    
-                    echo "Test results published"
                 }
             }
         }
     }
-    
+
     post {
         always {
             script {
-                // Collect test statistics
                 def testStats = getTestStatistics()
-                
-                // Override build status based on actual test results
-                // This ensures builds are marked SUCCESS when all tests pass, even if junit marks them as UNSTABLE
                 if (testStats.total > 0) {
-                    if (testStats.failed == 0 && testStats.passed > 0) {
-                        echo "All tests passed (${testStats.passed}/${testStats.total}). Setting build status to SUCCESS."
-                        currentBuild.result = 'SUCCESS'
-                    } else if (testStats.failed > 0) {
-                        echo "Tests failed (${testStats.failed}/${testStats.total}). Setting build status to FAILURE."
-                        currentBuild.result = 'FAILURE'
-                    }
+                    currentBuild.result = testStats.failed > 0 ? 'FAILURE' : 'SUCCESS'
                 }
-                
-                // Update build description
-                def testSelection = parseTestSelection(' | ')
-                
-                // Format duration - remove "and counting" if present
-                def durationDisplay = currentBuild.durationString ?: 'N/A'
-                if (durationDisplay.contains('and counting')) {
-                    durationDisplay = durationDisplay.replace(' and counting', '')
-                }
-                
-                // Format environment and portal display
+
+                def durationDisplay = (currentBuild.durationString ?: 'N/A').replace(' and counting', '')
                 def envDisplay = params.ENVIRONMENT ?: 'uat'
                 def portalDisplay = params.PORTAL ?: 'Default'
-                if (portalDisplay == 'Default') {
-                    envDisplay = "${envDisplay.toUpperCase()}"
-                } else {
-                    envDisplay = "${envDisplay.toUpperCase()} - ${portalDisplay}"
-                }
-                
+                envDisplay = (portalDisplay == 'Default') ? envDisplay.toUpperCase() : "${envDisplay.toUpperCase()} - ${portalDisplay}"
+
                 currentBuild.description = """
-                    Environment: ${envDisplay} | 
-                    ${testSelection} | 
-                    Tests: ${testStats.total} | 
-                    Passed: ${testStats.passed} | 
-                    Failed: ${testStats.failed} | 
+                    Environment: ${envDisplay} |
+                    ${parseTestSelection(' | ')} |
+                    Tests: ${testStats.total} |
+                    Passed: ${testStats.passed} |
+                    Failed: ${testStats.failed} |
                     Duration: ${durationDisplay}
                 """.stripIndent().trim()
-            }
-        }
-        
-        success {
-            script {
-                echo "Build succeeded!"
-                if (params.SEND_EMAIL) {
-                    sendEmailNotification('SUCCESS')
+
+                if (fileExists('reports')) {
+                    archiveArtifacts artifacts: 'reports/**', allowEmptyArchive: true
                 }
-            }
-        }
-        
-        failure {
-            script {
-                echo "Build failed!"
-                if (params.SEND_EMAIL) {
-                    sendEmailNotification('FAILURE')
+                if (fileExists(env.ALLURE_DIR)) {
+                    archiveArtifacts artifacts: "${env.ALLURE_DIR}/**", allowEmptyArchive: true
                 }
-            }
-        }
-        
-        unstable {
-            script {
-                // Check if build was marked unstable but all tests actually passed
-                def testStats = getTestStatistics()
-                if (testStats.total > 0 && testStats.failed == 0 && testStats.passed > 0) {
-                    echo "Build was marked unstable, but all tests passed (${testStats.passed}/${testStats.total}). Setting build status to SUCCESS."
-                    currentBuild.result = 'SUCCESS'
-                    if (params.SEND_EMAIL) {
-                        sendEmailNotification('SUCCESS')
-                    }
-                } else {
-                    echo "Build unstable!"
-                    if (params.SEND_EMAIL) {
-                        sendEmailNotification('UNSTABLE')
-                    }
+
+                if (params.SEND_EMAIL) {
+                    sendEmailNotification(currentBuild.currentResult ?: 'UNKNOWN')
                 }
             }
         }
     }
 }
 
-// Helper function to parse test selection (suites and markers) for display
+def validateRuntimeParameters(String testSuite, String markers) {
+    if (testSuite && !testSuite.trim()) {
+        error("Invalid TEST_SUITE value.")
+    }
+    if (markers && !markers.trim()) {
+        error("Invalid MARKERS value.")
+    }
+}
+
+def resolveSelectedTestPaths(String testSuite) {
+    def suites = parseSuites(testSuite)
+    if (suites.isEmpty()) {
+        return ['tests/']
+    }
+    def paths = suites.collect { getTestPath(it) }.findAll { it && it != 'tests/' }.unique()
+    return paths.isEmpty() ? ['tests/'] : paths
+}
+
+def resolveMarkerExpression(String markers) {
+    if (!markers?.trim()) {
+        return null
+    }
+    def markerList = markers
+        .split(',')
+        .collect { it.trim() }
+        .findAll { it && it != 'all' && it != 'All Tests' }
+        .collect { mapMarkerDisplayToInternal(it) }
+        .unique()
+    return markerList.isEmpty() ? null : markerList.join(' or ')
+}
+
+def buildPytestCommand(List testPaths, String markerExpression, boolean runAllure, boolean collectOnly) {
+    def parts = []
+    parts << '-v'
+    parts << '--tb=short'
+    parts << '--color=no'
+    if (collectOnly) {
+        parts << '--collect-only'
+        parts << '-q'
+    } else {
+        parts << "--junitxml=${env.PYTEST_JUNIT}"
+        parts << "--html=${env.PYTEST_HTML}"
+        parts << '--self-contained-html'
+        parts << '--json-report'
+        parts << "--json-report-file=${env.PYTEST_JSON}"
+        if (runAllure) {
+            parts << "--alluredir=${env.ALLURE_DIR}"
+        }
+    }
+    parts.addAll(testPaths)
+    if (markerExpression) {
+        parts << '-m'
+        parts << "\"${markerExpression}\""
+    }
+    return parts.join(' ')
+}
+
+def runPytest(String args) {
+    runShell(
+        "${env.VENV_DIR}/bin/python -m pytest ${args}",
+        "%VENV_DIR%\\Scripts\\python -m pytest ${args}"
+    )
+}
+
+def runShell(String unixCommand, String windowsCommand) {
+    if (isUnix()) {
+        sh(unixCommand)
+    } else {
+        bat(windowsCommand)
+    }
+}
+
 def parseTestSelection(separator = ' | ') {
     def testSelectionParts = []
     if (params.TEST_SUITE && params.TEST_SUITE.trim() && params.TEST_SUITE != 'all' && params.TEST_SUITE != 'All Tests') {
@@ -382,7 +329,16 @@ def parseTestSelection(separator = ' | ') {
     return testSelectionParts.size() > 0 ? testSelectionParts.join(separator) : "All Tests"
 }
 
-// Helper function to map display names to internal suite names
+def parseSuites(String testSuite) {
+    if (!testSuite?.trim()) return []
+    return testSuite
+        .split(',')
+        .collect { it.trim() }
+        .findAll { it && it != 'all' && it != 'All Tests' }
+        .collect { mapSuiteDisplayToInternal(it) }
+        .unique()
+}
+
 def mapSuiteDisplayToInternal(displayName) {
     def suiteMapping = [
         'All Tests': 'all',
@@ -393,11 +349,9 @@ def mapSuiteDisplayToInternal(displayName) {
         'List View CRUD Operations': 'list_view_crud',
         'Pin/Unpin Functionality': 'pin_unpin'
     ]
-    // Return mapped name or original if not found (for backward compatibility)
     return suiteMapping.get(displayName, displayName)
 }
 
-// Helper function to map display names to internal marker names
 def mapMarkerDisplayToInternal(displayName) {
     def markerMapping = [
         'All Tests': 'all',
@@ -436,100 +390,9 @@ def mapMarkerDisplayToInternal(displayName) {
         'Recommends Portal': 'recommends_portal',
         'FA and RIA Portal': 'fa_ria_portal'
     ]
-    // Return mapped name or original if not found (for backward compatibility)
     return markerMapping.get(displayName, displayName)
 }
 
-// Helper function to build test command based on suite or markers
-def buildTestCommand(testSuite, markers) {
-    def baseCommand = "\"%PYTHON_EXE%\" -m pytest"
-    def reportOptions = "--html=\"%HTML_REPORT%\" --self-contained-html --alluredir=\"%ALLURE_RESULTS%\" --json-report --json-report-file=\"reports/report.json\" --junitxml=\"reports/junit.xml\" -v --tb=short"
-    
-    // Parse multiple suites (extendedChoice returns comma-separated string)
-    def suitesList = []
-    if (testSuite && testSuite.trim()) {
-        testSuite.split(',').each { suite ->
-            def trimmed = suite.trim()
-            if (trimmed && trimmed != 'all' && trimmed != 'All Tests') {
-                // Map display name to internal name
-                def internalName = mapSuiteDisplayToInternal(trimmed)
-                suitesList.add(internalName)
-            }
-        }
-    }
-    def hasSuite = suitesList.size() > 0
-    
-    // Parse multiple markers (extendedChoice returns comma-separated string)
-    def markersList = []
-    if (markers && markers.trim()) {
-        markers.split(',').each { marker ->
-            def trimmed = marker.trim()
-            if (trimmed && trimmed != 'all' && trimmed != 'All Tests') {
-                // Map display name to internal name
-                def internalName = mapMarkerDisplayToInternal(trimmed)
-                markersList.add(internalName)
-            }
-        }
-    }
-    def hasMarkers = markersList.size() > 0
-    
-    // Build marker expression (multiple markers use OR logic)
-    def markerExpression = null
-    if (hasMarkers) {
-        markerExpression = markersList.join(' or ')
-    }
-    
-    // Case 1: Both suites and markers specified - combine them
-    if (hasSuite && hasMarkers) {
-        // Build test paths for multiple suites
-        def testPaths = []
-        suitesList.each { suite ->
-            def path = getTestPath(suite)
-            if (path && path != 'tests/') {
-                testPaths.add(path)
-            }
-        }
-        
-        if (testPaths.size() > 0) {
-            def pathsStr = testPaths.join(' ')
-            echo "Running test suites: ${suitesList.join(', ')} from paths: ${testPaths.join(', ')} with markers: ${markerExpression}"
-            return "${baseCommand} ${pathsStr} -m \"${markerExpression}\" ${reportOptions}"
-        } else {
-            // Fallback: if paths are empty, use marker-only approach
-            echo "Running tests with markers: ${markerExpression}"
-            return "${baseCommand} -m \"${markerExpression}\" ${reportOptions}"
-        }
-    }
-    
-    // Case 2: Only markers specified - run all suites with those markers
-    if (hasMarkers) {
-        echo "Running tests with markers: ${markerExpression}"
-        return "${baseCommand} -m \"${markerExpression}\" ${reportOptions}"
-    }
-    
-    // Case 3: Only suites specified - run all tests in those suites
-    if (hasSuite) {
-        def testPaths = []
-        suitesList.each { suite ->
-            def path = getTestPath(suite)
-            if (path && path != 'tests/') {
-                testPaths.add(path)
-            }
-        }
-        
-        if (testPaths.size() > 0) {
-            def pathsStr = testPaths.join(' ')
-            echo "Running test suites: ${suitesList.join(', ')} from paths: ${testPaths.join(', ')}"
-            return "${baseCommand} ${pathsStr} ${reportOptions}"
-        }
-    }
-    
-    // Case 4: Neither specified - run all tests
-    echo "Running all tests"
-    return "${baseCommand} tests/ ${reportOptions}"
-}
-
-// Helper function to get test path based on suite selection
 def getTestPath(testSuite) {
     def testPaths = [
         'all': 'tests/',
@@ -543,287 +406,76 @@ def getTestPath(testSuite) {
     return testPaths.get(testSuite, 'tests/')
 }
 
-// Helper function to get test statistics from HTML report
 def getTestStatistics() {
-    def stats = [
-        total: 0,
-        passed: 0,
-        failed: 0,
-        skipped: 0
-    ]
-
-    def jsonFile = 'reports/report.json'
-
+    def stats = [total: 0, passed: 0, failed: 0, skipped: 0]
+    def jsonFile = env.PYTEST_JSON ?: 'reports/report.json'
     if (!fileExists(jsonFile)) {
         echo "pytest JSON report not found. Returning empty stats."
         return stats
     }
-
     try {
-        // Read JSON file and parse using Groovy's JsonSlurper
-        def jsonContent = readFile jsonFile
-        def jsonSlurper = new groovy.json.JsonSlurper()
-        def report = jsonSlurper.parseText(jsonContent)
-
-        stats.passed  = report.summary?.passed  ?: 0
-        stats.failed  = report.summary?.failed  ?: 0
-        stats.skipped = report.summary?.skipped ?: 0
-
-        // Deselected tests are NOT counted as executed
+        def report = new groovy.json.JsonSlurper().parseText(readFile(jsonFile))
+        stats.passed = report.summary?.passed ?: 0
+        stats.failed = (report.summary?.failed ?: 0) + (report.summary?.error ?: 0)
+        stats.skipped = (report.summary?.skipped ?: 0) + (report.summary?.xfailed ?: 0) + (report.summary?.xpassed ?: 0)
         stats.total = stats.passed + stats.failed + stats.skipped
-
-        echo """
-        Test Statistics (from JSON):
-        Total   : ${stats.total}
-        Passed  : ${stats.passed}
-        Failed  : ${stats.failed}
-        Skipped : ${stats.skipped}
-        """.stripIndent()
-
     } catch (Exception e) {
         echo "Error parsing pytest JSON report: ${e.getMessage()}"
     }
-
     return stats
 }
 
-// Email notification function
-def sendEmailNotification(buildStatus) {
-    def testStats = getTestStatistics()
-    
-    // Determine actual status: verify with test statistics to ensure accuracy
-    def actualStatus = buildStatus
-    
-    // Override based on test statistics if they contradict the parameter
-    if (testStats.total > 0) {
-        if (testStats.failed > 0) {
-            // Tests failed - must be FAILURE
-            actualStatus = 'FAILURE'
-        } else if (testStats.passed > 0 && testStats.failed == 0) {
-            // All tests passed - should be SUCCESS
-            actualStatus = 'SUCCESS'
-        }
-    }
-    
-    echo "Email notification - Parameter: ${buildStatus}, Final status: ${actualStatus}, Tests: ${testStats.passed}/${testStats.total} passed, ${testStats.failed} failed"
-    
-    // Try to get user who triggered the build (avoiding getRawBuild() for script security)
-    def triggeredBy = 'Muhammad Usman Arshad'
-    try {
-        // Try to get from BUILD_USER_ID environment variable first
-        if (env.BUILD_USER_ID && env.BUILD_USER_ID != 'null') {
-            triggeredBy = env.BUILD_USER_ID
-        }
-        // If BUILD_USER_ID is not available, use default
-    } catch (Exception e) {
-        triggeredBy = 'Muhammad Usman Arshad'
-    }
-    
-    def statusColor = actualStatus == 'SUCCESS' ? '#28a745' : actualStatus == 'FAILURE' ? '#dc3545' : '#ffc107'
-    def statusIcon = actualStatus == 'SUCCESS' ? '[PASS]' : actualStatus == 'FAILURE' ? '[FAIL]' : '[WARN]'
-    
-    // Format current date
-    def currentDate = new Date().format("yyyy-MM-dd")
-    def subject = "Dakota Automation Report - ${currentDate}"
-    
-    // Calculate pass percentage for progress bar
-    def passPercentage = testStats.total > 0 ? (testStats.passed * 100 / testStats.total).intValue() : 0
-    def failPercentage = testStats.total > 0 ? (testStats.failed * 100 / testStats.total).intValue() : 0
-    def skipPercentage = testStats.total > 0 ? (testStats.skipped * 100 / testStats.total).intValue() : 0
-    
-    // Build test selection string for email
-    def testSelectionDisplay = parseTestSelection('<br>')
-    
-    // Status configuration for template - Professional color scheme
-    def statusText = actualStatus == 'SUCCESS' ? 'SUCCESS' : actualStatus == 'FAILURE' ? 'FAILURE' : 'UNSTABLE'
-    def statusBarBg = actualStatus == 'SUCCESS' ? '#ecfdf5' : actualStatus == 'FAILURE' ? '#fef2f2' : '#fffbeb'
-    def statusBarBorder = actualStatus == 'SUCCESS' ? '#10b981' : actualStatus == 'FAILURE' ? '#ef4444' : '#f59e0b'
-    def statusTextColor = actualStatus == 'SUCCESS' ? '#047857' : actualStatus == 'FAILURE' ? '#b91c1c' : '#b45309'
-    def statusDarkTextColor = actualStatus == 'SUCCESS' ? '#065f46' : actualStatus == 'FAILURE' ? '#991b1b' : '#92400e'
-    
-    // Format duration - remove "and counting" if present
-    def durationString = currentBuild.durationString ?: 'N/A'
-    if (durationString.contains('and counting')) {
-        durationString = durationString.replace(' and counting', '')
-    }
-    
-    // Build test selection display
-    def testSelectionHtml = ''
-    def hasSuites = params.TEST_SUITE && params.TEST_SUITE.trim() && params.TEST_SUITE != 'all' && params.TEST_SUITE != 'All Tests'
-    def hasMarkers = params.MARKERS && params.MARKERS.trim() && params.MARKERS != 'All Tests'
-    
-    if (hasSuites || hasMarkers) {
-        def suitesHtml = ''
-        def markersHtml = ''
-        if (hasSuites) {
-            def suites = params.TEST_SUITE.split(',').collect { it.trim() }.findAll { it && it != 'all' && it != 'All Tests' }
-            if (suites.size() > 0) {
-                suitesHtml = "<strong>Suites:</strong> ${suites.join(', ')}"
-            }
-        }
-        if (hasMarkers) {
-            def markers = params.MARKERS.split(',').collect { it.trim() }.findAll { it && it != 'All Tests' }
-            if (markers.size() > 0) {
-                markersHtml = "<strong>Markers:</strong> ${markers.join(', ')}"
-            }
-        }
-        if (suitesHtml || markersHtml) {
-            testSelectionHtml = """
-<!-- ================= TEST SELECTION ================= -->
-<tr>
-<td style="padding:0 32px 28px;background:#ffffff;">
-<h3 style="margin:0 0 16px;font-size:20px;color:#1e293b;border-left:5px solid #10b981;padding-left:14px;font-weight:700;">
-Test Scope
-</h3>
-
-<table width="100%" cellpadding="14" cellspacing="0" style="background:linear-gradient(135deg,#ecfdf5 0%,#d1fae5 100%);border-radius:10px;border:2px solid #10b981;font-size:14px;">
-<tr>
-<td style="color:#065f46;line-height:1.8;">
-${suitesHtml ? suitesHtml + (markersHtml ? '<br>' : '') : ''}${markersHtml ? markersHtml : ''}
-</td>
-</tr>
-</table>
-</td>
-</tr>
-"""
-        }
-    }
-    
-    def body = """
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Dakota Marketplace | Automation Report</title>
-</head>
-
-<body style="margin:0;padding:0;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);font-family:Segoe UI, Roboto, Arial, sans-serif;">
-
-<table width="100%" cellpadding="0" cellspacing="0">
-<tr>
-<td align="center" style="padding:40px 0;">
-
-<!-- ================= MAIN CARD ================= -->
-<table width="720" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 25px 50px rgba(0,0,0,0.25);">
-
-<!-- ================= HEADER ================= -->
-<tr>
-<td style="background:linear-gradient(135deg,#1e40af 0%,#3b82f6 50%,#60a5fa 100%);padding:32px 32px;color:#ffffff;">
-    <h1 style="margin:0;font-size:28px;font-weight:700;letter-spacing:0.3px;text-shadow:0 2px 4px rgba(0,0,0,0.2);">
-        Dakota Marketplace
-    </h1>
-    <p style="margin:8px 0 0;font-size:15px;opacity:0.95;font-weight:400;">
-        Automated Test Execution Report
-    </p>
-</td>
-</tr>
-
-<!-- ================= STATUS BAR ================= -->
-<tr>
-<td style="background:${statusBarBg};padding:18px 32px;border-bottom:1px solid ${statusBarBorder};">
-    <table width="100%">
-        <tr>
-            <td>
-                <span style="font-size:20px;font-weight:700;color:${statusDarkTextColor};">${statusText}</span>
-            </td>
-            <td align="right" style="font-size:14px;color:${statusDarkTextColor};">
-                Pass Rate: <strong>${passPercentage}%</strong>
-            </td>
-        </tr>
-    </table>
-</td>
-                    </tr>
-
-<!-- ================= METRICS ================= -->
-<tr>
-<td style="padding:28px 32px;background:#f8fafc;">
-<table width="100%" cellpadding="14" cellspacing="12">
-<tr align="center">
-<td style="background:linear-gradient(135deg,#3b82f6 0%,#2563eb 100%);color:#ffffff;border-radius:12px;box-shadow:0 4px 12px rgba(59,130,246,0.3);">
-    <div style="font-size:12px;opacity:0.9;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:6px;">TOTAL</div>
-    <div style="font-size:32px;font-weight:800;line-height:1;">${testStats.total}</div>
-</td>
-<td style="background:linear-gradient(135deg,#10b981 0%,#059669 100%);color:#ffffff;border-radius:12px;box-shadow:0 4px 12px rgba(16,185,129,0.3);">
-    <div style="font-size:12px;opacity:0.9;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:6px;">PASSED</div>
-    <div style="font-size:32px;font-weight:800;line-height:1;">${testStats.passed}</div>
-</td>
-<td style="background:linear-gradient(135deg,#ef4444 0%,#dc2626 100%);color:#ffffff;border-radius:12px;box-shadow:0 4px 12px rgba(239,68,68,0.3);">
-    <div style="font-size:12px;opacity:0.9;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:6px;">FAILED</div>
-    <div style="font-size:32px;font-weight:800;line-height:1;">${testStats.failed}</div>
-</td>
-<td style="background:linear-gradient(135deg,#8b5cf6 0%,#7c3aed 100%);color:#ffffff;border-radius:12px;box-shadow:0 4px 12px rgba(139,92,246,0.3);">
-    <div style="font-size:12px;opacity:0.9;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:6px;">SKIPPED</div>
-    <div style="font-size:32px;font-weight:800;line-height:1;">${testStats.skipped}</div>
-</td>
-</tr>
-</table>
-</td>
-                    </tr>
-
-<!-- ================= BUILD DETAILS ================= -->
-<tr>
-<td style="padding:0 32px 28px;background:#ffffff;">
-<h3 style="margin:0 0 16px;font-size:20px;color:#1e293b;border-left:5px solid #3b82f6;padding-left:14px;font-weight:700;">
-Build Information
-</h3>
-
-<table width="100%" cellpadding="12" cellspacing="0" style="font-size:14px;background:#f8fafc;border-radius:10px;padding:16px;">
-<tr style="border-bottom:1px solid #e2e8f0;"><td width="35%" style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Build #</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${env.BUILD_NUMBER}</td></tr>
-<tr style="border-bottom:1px solid #e2e8f0;"><td style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Environment</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${(params.ENVIRONMENT ?: 'uat').toUpperCase()}</td></tr>
-<tr style="border-bottom:1px solid #e2e8f0;"><td style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Portal</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${params.PORTAL ?: 'Default'}</td></tr>
-<tr style="border-bottom:1px solid #e2e8f0;"><td style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Duration</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${durationString}</td></tr>
-<tr><td style="color:#64748b;font-weight:600;padding:10px 0;"><strong>Triggered By</strong></td><td style="color:#1e293b;font-weight:600;padding:10px 0;">${triggeredBy}</td></tr>
-</table>
-</td>
-                    </tr>
-
-${testSelectionHtml}
-
-<!-- ================= FOOTER ================= -->
-<tr>
-<td style="background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);color:#cbd5e1;padding:24px 32px;font-size:13px;border-top:1px solid rgba(255,255,255,0.1);">
-<p style="margin:0;line-height:1.8;">
-Automated by <strong style="color:#ffffff;font-weight:700;">Jenkins CI/CD</strong><br>
-<span style="color:#94a3b8;">Dakota Marketplace Test Framework</span>
-</p>
-</td>
-                    </tr>
-
-</table>
-<!-- ================= END CARD ================= -->
-
-</td>
-                    </tr>
-                </table>
-
-</body>
-</html>
-    """
-    
-    // Build recipient list: default email + additional emails
-    def recipients = [EMAIL_RECIPIENT]
-    
-    // Parse additional emails if provided
-    if (params.ADDITIONAL_EMAILS && params.ADDITIONAL_EMAILS.trim()) {
-        params.ADDITIONAL_EMAILS.split(',').each { email ->
-            def trimmedEmail = email.trim()
-            if (trimmedEmail && trimmedEmail.length() > 0) {
-                // Avoid duplicates
-                if (!recipients.contains(trimmedEmail)) {
-                    recipients.add(trimmedEmail)
+def collectRecipientEmails(String defaultEmail, String additionalEmails) {
+    def recipients = []
+    def seen = [] as Set
+    [defaultEmail, additionalEmails].findAll { it?.trim() }.each { source ->
+        source
+            .split(/[,\s;]+/)
+            .collect { it.trim() }
+            .findAll { it }
+            .each { mail ->
+                def key = mail.toLowerCase()
+                if (!seen.contains(key)) {
+                    seen.add(key)
+                    recipients.add(mail)
                 }
             }
-        }
     }
-    
-    def recipientList = recipients.join(', ')
-    echo "Sending email to: ${recipientList}"
-    
+    return recipients
+}
+
+def sendEmailNotification(String buildStatus) {
+    def testStats = getTestStatistics()
+    def actualStatus = buildStatus
+    if (testStats.total > 0) {
+        actualStatus = testStats.failed > 0 ? 'FAILURE' : 'SUCCESS'
+    }
+    def recipients = collectRecipientEmails(params.DEFAULT_EMAIL as String, params.ADDITIONAL_EMAILS as String)
+    if (recipients.isEmpty() && EMAIL_RECIPIENT?.trim()) {
+        recipients = [EMAIL_RECIPIENT]
+    }
+    if (recipients.isEmpty()) {
+        echo "No recipients configured, skipping email."
+        return
+    }
+    def subject = "Dakota Smoke Automation Report - ${new Date().format('yyyy-MM-dd')}"
+    def body = """
+Build: #${env.BUILD_NUMBER}
+Status: ${actualStatus}
+Environment: ${(params.ENVIRONMENT ?: 'uat').toUpperCase()}
+Portal: ${params.PORTAL ?: 'Default'}
+Selection: ${parseTestSelection(' | ')}
+Total: ${testStats.total}
+Passed: ${testStats.passed}
+Failed: ${testStats.failed}
+Skipped: ${testStats.skipped}
+URL: ${env.BUILD_URL ?: ''}
+"""
     emailext(
         subject: subject,
         body: body,
-        mimeType: 'text/html',
-        to: recipientList,
+        mimeType: 'text/plain',
+        to: recipients.join(', '),
         attachLog: true,
         compressLog: true
     )
