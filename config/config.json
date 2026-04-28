@@ -26,8 +26,8 @@
                 "password": "Rolus889$"
             },
             "prod": {
-                "username": "standard_user",
-                "password": "secret_sauce"
+                "username": "test_automation@dakota.com",
+                "password": "@#$%1234uatest%%"
             }
         },
         "portals": {
