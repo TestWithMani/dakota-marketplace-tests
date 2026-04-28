@@ -5,3 +5,4 @@ pytest-html==4.1.1
 allure-pytest==2.15.2
 webdriver-manager==4.0.2
 pytest-json-report
+pytest-xdist

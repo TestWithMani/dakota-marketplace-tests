@@ -1,12 +1,26 @@
 import pytest
 from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.edge.service import Service as EdgeService
+from selenium.webdriver.edge.options import Options as EdgeOptions
+from selenium.webdriver.firefox.service import Service as FirefoxService
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
+from webdriver_manager.firefox import GeckoDriverManager
 import os
 import logging
 from config.settings import resolve_runtime_config
+
+def pytest_addoption(parser):
+    parser.addoption(
+        "--browser",
+        action="store",
+        default=None,
+        help="Browser for UI tests: chrome, edge, firefox",
+    )
 
 @pytest.fixture(scope="session")
 def base_url():
@@ -24,30 +38,74 @@ def environment():
     runtime = resolve_runtime_config(os.environ.get("ENV"))
     return runtime["environment"]
 
-@pytest.fixture(scope="function")
-def driver():
-    chrome_options = Options()
-    chrome_options.add_argument("--start-maximized")
-    chrome_options.add_argument("--disable-infobars")
-    chrome_options.add_argument("--disable-extensions")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--remote-allow-origins=*")  # Chrome 111+ fix
+@pytest.fixture(scope="session")
+def browser_name(request):
+    cli_browser = request.config.getoption("--browser")
+    browser = (cli_browser or os.environ.get("BROWSER") or "chrome").strip().lower()
+    if browser not in {"chrome", "edge", "firefox"}:
+        raise ValueError(
+            f"Unsupported browser '{browser}'. Supported browsers: chrome, edge, firefox"
+        )
+    return browser
 
-    # Setup ChromeDriver
-    try:
-        # Use ChromeDriverManager to automatically download and manage ChromeDriver
-        driver_path = ChromeDriverManager().install()
-        service = Service(driver_path)
-    except Exception as e:
-        # Fallback: let Selenium find ChromeDriver automatically
-        logging.warning(f"ChromeDriverManager failed: {e}. Using system ChromeDriver.")
-        service = Service()
-    
-    driver = webdriver.Chrome(service=service, options=chrome_options)
-    yield driver
-    driver.quit()
+
+def _build_common_browser_args(options):
+    options.add_argument("--start-maximized")
+    options.add_argument("--disable-infobars")
+    options.add_argument("--disable-extensions")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--no-sandbox")
+
+
+@pytest.fixture(scope="function")
+def driver(browser_name):
+    browser_driver = None
+
+    if browser_name == "chrome":
+        options = ChromeOptions()
+        _build_common_browser_args(options)
+        options.add_argument("--remote-allow-origins=*")  # Chrome 111+ fix
+        try:
+            service = ChromeService(ChromeDriverManager().install())
+        except Exception as exc:
+            logging.warning(
+                "ChromeDriverManager failed: %s. Falling back to system ChromeDriver.", exc
+            )
+            service = ChromeService()
+        browser_driver = webdriver.Chrome(service=service, options=options)
+
+    elif browser_name == "edge":
+        options = EdgeOptions()
+        _build_common_browser_args(options)
+        try:
+            service = EdgeService(EdgeChromiumDriverManager().install())
+        except Exception as exc:
+            logging.warning(
+                "EdgeDriverManager failed: %s. Falling back to system EdgeDriver.", exc
+            )
+            service = EdgeService()
+        browser_driver = webdriver.Edge(service=service, options=options)
+
+    elif browser_name == "firefox":
+        options = FirefoxOptions()
+        # Firefox supports a subset of Chromium flags; keep minimal stable options.
+        options.add_argument("--width=1920")
+        options.add_argument("--height=1080")
+        try:
+            service = FirefoxService(GeckoDriverManager().install())
+        except Exception as exc:
+            logging.warning(
+                "GeckoDriverManager failed: %s. Falling back to system geckodriver.", exc
+            )
+            service = FirefoxService()
+        browser_driver = webdriver.Firefox(service=service, options=options)
+
+    if browser_driver is None:
+        raise ValueError(f"Driver setup failed for browser '{browser_name}'")
+
+    yield browser_driver
+    browser_driver.quit()
 
 @pytest.fixture(scope="function")
 def wait(driver):

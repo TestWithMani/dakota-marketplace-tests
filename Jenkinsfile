@@ -29,6 +29,16 @@ pipeline {
             choices: ['All Tests', 'Accounts Tab', 'Contact Tab', 'All Documents', '13F Filings & Investments Search', 'Conference Search', 'Consultant Reviews', 'Continuation Vehicle', 'Dakota City Guides', 'Dakota Searches', 'Dakota Video Search', 'Fee Schedules Dashboard', 'Fund Family Memos', 'Fund Launches', 'Investment Allocator - Accounts', 'Investment Allocator - Contacts', 'Investment Firm - Accounts', 'Investment Firm - Contacts', 'Manager Presentation Dashboard', 'My Accounts', 'Pension Documents', 'Portfolio Companies', 'Portfolio Companies - Contacts', 'Private Fund Search', 'Public Company Search', 'Public Investments Search', 'Public Plan Minutes Search', 'Recent Transactions', 'University Alumni - Contacts'],
             description: 'Select one marker. Use "All Tests" for no marker filtering.'
         )
+        choice(
+            name: 'BROWSER',
+            choices: ['chrome', 'edge', 'firefox'],
+            description: 'Browser used for Selenium execution.'
+        )
+        string(
+            name: 'PARALLEL_WORKERS',
+            defaultValue: '1',
+            description: "Pytest xdist workers. Use '1' to disable parallel mode, integer >1, or 'auto'."
+        )
         booleanParam(
             name: 'RUN_ALLURE',
             defaultValue: true,
@@ -100,13 +110,13 @@ pipeline {
                             python3 -m venv ${env.VENV_DIR}
                             ${env.VENV_DIR}/bin/python -m pip install --upgrade pip
                             ${env.VENV_DIR}/bin/python -m pip install -r requirements.txt
-                            ${env.VENV_DIR}/bin/python -m pip install pytest-html pytest-json-report allure-pytest
+                            ${env.VENV_DIR}/bin/python -m pip install pytest-html pytest-json-report allure-pytest pytest-xdist
                         """,
                         """
                             py -m venv %VENV_DIR%
                             %VENV_DIR%\\Scripts\\python -m pip install --upgrade pip
                             %VENV_DIR%\\Scripts\\python -m pip install -r requirements.txt
-                            %VENV_DIR%\\Scripts\\python -m pip install pytest-html pytest-json-report allure-pytest
+                            %VENV_DIR%\\Scripts\\python -m pip install pytest-html pytest-json-report allure-pytest pytest-xdist
                         """
                     )
                 }
@@ -135,10 +145,22 @@ pipeline {
         stage('Static Validation') {
             steps {
                 script {
-                    validateRuntimeParameters(params.TEST_SUITE as String, params.MARKERS as String)
+                    validateRuntimeParameters(
+                        params.TEST_SUITE as String,
+                        params.MARKERS as String,
+                        params.BROWSER as String,
+                        params.PARALLEL_WORKERS as String
+                    )
                     def selectedPaths = resolveSelectedTestPaths(params.TEST_SUITE as String)
                     def markerExpr = resolveMarkerExpression(params.MARKERS as String)
-                    def collectCmd = buildPytestCommand(selectedPaths, markerExpr, false, true)
+                    def collectCmd = buildPytestCommand(
+                        selectedPaths,
+                        markerExpr,
+                        false,
+                        true,
+                        params.BROWSER as String,
+                        params.PARALLEL_WORKERS as String
+                    )
                     runPytest('--version')
                     runPytest(collectCmd)
                 }
@@ -150,10 +172,17 @@ pipeline {
                 script {
                     def selectedPaths = resolveSelectedTestPaths(params.TEST_SUITE as String)
                     def markerExpr = resolveMarkerExpression(params.MARKERS as String)
-                    def runCmd = buildPytestCommand(selectedPaths, markerExpr, params.RUN_ALLURE as boolean, false)
+                    def runCmd = buildPytestCommand(
+                        selectedPaths,
+                        markerExpr,
+                        params.RUN_ALLURE as boolean,
+                        false,
+                        params.BROWSER as String,
+                        params.PARALLEL_WORKERS as String
+                    )
                     echo "Pytest command: pytest ${runCmd}"
 
-                    withEnv(["ENV=${env.ENV}"]) {
+                    withEnv(["ENV=${env.ENV}", "BROWSER=${(params.BROWSER ?: 'chrome').trim().toLowerCase()}"]) {
                         catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                             runPytest(runCmd)
                         }
@@ -236,12 +265,27 @@ pipeline {
     }
 }
 
-def validateRuntimeParameters(String testSuite, String markers) {
+def validateRuntimeParameters(String testSuite, String markers, String browser, String parallelWorkers) {
     if (testSuite && !testSuite.trim()) {
         error("Invalid TEST_SUITE value.")
     }
     if (markers && !markers.trim()) {
         error("Invalid MARKERS value.")
+    }
+    def normalizedBrowser = (browser ?: '').trim().toLowerCase()
+    if (!(normalizedBrowser in ['chrome', 'edge', 'firefox'])) {
+        error("Invalid BROWSER value '${browser}'. Supported values: chrome, edge, firefox.")
+    }
+
+    def workers = (parallelWorkers ?: '1').trim().toLowerCase()
+    if (workers == 'auto') {
+        return
+    }
+    if (!(workers ==~ /^\\d+$/)) {
+        error("Invalid PARALLEL_WORKERS value '${parallelWorkers}'. Use '1', integer >1, or 'auto'.")
+    }
+    if ((workers as int) < 1) {
+        error("PARALLEL_WORKERS must be >= 1, got '${parallelWorkers}'.")
     }
 }
 
@@ -267,11 +311,19 @@ def resolveMarkerExpression(String markers) {
     return markerList.isEmpty() ? null : markerList.join(' or ')
 }
 
-def buildPytestCommand(List testPaths, String markerExpression, boolean runAllure, boolean collectOnly) {
+def buildPytestCommand(List testPaths, String markerExpression, boolean runAllure, boolean collectOnly, String browser, String parallelWorkers) {
     def parts = []
     parts << '-v'
     parts << '--tb=short'
     parts << '--color=no'
+    def selectedBrowser = (browser ?: 'chrome').trim().toLowerCase()
+    def workers = (parallelWorkers ?: '1').trim().toLowerCase()
+
+    if (workers != '1') {
+        parts << '-n'
+        parts << workers
+    }
+
     if (collectOnly) {
         parts << '--collect-only'
         parts << '-q'
@@ -290,6 +342,7 @@ def buildPytestCommand(List testPaths, String markerExpression, boolean runAllur
         parts << '-m'
         parts << "\"${markerExpression}\""
     }
+    parts << "--browser=${selectedBrowser}"
     return parts.join(' ')
 }
 
@@ -322,6 +375,8 @@ def parseTestSelection(separator = ' | ') {
             testSelectionParts.add("Markers: ${markers.join(', ')}")
         }
     }
+    testSelectionParts.add("Browser: ${(params.BROWSER ?: 'chrome').trim().toLowerCase()}")
+    testSelectionParts.add("Workers: ${(params.PARALLEL_WORKERS ?: '1').trim()}")
     return testSelectionParts.size() > 0 ? testSelectionParts.join(separator) : "All Tests"
 }
 
