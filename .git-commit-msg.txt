@@ -1,3 +1,0 @@
-Revert local video-recording additions and helper scripts.
-
-Commit current workspace state by removing per-test video attachment dependencies and deleting cleanup/branch-sync helper scripts.
