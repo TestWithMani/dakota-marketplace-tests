@@ -455,22 +455,42 @@ def sendEmailNotification(String buildStatus) {
         return
     }
     def subject = "Dakota Smoke Automation Report - ${new Date().format('yyyy-MM-dd')}"
+    def statusColor = actualStatus == 'SUCCESS' ? '#0f9d58' : (actualStatus == 'FAILURE' ? '#d93025' : '#f9ab00')
     def body = """
-Build: #${env.BUILD_NUMBER}
-Status: ${actualStatus}
-Environment: ${(params.ENVIRONMENT ?: 'uat').toUpperCase()}
-Portal: ${params.PORTAL ?: 'Default'}
-Selection: ${parseTestSelection(' | ')}
-Total: ${testStats.total}
-Passed: ${testStats.passed}
-Failed: ${testStats.failed}
-Skipped: ${testStats.skipped}
-URL: ${env.BUILD_URL ?: ''}
+<html>
+  <body style="font-family: Arial, sans-serif; color: #1f2937; line-height: 1.4; margin: 0; padding: 0;">
+    <div style="max-width: 760px; margin: 0 auto; padding: 18px; border: 1px solid #e5e7eb; border-radius: 10px;">
+      <h2 style="margin: 0 0 12px 0;">Dakota Smoke Automation Report</h2>
+      <div style="margin-bottom: 12px;">
+        <strong>Build:</strong> #${env.BUILD_NUMBER}<br/>
+        <strong>Status:</strong> <span style="color: ${statusColor}; font-weight: bold;">${actualStatus}</span><br/>
+        <strong>Environment:</strong> ${(params.ENVIRONMENT ?: 'uat').toUpperCase()}<br/>
+        <strong>Portal:</strong> ${params.PORTAL ?: 'Default'}<br/>
+        <strong>Selection:</strong> ${parseTestSelection(' | ')}
+      </div>
+      <table cellpadding="8" cellspacing="0" border="0" style="border-collapse: collapse; width: 100%; margin-bottom: 12px;">
+        <tr style="background: #f9fafb;">
+          <th align="left" style="border: 1px solid #e5e7eb;">Total</th>
+          <th align="left" style="border: 1px solid #e5e7eb;">Passed</th>
+          <th align="left" style="border: 1px solid #e5e7eb;">Failed</th>
+          <th align="left" style="border: 1px solid #e5e7eb;">Skipped</th>
+        </tr>
+        <tr>
+          <td style="border: 1px solid #e5e7eb;">${testStats.total}</td>
+          <td style="border: 1px solid #e5e7eb; color: #0f9d58; font-weight: bold;">${testStats.passed}</td>
+          <td style="border: 1px solid #e5e7eb; color: #d93025; font-weight: bold;">${testStats.failed}</td>
+          <td style="border: 1px solid #e5e7eb;">${testStats.skipped}</td>
+        </tr>
+      </table>
+      <a href="${env.BUILD_URL ?: ''}" style="display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; padding: 8px 12px; border-radius: 6px;">Open Build in Jenkins</a>
+    </div>
+  </body>
+</html>
 """
     emailext(
         subject: subject,
         body: body,
-        mimeType: 'text/plain',
+        mimeType: 'text/html',
         to: recipients.join(', '),
         attachLog: true,
         compressLog: true
