@@ -1,6 +1,7 @@
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import TimeoutException
 
 class LoginPage:
     def __init__(self, driver):
@@ -30,6 +31,25 @@ class LoginPage:
         login_btn = self.wait.until(EC.element_to_be_clickable(self.login_button))
         login_btn.click()
         
-        # Wait for inventory page to load after login
-        self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "a[title='Dakota Marketplace']")))
+        # Robust post-login validation:
+        # some environments land on slightly different shells/pages.
+        marketplace_link = (By.CSS_SELECTOR, "a[title='Dakota Marketplace']")
+        login_form_still_visible = (By.ID, "loginPage:loginForm:login-email")
+
+        try:
+            self.wait.until(
+                lambda d: (
+                    len(d.find_elements(*marketplace_link)) > 0
+                    or "/dakotaMarketplace/s/" in (d.current_url or "")
+                    or "/s/" in (d.current_url or "")
+                )
+            )
+        except TimeoutException as exc:
+            if self.driver.find_elements(*login_form_still_visible):
+                raise TimeoutException(
+                    f"Login did not complete; login form is still visible. Current URL: {self.driver.current_url}"
+                ) from exc
+            raise TimeoutException(
+                f"Post-login landing element not detected. Current URL: {self.driver.current_url}"
+            ) from exc
 
