@@ -98,7 +98,17 @@ $env:ENV="prod_ria_portal"
 
 ## ⚙️ Configuration
 
-Edit `config/config.json` to configure different environments (UAT, PROD) and portals (FA Portal, RIA Portal, FO Portal, Benchmark Portal, Recommends Portal, FA and RIA Portal).
+`config/config.json` is now normalized for easy maintenance:
+
+- `base_urls`: one URL per base environment (`uat`, `prod`)
+- `credentials.base`: default creds per base environment
+- `credentials.portals`: portal-specific creds per base environment
+- `urls`: single shared URL key map used by all environments
+
+Set runtime environment with `ENV`:
+
+- Base only: `uat` / `prod`
+- Portal specific: `uat_fa_portal`, `prod_ria_portal`, `uat_benchmark_portal`, etc.
 
 ## 📦 Dependencies
 

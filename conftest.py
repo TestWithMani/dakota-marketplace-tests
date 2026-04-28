@@ -5,52 +5,24 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
 from webdriver_manager.chrome import ChromeDriverManager
 import os
-import json
 import logging
-
-# Load environment-specific configuration
-CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config", "config.json")
-with open(CONFIG_PATH) as f:
-    config = json.load(f)
+from config.settings import resolve_runtime_config
 
 @pytest.fixture(scope="session")
 def base_url():
-    # Support both old format (uat/prod) and new format (uat_fa_portal, prod_ria_portal, etc.)
-    env = os.environ.get("ENV", "uat")  # default to original uat
-    # If old format is used (uat/prod), use as-is (no portal suffix)
-    # If new format is used (uat_fa_portal, etc.), use as-is
-    if env not in ["uat", "prod"] and not env.startswith(("uat_", "prod_")):
-        # Fallback: if invalid format, use uat
-        env = "uat"
-    
-    if env not in config:
-        raise ValueError(f"Configuration not found for environment: {env}. Available: {list(config.keys())}")
-    return config[env]["url"]
+    runtime = resolve_runtime_config(os.environ.get("ENV"))
+    return runtime["url"]
 
 @pytest.fixture(scope="session")
 def credentials():
-    # Support both old format (uat/prod) and new format (uat_fa_portal, prod_ria_portal, etc.)
-    env = os.environ.get("ENV", "uat")  # default to original uat
-    # If old format is used (uat/prod), use as-is (no portal suffix)
-    # If new format is used (uat_fa_portal, etc.), use as-is
-    if env not in ["uat", "prod"] and not env.startswith(("uat_", "prod_")):
-        # Fallback: if invalid format, use uat
-        env = "uat"
-    
-    if env not in config:
-        raise ValueError(f"Configuration not found for environment: {env}. Available: {list(config.keys())}")
-    return config[env]["username"], config[env]["password"]
+    runtime = resolve_runtime_config(os.environ.get("ENV"))
+    return runtime["username"], runtime["password"]
 
 @pytest.fixture(scope="session")
 def environment():
     """Get the current environment name"""
-    env = os.environ.get("ENV", "uat")  # default to original uat
-    # If old format is used (uat/prod), use as-is (no portal suffix)
-    # If new format is used (uat_fa_portal, etc.), use as-is
-    if env not in ["uat", "prod"] and not env.startswith(("uat_", "prod_")):
-        # Fallback: if invalid format, use uat
-        env = "uat"
-    return env
+    runtime = resolve_runtime_config(os.environ.get("ENV"))
+    return runtime["environment"]
 
 @pytest.fixture(scope="function")
 def driver():

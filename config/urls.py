@@ -1,45 +1,8 @@
 """URL access helpers backed by ``config.json``."""
 
-import json
-import os
 from typing import Dict, List, Optional, Set
 
-CONFIG_PATH = os.path.join(os.path.dirname(__file__), "config.json")
-DEFAULT_ENV = "uat"
-
-
-def _load_config() -> Dict[str, dict]:
-    with open(CONFIG_PATH, encoding="utf-8") as config_file:
-        return json.load(config_file)
-
-
-_config = _load_config()
-
-
-def _get_all_environment_names() -> List[str]:
-    names = []
-    for key, value in _config.items():
-        if isinstance(value, dict) and "url" in value and "urls" in value:
-            names.append(key)
-    return sorted(names)
-
-
-def _normalize_environment_name(environment: Optional[str]) -> str:
-    env = (environment or os.environ.get("ENV") or DEFAULT_ENV).strip().lower()
-    return env.replace("-", "_").replace(" ", "_")
-
-
-def _resolve_environment(environment: Optional[str]) -> str:
-    normalized = _normalize_environment_name(environment)
-    if normalized in _config:
-        return normalized
-
-    available = _get_all_environment_names()
-    message = (
-        f"Environment '{normalized}' not found in config.json. "
-        f"Available: {', '.join(available)}"
-    )
-    raise ValueError(message)
+from .settings import resolve_runtime_config
 
 
 def _normalize_url_path(raw_path: str) -> str:
@@ -113,18 +76,12 @@ class URLs:
 
     @staticmethod
     def get_url_path(url_key: str, environment: Optional[str] = None) -> str:
-        resolved_env = _resolve_environment(environment)
-        env_config = _config.get(resolved_env, {})
-        urls = env_config.get("urls")
-
-        if not isinstance(urls, dict):
-            raise ValueError(
-                f"No valid 'urls' section found for environment '{resolved_env}' in config.json"
-            )
+        runtime = resolve_runtime_config(environment)
+        urls = runtime.get("urls")
 
         if url_key not in urls:
             raise ValueError(
-                f"URL key '{url_key}' not found for environment '{resolved_env}' in config.json"
+                f"URL key '{url_key}' not found in config.json urls map"
             )
 
         return _normalize_url_path(urls[url_key])
@@ -139,33 +96,40 @@ class URLs:
 
     @staticmethod
     def available_environments() -> List[str]:
-        return _get_all_environment_names()
+        environments: List[str] = []
+        for base_env in ("uat", "prod"):
+            environments.append(base_env)
+            for portal in (
+                "fa_portal",
+                "ria_portal",
+                "fo_portal",
+                "benchmark_portal",
+                "recommends_portal",
+                "fa_ria_portal",
+            ):
+                environments.append(f"{base_env}_{portal}")
+        return environments
 
     @staticmethod
     def validate_config() -> Dict[str, List[str]]:
-        """Validate env/url integrity and return issues grouped by environment."""
-        issues: Dict[str, List[str]] = {}
+        """Validate top-level URL key integrity and malformed paths."""
+        issues: Dict[str, List[str]] = {"config": []}
         required: Set[str] = set(URLs.ALL_KEYS)
+        runtime = resolve_runtime_config("uat")
+        urls = runtime.get("urls", {})
+        missing = sorted(required - set(urls.keys()))
+        extra = sorted(set(urls.keys()) - required)
+        if missing:
+            issues["config"].append(f"Missing url keys: {', '.join(missing)}")
+        if extra:
+            issues["config"].append(f"Extra url keys: {', '.join(extra)}")
 
-        for env_name in URLs.available_environments():
-            env_issues: List[str] = []
-            env_config = _config.get(env_name, {})
-            urls = env_config.get("urls", {})
-            missing = sorted(required - set(urls.keys()))
-            extra = sorted(set(urls.keys()) - required)
+        trailing = [k for k, v in urls.items() if isinstance(v, str) and v.strip().endswith("-")]
+        if trailing:
+            issues["config"].append(f"Paths with trailing '-': {', '.join(sorted(trailing))}")
 
-            if missing:
-                env_issues.append(f"Missing url keys: {', '.join(missing)}")
-            if extra:
-                env_issues.append(f"Extra url keys: {', '.join(extra)}")
-
-            trailing = [k for k, v in urls.items() if isinstance(v, str) and v.strip().endswith("-")]
-            if trailing:
-                env_issues.append(f"Paths with trailing '-': {', '.join(sorted(trailing))}")
-
-            if env_issues:
-                issues[env_name] = env_issues
-
+        if not issues["config"]:
+            return {}
         return issues
 
 
