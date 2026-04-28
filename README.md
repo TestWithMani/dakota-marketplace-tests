@@ -123,3 +123,15 @@ Reload VS Code window after setup to ensure proper Python interpreter detection.
 - Cache files (`__pycache__/`, `.pytest_cache/`) are excluded
 - Reports are generated automatically in `reports/` directory
 
+## 🔄 Jenkins Branch Sync
+
+To keep Jenkins jobs stable when one job points to `main` and another points to `master`, sync both branches after Jenkinsfile changes.
+
+```powershell
+# Sync main from master and push
+.\sync_branches.ps1 -SourceBranch master -TargetBranch main -Push
+
+# Optional: sync master from main and push
+.\sync_branches.ps1 -SourceBranch main -TargetBranch master -Push
+```
+
