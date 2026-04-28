@@ -1,0 +1,3 @@
+Remove setup and guide helper files.
+
+Delete legacy Jenkins/test setup docs and helper scripts to keep the repository lean and focused on the active runtime/CI configuration.
