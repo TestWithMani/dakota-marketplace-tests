@@ -145,3 +145,17 @@ To keep Jenkins jobs stable when one job points to `main` and another points to 
 .\sync_branches.ps1 -SourceBranch main -TargetBranch master -Push
 ```
 
+## 🧹 Safe Cleanup
+
+Remove generated artifacts and cache folders:
+
+```powershell
+.\cleanup_generated.ps1
+```
+
+Optional: include local virtual environment too:
+
+```powershell
+.\cleanup_generated.ps1 -IncludeVenv
+```
+
