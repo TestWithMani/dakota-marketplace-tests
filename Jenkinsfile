@@ -281,7 +281,7 @@ def validateRuntimeParameters(String testSuite, String markers, String browser, 
     if (workers == 'auto') {
         return
     }
-    if (!(workers ==~ /^\\d+$/)) {
+    if (!(workers ==~ /^\d+$/)) {
         error("Invalid PARALLEL_WORKERS value '${parallelWorkers}'. Use '1', integer >1, or 'auto'.")
     }
     if ((workers as int) < 1) {
