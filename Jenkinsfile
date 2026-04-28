@@ -465,15 +465,33 @@ def getTestStatistics() {
         return stats
     }
     try {
-        def report = new groovy.json.JsonSlurper().parseText(readFile(jsonFile))
-        stats.passed = report.summary?.passed ?: 0
-        stats.failed = (report.summary?.failed ?: 0) + (report.summary?.error ?: 0)
-        stats.skipped = (report.summary?.skipped ?: 0) + (report.summary?.xfailed ?: 0) + (report.summary?.xpassed ?: 0)
+        def jsonText = readFile(jsonFile)
+        def passed = extractJsonSummaryInt(jsonText, 'passed')
+        def failed = extractJsonSummaryInt(jsonText, 'failed')
+        def errored = extractJsonSummaryInt(jsonText, 'error')
+        def skipped = extractJsonSummaryInt(jsonText, 'skipped')
+        def xfailed = extractJsonSummaryInt(jsonText, 'xfailed')
+        def xpassed = extractJsonSummaryInt(jsonText, 'xpassed')
+
+        stats.passed = passed
+        stats.failed = failed + errored
+        stats.skipped = skipped + xfailed + xpassed
         stats.total = stats.passed + stats.failed + stats.skipped
     } catch (Exception e) {
         echo "Error parsing pytest JSON report: ${e.getMessage()}"
     }
     return stats
+}
+
+def extractJsonSummaryInt(String jsonText, String key) {
+    if (!jsonText?.trim()) {
+        return 0
+    }
+    def matcher = (jsonText =~ /"summary"\s*:\s*\{(?s).*?"${java.util.regex.Pattern.quote(key)}"\s*:\s*(\d+)/)
+    if (matcher.find()) {
+        return (matcher.group(1) ?: '0') as int
+    }
+    return 0
 }
 
 def collectRecipientEmails(String defaultEmail, String additionalEmails) {
