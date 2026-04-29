@@ -63,6 +63,15 @@ def test_pension_documents_fields_display_functionality(driver, base_url, creden
     # Step 2: Navigate to Pension Documents Tab
     print("[Step 2] Navigating to Pension Documents tab...")
     driver.get(get_url(base_url, URLs.PENSION_DOCUMENTS))
+
+    # Wait for the "Dakota Marketplace" link to be clickable before proceeding
+    marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
+    print("Waiting for 'Dakota Marketplace' link to be clickable...")
+    WebDriverWait(driver, 30).until(
+        EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
+    )
+    print("'Dakota Marketplace' link is clickable.")
+
     wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
     time.sleep(2)
     print("[✓] Pension Documents tab loaded.")
@@ -100,7 +109,7 @@ def test_pension_documents_fields_display_functionality(driver, base_url, creden
 
     # Step 5: Open Select Fields To Display
     print("[Step 5] Opening 'Select Fields To Display' dialog...")
-    select_fields_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[@title='Select Fields To Display']")))
+    select_fields_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[normalize-space()='Select Fields To Display']")))
     driver.execute_script("arguments[0].click();", select_fields_btn)
     time.sleep(2)
 
@@ -282,3 +291,4 @@ def test_pension_documents_fields_display_functionality(driver, base_url, creden
     print(f"    - Original columns: {', '.join(original_column_names)}")
     print(f"    - Columns after change: {', '.join(new_column_names)}")
     print(f"    - Custom list view '{new_list_view_name}' was created and deleted as part of verification.")
+

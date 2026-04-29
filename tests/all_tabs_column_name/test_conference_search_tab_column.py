@@ -35,6 +35,15 @@ def test_verify_conference_search_tab_column_names(driver, base_url, credentials
     conference_search_url = get_url(base_url, URLs.CONFERENCE_SEARCH_TAB)
     driver.get(conference_search_url)
 
+    # Wait for the "Dakota Marketplace" link to be clickable before proceeding
+    marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
+    print("Waiting for 'Dakota Marketplace' link to be clickable...")
+    WebDriverWait(driver, 30).until(
+        EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
+    )
+    print("'Dakota Marketplace' link is clickable.")
+
+
     print("Waiting for Conference Search page to load (header visible)...")
     wait = WebDriverWait(driver, 30)
     header_selector = (By.XPATH, "//span[@class='headerTitle']")

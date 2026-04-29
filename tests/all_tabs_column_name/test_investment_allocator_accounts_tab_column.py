@@ -36,6 +36,15 @@ def test_verify_investment_allocator_accounts_tab_column(driver, base_url, crede
     accounts_url = get_url(base_url, URLs.INVESTMENT_ALLOCATOR_ACCOUNTS_DEFAULT)
     driver.get(accounts_url)
 
+    # Wait for the "Dakota Marketplace" link to be clickable before proceeding
+    marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
+    print("Waiting for 'Dakota Marketplace' link to be clickable...")
+    WebDriverWait(driver, 30).until(
+        EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
+    )
+    print("'Dakota Marketplace' link is clickable.")
+
+
     print("Waiting for Investment Allocator Accounts page to load (header visible)...")
     wait = WebDriverWait(driver, 30)
     header_selector = (By.XPATH, "//span[@class='headerTitle']")

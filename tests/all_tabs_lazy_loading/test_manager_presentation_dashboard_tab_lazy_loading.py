@@ -51,6 +51,15 @@ def test_manager_presentation_dashboard_tab_lazy_loading(driver, base_url, crede
 
     print("Step 2: Navigating to Manager Presentation Dashboard tab...")
     driver.get(get_url(base_url, URLs.MANAGER_PRESENTATION_DASHBOARD))
+
+    # Wait for the "Dakota Marketplace" link to be clickable before proceeding
+    marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
+    print("Waiting for 'Dakota Marketplace' link to be clickable...")
+    WebDriverWait(driver, 30).until(
+        EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
+    )
+    print("'Dakota Marketplace' link is clickable.")
+
     wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
     time.sleep(3)
 

@@ -114,6 +114,15 @@ def test_manager_presentation_dashboard_tab_fields_comparison(driver, base_url, 
 
     print("Step 2: Navigating to Manager Presentation Dashboard tab...")
     driver.get(get_url(base_url, URLs.MANAGER_PRESENTATION_DASHBOARD))
+
+    # Wait for the "Dakota Marketplace" link to be clickable before proceeding
+    marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
+    print("Waiting for 'Dakota Marketplace' link to be clickable...")
+    WebDriverWait(driver, 30).until(
+        EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
+    )
+    print("'Dakota Marketplace' link is clickable.")
+
     wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
 
     print("Step 3: Checking if Unpin is needed and performing if available...")
@@ -139,7 +148,7 @@ def test_manager_presentation_dashboard_tab_fields_comparison(driver, base_url, 
 
     print("Step 5: Clicking on 'Select Fields To Display' button...")
     select_fields_btn = wait.until(
-        EC.element_to_be_clickable((By.XPATH, "//button[@title='Select Fields To Display']"))
+        EC.element_to_be_clickable((By.XPATH, "//button[normalize-space()='Select Fields To Display']"))
     )
     driver.execute_script("arguments[0].click();", select_fields_btn)
     time.sleep(3)
@@ -316,4 +325,5 @@ def test_manager_presentation_dashboard_tab_fields_comparison(driver, base_url, 
     )
     
     print("\n✓ Test completed successfully. Both field lists match (case insensitive, order independent).")
+
 

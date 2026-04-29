@@ -36,6 +36,15 @@ def test_verify_dakota_searches_tab_column_names(driver, base_url, credentials):
     dakota_searches_url = get_url(base_url, URLs.DAKOTA_SEARCHES_TAB)
     driver.get(dakota_searches_url)
 
+    # Wait for the "Dakota Marketplace" link to be clickable before proceeding
+    marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
+    print("Waiting for 'Dakota Marketplace' link to be clickable...")
+    WebDriverWait(driver, 30).until(
+        EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
+    )
+    print("'Dakota Marketplace' link is clickable.")
+
+
     print("Waiting for Dakota Searches page to load (header visible)...")
     wait = WebDriverWait(driver, 30)
     header_selector = (By.XPATH, "//span[@class='headerTitle']")
