@@ -98,7 +98,7 @@
         "contact_default": "contact/Contact/Default",
         "investment_allocator_accounts_default": "investment-allocator-list",
         "investment_firm_accounts_default": "investment-firm-list",
-        "dakota_searches_tab": "dakota-searches-tab",
+        "dakota_searches_tab": "marketplace-searches/Marketplace_Searches__c/Default",
         "my_accounts_default": "my-account/My_Account__c/Default",
         "investment_allocator_contacts_default": "investment-allocator-contacts",
         "investment_firm_contacts_default": "investment-firm-contacts",
@@ -120,7 +120,7 @@
         "portfolio_companies": "portfolio-companies",
         "recent_transactions": "recent-transactions",
         "conference_search_tab": "conference-search-tab",
-        "dakota_video_search_tab": "dakota-video-search-tab",
+        "dakota_video_search_tab": "dakota-videos",
         "public_company_search_tab": "public-company-search-tab"
     }
 }
