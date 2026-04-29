@@ -690,7 +690,7 @@ def sendEmailNotification(String buildStatus) {
         echo "No recipients configured, skipping email."
         return
     }
-    def subject = "Dakota Smoke Automation Report - ${new Date().format('yyyy-MM-dd')}"
+    def subject = "Dakota Marketplace Smoke Report - ${new Date().format('yyyy-MM-dd')}"
     def statusColor = actualStatus == 'SUCCESS' ? '#16a34a' : (actualStatus == 'FAILURE' ? '#dc2626' : '#f59e0b')
     def durationString = (currentBuild.durationString ?: 'N/A').replace(' and counting', '')
     def passRate = testStats.total > 0 ? ((testStats.passed * 100) / testStats.total) as int : 0
@@ -705,7 +705,7 @@ def sendEmailNotification(String buildStatus) {
           <table width="760" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #dbe3ee;box-shadow:0 14px 32px rgba(30,64,175,0.14);">
             <tr>
               <td style="padding:22px 30px;background:linear-gradient(135deg,#0f172a 0%,#1e40af 52%,#7c3aed 100%);color:#ffffff;">
-                <h2 style="margin:0;font-size:30px;letter-spacing:0.2px;">Dakota Smoke Automation</h2>
+                <h2 style="margin:0;font-size:30px;letter-spacing:0.2px;">Dakota Marketplace Smoke</h2>
               </td>
             </tr>
             <tr>
