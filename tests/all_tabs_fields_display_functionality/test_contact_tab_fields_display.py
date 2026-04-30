@@ -11,7 +11,7 @@ import pytest
 
 def click_all_move_buttons(driver, move_btn_xpaths):
     """
-    Click each button in move_btn_xpaths (ignores missing/non-clickable).
+    Helper: attempts each XPath in order and skips missing/non-clickable buttons.
     """
     for xpath in move_btn_xpaths:
         try:
@@ -22,6 +22,22 @@ def click_all_move_buttons(driver, move_btn_xpaths):
             time.sleep(0.5)
         except Exception:
             pass
+
+
+def click_button_if_present(driver, xpath, timeout=2):
+    """
+    Helper: click a button if it becomes clickable within timeout.
+    Returns True if clicked, else False.
+    """
+    try:
+        btn = WebDriverWait(driver, timeout).until(
+            EC.element_to_be_clickable((By.XPATH, xpath))
+        )
+        driver.execute_script("arguments[0].click();", btn)
+        time.sleep(0.5)
+        return True
+    except Exception:
+        return False
 @pytest.mark.contact
 @pytest.mark.fields_display
 @pytest.mark.fa_portal
@@ -33,25 +49,26 @@ def click_all_move_buttons(driver, move_btn_xpaths):
 
 def test_contact_tab_fields_display_functionality(driver, base_url, credentials):
     """
-    End-to-end validation for the Contact tab fields display functionality.
-    Test Steps:
-      1. Log in and capture the state.
-      2. Navigate to the target tab.
-      3. Unpin default list view, if present.
-      4. Capture and print original table column headers.
-      5. Open 'Select Fields To Display' and fetch all field names.
-      6. Move the last field to 'Available', first field to 'Selected'.
-      7. Confirm changes with 'Add' button.
-      8. Create a new list view and verify header.
-      9. Confirm change in table headers (at least one diff).
-      10. Clean up by deleting the custom list view.
-    Test fails if no header diff is detected after the steps.
+    End-to-end validation for Contact tab field display behavior.
+    Flow:
+      1) Login and navigate to Contact tab.
+      2) Capture current list-view title and visible table columns.
+      3) Open "Select Fields To Display" and collect all modal fields from:
+         //li[@role='presentation']
+      4) Log field index + text for debug visibility.
+      5) Select first field and execute button sequence on dual-listbox[1]
+         and optional dual-listbox[2] buttons.
+      6) Select last field (from stored list) and repeat same button sequence.
+      7) Apply changes, save as a new list view, and validate list-view name.
+      8) Verify table headers changed (at least one added/removed column).
+      9) Delete created list view and confirm cleanup.
+    The test fails if column headers do not change after save.
     """
 
     wait = WebDriverWait(driver, 20)
 
     # Step 1: Login
-    print("[Step 1] Logging in to the application...")
+    print("[Step 1] Login: opening application and signing in...")
     username, password = credentials
     login_page = LoginPage(driver)
     login_page.navigate_to_login(base_url)
@@ -61,23 +78,23 @@ def test_contact_tab_fields_display_functionality(driver, base_url, credentials)
     print("[✓] Login successful and screenshot taken.")
 
     # Step 2: Navigate to Contact Tab
-    print("[Step 2] Navigating to Contact tab...")
+    print("[Step 2] Navigation: opening Contact tab...")
     driver.get(get_url(base_url, URLs.CONTACT_DEFAULT))
 
     # Wait for the "Dakota Marketplace" link to be clickable before proceeding
     marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
-    print("Waiting for 'Dakota Marketplace' link to be clickable...")
+    print("    Waiting for main grid row to become clickable...")
     WebDriverWait(driver, 30).until(
         EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
     )
-    print("'Dakota Marketplace' link is clickable.")
+    print("    Main grid row is clickable.")
 
     wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
     time.sleep(2)
     print("[✓] Contact tab loaded.")
 
     # Step 3: Try Unpin
-    print("[Step 3] Checking for 'Unpin this List View' button...")
+    print("[Step 3] List view prep: checking for 'Unpin this List View' button...")
     try:
         unpin_btn = WebDriverWait(driver, 5).until(
             EC.element_to_be_clickable((By.XPATH, "//button[@title='Unpin this List View']"))
@@ -86,13 +103,13 @@ def test_contact_tab_fields_display_functionality(driver, base_url, credentials)
         time.sleep(1)
         driver.refresh()
         wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
-        print("[✓] List view unpinned and page refreshed.")
+        print("[✓] Unpin completed and page refreshed.")
         time.sleep(2)
     except Exception:
-        print("[i] No unpin needed (button not found or already unpinned).")
+        print("[i] Unpin not required (already unpinned or button not present).")
 
     # Step 4: Save Current Header
-    print("[Step 4] Capturing original header for verification...")
+    print("[Step 4] Baseline capture: reading current list-view title...")
     original_header = wait.until(
         EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']"))
     ).text.strip()
@@ -100,7 +117,7 @@ def test_contact_tab_fields_display_functionality(driver, base_url, credentials)
     time.sleep(1)
 
     # Step 4a: Save table column headers BEFORE field selection change
-    print("[Step 4a] Saving table column headers BEFORE changing display fields:")
+    print("[Step 4a] Baseline capture: collecting visible table column headers...")
     header_span_elems = driver.find_elements(By.XPATH, "//th[@role='columnheader']//span[contains(@class,'slds-truncate')]")
     original_column_names = [elem.text.strip() for elem in header_span_elems if elem.text.strip()]
     if not original_column_names:
@@ -108,13 +125,13 @@ def test_contact_tab_fields_display_functionality(driver, base_url, credentials)
     print(f"    ({len(original_column_names)}) columns:", ', '.join(original_column_names))
 
     # Step 5: Open Select Fields To Display
-    print("[Step 5] Opening 'Select Fields To Display' dialog...")
+    print("[Step 5] Modal open: launching 'Select Fields To Display'...")
     select_fields_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[normalize-space()='Select Fields To Display']")))
     driver.execute_script("arguments[0].click();", select_fields_btn)
     time.sleep(2)
 
     # Step 6: Scrape all field names from modal
-    print("[Step 6] Fetching available fields for display selection...")
+    print("[Step 6] Modal read: extracting all fields from //li[@role='presentation']...")
     field_elements = wait.until(
         EC.presence_of_all_elements_located((By.XPATH, "//li[@role='presentation']"))
     )
@@ -124,49 +141,73 @@ def test_contact_tab_fields_display_functionality(driver, base_url, credentials)
         raise AssertionError("No fields found in Select Fields To Display modal")
     print("    Fields available:", ', '.join(fields_list))
 
+    # Debug: print all fields with index and text
+    print("    Debug list (index -> field text):")
+    for idx, field_name in enumerate(fields_list, start=1):
+        print(f"      [{idx}] {field_name}")
+
     # Get first and last for further operations
     first_field_name = fields_list[0]
     last_field_name = fields_list[-1]
-    print(f"    Candidate for moving - First: \"{first_field_name}\", Last: \"{last_field_name}\"")
+    print(f"    Selected candidates -> First: \"{first_field_name}\", Last: \"{last_field_name}\"")
 
-    # Step 7: Move LAST field to Available
-    print("[Step 7] Moving LAST field to Available Fields...")
-    last_field_xpath = f"(//li[@role='presentation'])[{len(fields_list)}]"
-    last_field_element = wait.until(EC.element_to_be_clickable((By.XPATH, last_field_xpath)))
-    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", last_field_element)
-    time.sleep(0.4)
-    last_field_element.click()
-    time.sleep(0.6)
-    move_to_available_xpaths = [
-        "(//button[@title='Move to Available Fields'])[1]",
-        "(//button[@title='Move to Available Fields'])[2]",
-        "(//button[@title='Move to Selected Visible Fields'])[1]",
-        "(//button[@title='Move to Selected Visible Fields'])[2]"
-    ]
-    click_all_move_buttons(driver, move_to_available_xpaths)
-    time.sleep(0.8)
-    print(f"    Last field '{last_field_name}' moved to Available Fields.")
-
-    # Step 7a: Move FIRST field to Selected
-    print("[Step 8] Moving FIRST field to Selected Visible Fields...")
+    # Step 7: Select FIRST field and click all required buttons in sequence
+    print("[Step 7] Action A: select FIRST field and run button sequence...")
     first_field_xpath = "(//li[@role='presentation'])[1]"
     first_field_element = wait.until(EC.element_to_be_clickable((By.XPATH, first_field_xpath)))
     driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", first_field_element)
     time.sleep(0.4)
     first_field_element.click()
     time.sleep(0.6)
-    move_to_selected_visible_xpaths = [
-        "(//button[@title='Move to Available Fields'])[1]",
-        "(//button[@title='Move to Available Fields'])[2]",
-        "(//button[@title='Move to Selected Visible Fields'])[1]",
-        "(//button[@title='Move to Selected Visible Fields'])[2]"
-    ]
-    click_all_move_buttons(driver, move_to_selected_visible_xpaths)
+
+    btn1 = "//lightning-dual-listbox[1]//div[1]//div[2]//div[1]//div[4]//lightning-button-icon[1]//button[1]//lightning-primitive-icon[1]"
+    btn2 = "//lightning-dual-listbox[1]//div[1]//div[2]//div[1]//div[4]//lightning-button-icon[2]//button[1]//lightning-primitive-icon[1]"
+    btn3 = "//lightning-dual-listbox[2]//div[1]//div[2]//div[1]//div[4]//lightning-button-icon[1]//button[1]//lightning-primitive-icon[1]"
+    btn4 = "//lightning-dual-listbox[2]//div[1]//div[2]//div[1]//div[4]//lightning-button-icon[2]//button[1]//lightning-primitive-icon[1]"
+
+    # First two are required
+    if not click_button_if_present(driver, btn1):
+        raise AssertionError("Required button 1 in lightning-dual-listbox[1] was not clickable.")
+    if not click_button_if_present(driver, btn2):
+        raise AssertionError("Required button 2 in lightning-dual-listbox[1] was not clickable.")
+
+    # Last two are optional
+    clicked_btn3 = click_button_if_present(driver, btn3)
+    clicked_btn4 = click_button_if_present(driver, btn4)
+    if clicked_btn3 or clicked_btn4:
+        print("    Optional dual-listbox[2] button(s) found and clicked.")
+    else:
+        print("    Optional dual-listbox[2] button(s) not present in this step.")
+
+    print(f"    First field processed: '{first_field_name}'.")
     time.sleep(0.8)
-    print(f"    First field '{first_field_name}' re-added to Selected Visible Fields.")
+
+    # Step 8: Select LAST field and repeat button sequence
+    print("[Step 8] Action B: select LAST field and repeat button sequence...")
+    last_field_xpath = f"(//li[@role='presentation'])[{len(fields_list)}]"
+    last_field_element = wait.until(EC.element_to_be_clickable((By.XPATH, last_field_xpath)))
+    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", last_field_element)
+    time.sleep(0.4)
+    last_field_element.click()
+    time.sleep(0.6)
+
+    if not click_button_if_present(driver, btn1):
+        raise AssertionError("Required button 1 in lightning-dual-listbox[1] was not clickable for last-field step.")
+    if not click_button_if_present(driver, btn2):
+        raise AssertionError("Required button 2 in lightning-dual-listbox[1] was not clickable for last-field step.")
+
+    clicked_btn3 = click_button_if_present(driver, btn3)
+    clicked_btn4 = click_button_if_present(driver, btn4)
+    if clicked_btn3 or clicked_btn4:
+        print("    Optional dual-listbox[2] button(s) found and clicked for last-field step.")
+    else:
+        print("    Optional dual-listbox[2] button(s) not present for last-field step.")
+
+    time.sleep(0.8)
+    print(f"    Last field processed: '{last_field_name}'.")
 
     # Step 9: Screenshot before Add
-    print("[Step 9] Screenshot before confirming display changes (Add)...")
+    print("[Step 9] Evidence: capturing screenshot before clicking Add...")
     with allure.step("Before clicking Add button"):
         allure.attach(
             driver.get_screenshot_as_png(),
@@ -175,14 +216,22 @@ def test_contact_tab_fields_display_functionality(driver, base_url, credentials)
         )
 
     # Step 10: Click Add, apply changes
-    print("[Step 10] Clicking Add button to confirm displayed columns...")
+    print("[Step 10] Apply: clicking Add to confirm field-display selection...")
     add_btn = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[normalize-space()='Add']")))
     add_btn.click()
     print("    Add button clicked.")
     time.sleep(6)
 
+    # Wait for the "Dakota Marketplace" link to be clickable before proceeding
+    marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
+    print("    Waiting for main grid row to become clickable...")
+    WebDriverWait(driver, 30).until(
+        EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
+    )
+    print("    Main grid row is clickable.")
+
     # Step 11: Create new list view (Save As)
-    print("[Step 11] Performing 'Save As' to create a custom list view...")
+    print("[Step 11] Save As: creating a new custom list view...")
     save_as_btn = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.XPATH, "(//button[normalize-space(.)='Save As'])[1]"))
     )
@@ -190,6 +239,14 @@ def test_contact_tab_fields_display_functionality(driver, base_url, credentials)
     time.sleep(2)
     new_list_view_name = f"Automation by Mani {random.randint(1000, 9999)}"
     print(f"    Created List View Name: {new_list_view_name}")
+
+    # Wait for the "Dakota Marketplace" link to be clickable before proceeding
+    marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
+    print("    Waiting for main grid row to become clickable...")
+    WebDriverWait(driver, 30).until(
+        EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
+    )
+    print("    Main grid row is clickable.")
 
     name_input = WebDriverWait(driver, 10).until(
         EC.visibility_of_element_located((By.XPATH, "//input[@name='enter-list-view-name']"))
@@ -202,6 +259,14 @@ def test_contact_tab_fields_display_functionality(driver, base_url, credentials)
     )
     driver.execute_script("arguments[0].click();", save_btn)
     time.sleep(6)
+
+    # Wait for the "Dakota Marketplace" link to be clickable before proceeding
+    marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
+    print("    Waiting for main grid row to become clickable...")
+    WebDriverWait(driver, 30).until(
+        EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
+    )
+    print("    Main grid row is clickable.")
 
     saved_header = WebDriverWait(driver, 12).until(
         EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']"))
@@ -217,8 +282,17 @@ def test_contact_tab_fields_display_functionality(driver, base_url, credentials)
             attachment_type=allure.attachment_type.PNG
         )
 
+
+    # Wait for the "Dakota Marketplace" link to be clickable before proceeding
+    marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
+    print("    Waiting for main grid row to become clickable...")
+    WebDriverWait(driver, 30).until(
+        EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
+    )
+    print("    Main grid row is clickable.")
+
     # Step 12: Table header check (main logic)
-    print("[Step 12] Verifying that table headers have CHANGED after field selection...")
+    print("[Step 12] Validation: verifying table headers changed after save...")
     wait.until(EC.presence_of_element_located((By.XPATH, "//table[contains(@class,'slds-table')]")))
     time.sleep(2)
     header_span_elems_new = driver.find_elements(By.XPATH, "//th[@role='columnheader']//span[contains(@class,'slds-truncate')]")
@@ -240,13 +314,13 @@ def test_contact_tab_fields_display_functionality(driver, base_url, credentials)
         print("    [Added columns]:", ', '.join(sorted(added_in_new)))
 
     if missing_in_new or added_in_new:
-        print("    [✓] Table columns CHANGED - test PASSED.")
+        print("    [✓] Table columns changed as expected.")
     else:
-        print("    [X] Table columns did NOT change - test FAILED!")
+        print("    [X] Table columns did not change.")
         raise AssertionError("No change in table column headers after list view save: expected at least one difference.")
 
     # Step 13: Screenshot after verification
-    print("[Step 13] Screenshot after verifying field display diff.")
+    print("[Step 13] Evidence: capturing screenshot after column-diff verification.")
     with allure.step("After field display verification"):
         allure.attach(
             driver.get_screenshot_as_png(),
@@ -255,7 +329,7 @@ def test_contact_tab_fields_display_functionality(driver, base_url, credentials)
         )
 
     # Step 14: Delete the custom list view
-    print(f"[Step 14] Deleting the created list view '{new_list_view_name}' for cleanup...")
+    print(f"[Step 14] Cleanup: deleting created list view '{new_list_view_name}'...")
     delete_btn = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.XPATH, "//button[.//svg[@data-key='delete'] or contains(@title,'Delete') or .//span[contains(normalize-space(.),'Delete')]]"))
     )
@@ -287,7 +361,7 @@ def test_contact_tab_fields_display_functionality(driver, base_url, credentials)
         )
 
     # Final
-    print("\n[✔] Test completed successfully. Summary:")
+    print("\n[✔] Test completed successfully. Execution summary:")
     print(f"    - Original columns: {', '.join(original_column_names)}")
     print(f"    - Columns after change: {', '.join(new_column_names)}")
     print(f"    - Custom list view '{new_list_view_name}' was created and deleted as part of verification.")

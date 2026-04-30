@@ -11,7 +11,7 @@ import pytest
 
 def click_all_move_buttons(driver, move_btn_xpaths):
     """
-    Click each button in move_btn_xpaths (ignores missing/non-clickable).
+    Helper: attempts each XPath in order and skips missing/non-clickable buttons.
     """
     for xpath in move_btn_xpaths:
         try:
@@ -22,6 +22,22 @@ def click_all_move_buttons(driver, move_btn_xpaths):
             time.sleep(0.5)
         except Exception:
             pass
+
+
+def click_button_if_present(driver, xpath, timeout=2):
+    """
+    Helper: click a button if it becomes clickable within timeout.
+    Returns True if clicked, else False.
+    """
+    try:
+        btn = WebDriverWait(driver, timeout).until(
+            EC.element_to_be_clickable((By.XPATH, xpath))
+        )
+        driver.execute_script("arguments[0].click();", btn)
+        time.sleep(0.5)
+        return True
+    except Exception:
+        return False
 @pytest.mark.investment_allocator_contacts
 @pytest.mark.fields_display
 @pytest.mark.fa_portal
@@ -114,7 +130,7 @@ def test_investment_allocator_contacts_tab_fields_display_functionality(driver, 
     time.sleep(2)
 
     # Step 6: Scrape all field names from modal
-    print("[Step 6] Fetching available fields for display selection...")
+    print("[Step 6] Modal read: extracting all fields from //li[@role='presentation']...")
     field_elements = wait.until(
         EC.presence_of_all_elements_located((By.XPATH, "//li[@role='presentation']"))
     )
@@ -124,46 +140,70 @@ def test_investment_allocator_contacts_tab_fields_display_functionality(driver, 
         raise AssertionError("No fields found in Select Fields To Display modal")
     print("    Fields available:", ', '.join(fields_list))
 
+    # Debug: print all fields with index and text
+    print("    Debug list (index -> field text):")
+    for idx, field_name in enumerate(fields_list, start=1):
+        print(f"      [{idx}] {field_name}")
+
     # Get first and last for further operations
     first_field_name = fields_list[0]
     last_field_name = fields_list[-1]
-    print(f"    Candidate for moving - First: \"{first_field_name}\", Last: \"{last_field_name}\"")
+    print(f"    Selected candidates -> First: \"{first_field_name}\", Last: \"{last_field_name}\"")
 
-    # Step 7: Move LAST field to Available
-    print("[Step 7] Moving LAST field to Available Fields...")
-    last_field_xpath = f"(//li[@role='presentation'])[{len(fields_list)}]"
-    last_field_element = wait.until(EC.element_to_be_clickable((By.XPATH, last_field_xpath)))
-    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", last_field_element)
-    time.sleep(0.4)
-    last_field_element.click()
-    time.sleep(0.6)
-    move_to_available_xpaths = [
-        "(//button[@title='Move to Available Fields'])[1]",
-        "(//button[@title='Move to Available Fields'])[2]",
-        "(//button[@title='Move to Selected Visible Fields'])[1]",
-        "(//button[@title='Move to Selected Visible Fields'])[2]"
-    ]
-    click_all_move_buttons(driver, move_to_available_xpaths)
-    time.sleep(0.8)
-    print(f"    Last field '{last_field_name}' moved to Available Fields.")
-
-    # Step 7a: Move FIRST field to Selected
-    print("[Step 8] Moving FIRST field to Selected Visible Fields...")
+    # Step 7: Select FIRST field and click all required buttons in sequence
+    print("[Step 7] Action A: select FIRST field and run button sequence...")
     first_field_xpath = "(//li[@role='presentation'])[1]"
     first_field_element = wait.until(EC.element_to_be_clickable((By.XPATH, first_field_xpath)))
     driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", first_field_element)
     time.sleep(0.4)
     first_field_element.click()
     time.sleep(0.6)
-    move_to_selected_visible_xpaths = [
-        "(//button[@title='Move to Available Fields'])[1]",
-        "(//button[@title='Move to Available Fields'])[2]",
-        "(//button[@title='Move to Selected Visible Fields'])[1]",
-        "(//button[@title='Move to Selected Visible Fields'])[2]"
-    ]
-    click_all_move_buttons(driver, move_to_selected_visible_xpaths)
+
+    btn1 = "//lightning-dual-listbox[1]//div[1]//div[2]//div[1]//div[4]//lightning-button-icon[1]//button[1]//lightning-primitive-icon[1]"
+    btn2 = "//lightning-dual-listbox[1]//div[1]//div[2]//div[1]//div[4]//lightning-button-icon[2]//button[1]//lightning-primitive-icon[1]"
+    btn3 = "//lightning-dual-listbox[2]//div[1]//div[2]//div[1]//div[4]//lightning-button-icon[1]//button[1]//lightning-primitive-icon[1]"
+    btn4 = "//lightning-dual-listbox[2]//div[1]//div[2]//div[1]//div[4]//lightning-button-icon[2]//button[1]//lightning-primitive-icon[1]"
+
+    # First two are required
+    if not click_button_if_present(driver, btn1):
+        raise AssertionError("Required button 1 in lightning-dual-listbox[1] was not clickable.")
+    if not click_button_if_present(driver, btn2):
+        raise AssertionError("Required button 2 in lightning-dual-listbox[1] was not clickable.")
+
+    # Last two are optional
+    clicked_btn3 = click_button_if_present(driver, btn3)
+    clicked_btn4 = click_button_if_present(driver, btn4)
+    if clicked_btn3 or clicked_btn4:
+        print("    Optional dual-listbox[2] button(s) found and clicked.")
+    else:
+        print("    Optional dual-listbox[2] button(s) not present in this step.")
+
+    print(f"    First field processed: '{first_field_name}'.")
     time.sleep(0.8)
-    print(f"    First field '{first_field_name}' re-added to Selected Visible Fields.")
+
+    # Step 8: Select LAST field and repeat button sequence
+    print("[Step 8] Action B: select LAST field and repeat button sequence...")
+    last_field_xpath = f"(//li[@role='presentation'])[{len(fields_list)}]"
+    last_field_element = wait.until(EC.element_to_be_clickable((By.XPATH, last_field_xpath)))
+    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", last_field_element)
+    time.sleep(0.4)
+    last_field_element.click()
+    time.sleep(0.6)
+
+    if not click_button_if_present(driver, btn1):
+        raise AssertionError("Required button 1 in lightning-dual-listbox[1] was not clickable for last-field step.")
+    if not click_button_if_present(driver, btn2):
+        raise AssertionError("Required button 2 in lightning-dual-listbox[1] was not clickable for last-field step.")
+
+    clicked_btn3 = click_button_if_present(driver, btn3)
+    clicked_btn4 = click_button_if_present(driver, btn4)
+    if clicked_btn3 or clicked_btn4:
+        print("    Optional dual-listbox[2] button(s) found and clicked for last-field step.")
+    else:
+        print("    Optional dual-listbox[2] button(s) not present for last-field step.")
+
+    time.sleep(0.8)
+    print(f"    Last field processed: '{last_field_name}'.")
 
     # Step 9: Screenshot before Add
     print("[Step 9] Screenshot before confirming display changes (Add)...")
