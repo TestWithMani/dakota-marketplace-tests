@@ -177,33 +177,37 @@ def test_conference_search_tab_fields_display_functionality(driver, base_url, cr
         print("    Optional dual-listbox[2] button(s) found and clicked.")
     else:
         print("    Optional dual-listbox[2] button(s) not present in this step.")
+    process_last_field = clicked_btn3 or clicked_btn4
 
     print(f"    First field processed: '{first_field_name}'.")
     time.sleep(0.8)
 
     # Step 8: Select LAST field and repeat button sequence
-    print("[Step 8] Action B: select LAST field and repeat button sequence...")
-    last_field_xpath = f"(//li[@role='presentation'])[{len(fields_list)}]"
-    last_field_element = wait.until(EC.element_to_be_clickable((By.XPATH, last_field_xpath)))
-    driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", last_field_element)
-    time.sleep(0.4)
-    last_field_element.click()
-    time.sleep(0.6)
+    if process_last_field:
+        print("[Step 8] Action B: select LAST field and repeat button sequence...")
+        last_field_xpath = f"(//li[@role='presentation'])[{len(fields_list)}]"
+        last_field_element = wait.until(EC.element_to_be_clickable((By.XPATH, last_field_xpath)))
+        driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", last_field_element)
+        time.sleep(0.4)
+        last_field_element.click()
+        time.sleep(0.6)
 
-    if not click_button_if_present(driver, btn1):
-        raise AssertionError("Required button 1 in lightning-dual-listbox[1] was not clickable for last-field step.")
-    if not click_button_if_present(driver, btn2):
-        raise AssertionError("Required button 2 in lightning-dual-listbox[1] was not clickable for last-field step.")
+        if not click_button_if_present(driver, btn1):
+            raise AssertionError("Required button 1 in lightning-dual-listbox[1] was not clickable for last-field step.")
+        if not click_button_if_present(driver, btn2):
+            raise AssertionError("Required button 2 in lightning-dual-listbox[1] was not clickable for last-field step.")
 
-    clicked_btn3 = click_button_if_present(driver, btn3)
-    clicked_btn4 = click_button_if_present(driver, btn4)
-    if clicked_btn3 or clicked_btn4:
-        print("    Optional dual-listbox[2] button(s) found and clicked for last-field step.")
+        clicked_btn3 = click_button_if_present(driver, btn3)
+        clicked_btn4 = click_button_if_present(driver, btn4)
+        if clicked_btn3 or clicked_btn4:
+            print("    Optional dual-listbox[2] button(s) found and clicked for last-field step.")
+        else:
+            print("    Optional dual-listbox[2] button(s) not present for last-field step.")
+
+        time.sleep(0.8)
+        print(f"    Last field processed: '{last_field_name}'.")
     else:
-        print("    Optional dual-listbox[2] button(s) not present for last-field step.")
-
-    time.sleep(0.8)
-    print(f"    Last field processed: '{last_field_name}'.")
+        print("[Step 8] Skipped: only primary dual-listbox buttons are present, so last field is not moved.")
 
     # Step 9: Screenshot before Add
     print("[Step 9] Screenshot before confirming display changes (Add)...")
