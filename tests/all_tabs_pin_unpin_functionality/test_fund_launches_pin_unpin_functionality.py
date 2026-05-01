@@ -20,18 +20,18 @@ import pytest
 
 def test_fund_launches_pin_unpin_functionality(driver, base_url, credentials):
     """
-    End-to-end test for Fund Launches tab Pin/Unpin functionality:
+    End-to-end test for Fund Launches tab pin/unpin functionality:
         - Login
-        - Navigate to Fund Launches tab
-        - Check if unpin required and perform if available
+        - Navigate to the Fund Launches tab
+        - Check whether unpin is required and perform it if available
         - Store original header
         - Create new list view
         - Pin the new list view
-        - Refresh and verify new list appears after refresh
+        - Refresh and verify the new list appears
         - Unpin the list and refresh again
-        - Verify original header shows after unpin
+        - Verify the original header appears after unpin
         - Delete the list view
-        - All steps include Allure screenshots
+        - Include Allure screenshots for all key steps
     """
     wait = WebDriverWait(driver, 20)
 
@@ -44,17 +44,17 @@ def test_fund_launches_pin_unpin_functionality(driver, base_url, credentials):
     print("Step 2: Navigating to Fund Launches tab...")
     driver.get(get_url(base_url, URLs.FUND_LAUNCHES))
 
-    # Wait for the "Dakota Marketplace" link to be clickable before proceeding
+    # Wait for the "Dakota Marketplace" row to be clickable before proceeding
     marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
-    print("Waiting for 'Dakota Marketplace' link to be clickable...")
+    print("Waiting for 'Dakota Marketplace' row to be clickable...")
     WebDriverWait(driver, 30).until(
         EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
     )
-    print("'Dakota Marketplace' link is clickable.")
+    print("'Dakota Marketplace' row is clickable.")
 
     wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
 
-    print("Step 3: Checking if Unpin is needed and performing if available...")
+    print("Step 3: Checking whether Unpin is needed and clicking it if available...")
     try:
         unpin_btn = WebDriverWait(driver, 5).until(
             EC.element_to_be_clickable((By.XPATH, "//button[@title='Unpin this List View']"))
@@ -65,9 +65,17 @@ def test_fund_launches_pin_unpin_functionality(driver, base_url, credentials):
         wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
         print("  Unpinned List View.")
     except Exception:
-        print("  Unpin not required or button not found.")
+        print("  Unpin not required, or the button was not found.")
 
-    print("Step 4: Storing original header...")
+    # Wait for the "Dakota Marketplace" row to be clickable before proceeding
+    marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
+    print("Waiting for 'Dakota Marketplace' row to be clickable...")
+    WebDriverWait(driver, 30).until(
+        EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
+    )
+    print("'Dakota Marketplace' row is clickable.")
+
+    print("Step 4: Capturing original header...")
     original_header = wait.until(
         EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']"))
     ).text.strip()
@@ -76,11 +84,11 @@ def test_fund_launches_pin_unpin_functionality(driver, base_url, credentials):
     print(f"  Original base: {original_base}")
     time.sleep(2)
 
-    print("Screenshot: Before creating new list view")
-    with allure.step("Before creating new Fund Launches tab list view"):
+    print("Screenshot: Before creating a new list view")
+    with allure.step("Before creating a new Fund Launches tab list view"):
         allure.attach(driver.get_screenshot_as_png(), attachment_type=allure.attachment_type.PNG)
 
-    print("Step 5: Creating new list view...")
+    print("Step 5: Creating a new list view...")
     save_as_btn = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.XPATH, "(//button[normalize-space(.)='Save As'])[1]"))
     )
@@ -101,7 +109,15 @@ def test_fund_launches_pin_unpin_functionality(driver, base_url, credentials):
     driver.execute_script("arguments[0].click();", save_btn)
     time.sleep(6)
 
-    print("  Checking if the new list view loads with correct name...")
+    # Wait for the "Dakota Marketplace" row to be clickable before proceeding
+    marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
+    print("Waiting for 'Dakota Marketplace' row to be clickable...")
+    WebDriverWait(driver, 30).until(
+        EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
+    )
+    print("'Dakota Marketplace' row is clickable.")
+
+    print("  Checking whether the new list view loads with the correct name...")
     saved_header = WebDriverWait(driver, 12).until(
         EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']"))
     ).text.strip()
@@ -123,9 +139,17 @@ def test_fund_launches_pin_unpin_functionality(driver, base_url, credentials):
     with allure.step(f"After pinning list view: {new_list_view_name}"):
         allure.attach(driver.get_screenshot_as_png(), name=f'{new_list_view_name}_after_pin.png', attachment_type=allure.attachment_type.PNG)
 
-    print("Step 7: Refreshing page and verifying pinned list view appears...")
+    print("Step 7: Refreshing page and verifying the pinned list view appears...")
     driver.refresh()
     wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
+
+    # Wait for the "Dakota Marketplace" row to be clickable before proceeding
+    marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
+    print("Waiting for 'Dakota Marketplace' row to be clickable...")
+    WebDriverWait(driver, 30).until(
+        EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
+    )
+    print("'Dakota Marketplace' row is clickable.")
 
     refreshed_header = wait.until(
         EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']"))
@@ -151,11 +175,19 @@ def test_fund_launches_pin_unpin_functionality(driver, base_url, credentials):
     driver.refresh()
     wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
 
+    # Wait for the "Dakota Marketplace" row to be clickable before proceeding
+    marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
+    print("Waiting for 'Dakota Marketplace' row to be clickable...")
+    WebDriverWait(driver, 30).until(
+        EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
+    )
+    print("'Dakota Marketplace' row is clickable.")
+
     with allure.step(f"After unpin and refresh"):
         allure.attach(driver.get_screenshot_as_png(), name=f'after_unpin_refresh.png', attachment_type=allure.attachment_type.PNG)
     time.sleep(10)
 
-    print("Step 9: Verifying original header shows after unpin...")
+    print("Step 9: Verifying the original header appears after unpin...")
     after_unpin_header = wait.until(
         EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']"))
     ).text.strip()
@@ -167,14 +199,14 @@ def test_fund_launches_pin_unpin_functionality(driver, base_url, credentials):
         allure.attach(driver.get_screenshot_as_png(), name=f'{after_unpin_base}_original_restored.png', attachment_type=allure.attachment_type.PNG)
 
     print("Step 10: Deleting the created list view...")
-    # Navigate to the created list view first by selecting it from dropdown
+    # Navigate to the created list view first by selecting it from the dropdown
     select_list_view_btn = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.XPATH, "//button[@title='Select a List View']"))
     )
     driver.execute_script("arguments[0].click();", select_list_view_btn)
     time.sleep(3)
 
-    # Find and click on the created list view
+    # Find and click the created list view
     views_list = WebDriverWait(driver, 10).until(
         EC.presence_of_all_elements_located((By.XPATH, "//div[@role='main']//li//a[1]"))
     )
@@ -186,13 +218,13 @@ def test_fund_launches_pin_unpin_functionality(driver, base_url, credentials):
             break
 
     if not list_view_found:
-        # Close dropdown if list view not found
+        # Close the dropdown if the list view is not found
         driver.execute_script("arguments[0].click();", select_list_view_btn)
         raise Exception(f"Created list view '{new_list_view_name}' not found in dropdown")
 
     wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
 
-    # Now delete the list view
+    # Delete the list view
     delete_btn = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.XPATH, "//button[.//svg[@data-key='delete'] or contains(@title,'Delete') or .//span[contains(normalize-space(.),'Delete')]]"))
     )
@@ -203,9 +235,17 @@ def test_fund_launches_pin_unpin_functionality(driver, base_url, credentials):
     driver.execute_script("arguments[0].click();", confirm_delete_btn)
     time.sleep(12)
 
+    # Wait for the "Dakota Marketplace" row to be clickable before proceeding
+    marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
+    print("Waiting for 'Dakota Marketplace' row to be clickable...")
+    WebDriverWait(driver, 30).until(
+        EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
+    )
+    print("'Dakota Marketplace' row is clickable.")
+
     wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
 
-    print("  Verifying that the deleted list view is gone from the dropdown...")
+    print("  Verifying that the deleted list view is removed from the dropdown...")
     select_list_view_btn = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.XPATH, "//button[@title='Select a List View']"))
     )
@@ -221,4 +261,4 @@ def test_fund_launches_pin_unpin_functionality(driver, base_url, credentials):
     with allure.step(f"After deletion - list view removed: {new_list_view_name}"):
         allure.attach(driver.get_screenshot_as_png(), name=f'after_delete_verification.png', attachment_type=allure.attachment_type.PNG)
 
-    print("Test completed successfully. Pin/Unpin functionality verified for Fund Launches tab.")
+    print("Test completed successfully. Pin/unpin functionality verified for Fund Launches tab.")
