@@ -86,14 +86,14 @@ def test_verify_dakota_searches_tab_column_names(driver, base_url, credentials):
 
     # Update this list to match the actual column names for Dakota Searches tab
     expected_headers = [
-        "Search Name",
+        "Searches Name",
         "Metro Area",
         "Account",
         "Consultant",
         "Asset Class",
         "Sub-Asset Class",
         "Amount",
-        "Posted Date"
+        "Search Status"
     ]
     print("Expected column headers for Dakota Searches tab:", expected_headers)
 

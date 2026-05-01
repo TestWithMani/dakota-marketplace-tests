@@ -88,14 +88,14 @@ def test_verify_investment_firm_contacts_tab_column(driver, base_url, credential
 
     # Update this list to match the actual column names for Investment Firm Contacts tab.
     expected_headers = [
-        "Contact Name", 
-        "Title", 
-        "Contact Type", 
+        "Contact Name",
+        "Title",
+        "Contact Type",
         "Account",
-        "Metro Area", 
-        "Email", 
-        "Phone", 
-        "Account: AUM", 
+        "Contact Metro Area",
+        "Email",
+        "Phone",
+        "Account: AUM"
     ]
     print("Expected column headers for Investment Firm Contacts tab:", expected_headers)
 

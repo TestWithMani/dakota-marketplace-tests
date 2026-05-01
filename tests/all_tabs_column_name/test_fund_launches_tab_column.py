@@ -86,7 +86,7 @@ def test_verify_fund_launches_tab_column_names(driver, base_url, credentials):
 
     # Update this list to match the actual column names for Fund Launches tab
     expected_headers = [
-        "Investment Strategy",
+        "New Fund Name",
         "Account",
         "Asset Class",
         "Sub-Asset Class",

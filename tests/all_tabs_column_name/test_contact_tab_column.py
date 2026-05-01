@@ -87,15 +87,15 @@ def test_verify_contact_tab_column_names(driver, base_url, credentials):
     print("Actual column headers found:", actual_headers)
 
     expected_headers = [
-        "Contact Name", 
-        "Account", 
-        "Title", 
-        "Contact Type", 
-        "Metro Area", 
-        "Email", 
-        "Phone", 
-        "Account: Metro Area", 
-        "Account: Account Type"
+        "Contact Name",
+        "Account",
+        "Title",
+        "Contact Type",
+        "Contact Metro Area",
+        "Email",
+        "Phone",
+        "Account: Account Type",
+        "Account: Metro Area"
     ]
     print("Expected column headers for Contact tab:", expected_headers)
 

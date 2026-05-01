@@ -86,13 +86,13 @@ def test_verify_public_plan_minutes_search_tab_column_names(driver, base_url, cr
 
     # Update this list to match the actual column names for Public Plan Minutes Search tab
     expected_headers = [
+        "Account",
         "Public Plan Minute Name",
         "Meeting Date",
         "Meeting Minutes URL",
-        "Account",
+        "Meeting Resource",
         "Posted Date",
-        "Account: AUM",
-        "Account: Billing State/Province"
+        "Account: AUM"
     ]
     print("Expected column headers for Public Plan Minutes Search tab:", expected_headers)
 

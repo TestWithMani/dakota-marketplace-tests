@@ -87,13 +87,11 @@ def test_verify_13f_filings_investments_search_tab_column_names(driver, base_url
     expected_headers = [
         "Account",
         "Investment Strategy",
-        "Investment Name",
-        "Asset Class",
-        "Sub-Asset Class",
-        "Fund Balance",
-        "Funding Year",
         "Ticker",
-        "Filing Date"
+        "Latest Fund Balance",
+        "No. of Shares",
+        "Latest Filing Date",
+        "View Investment"
     ]
     print("Expected column headers for 13F Filings Investments Search tab:", expected_headers)
 

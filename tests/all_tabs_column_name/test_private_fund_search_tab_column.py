@@ -86,10 +86,10 @@ def test_verify_private_fund_search_tab_column_names(driver, base_url, credentia
 
     # Update this list to match the actual column names for Private Fund Search tab
     expected_headers = [
+        "Account",
         "Investment Strategy Name",
         "Asset Class",
         "Sub-Asset Class",
-        "Account",
         "Vintage",
         "Fundraising Status",
         "Account: AUM"

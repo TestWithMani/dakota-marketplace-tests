@@ -88,15 +88,15 @@ def test_verify_investment_allocator_contacts_tab_column(driver, base_url, crede
 
     # Update this list to match the actual column names for Investment Allocator Contacts tab.
     expected_headers = [
-        "Contact Name", 
+        "Contact Name",
         "Title",
         "Contact Type",
         "Asset Class Coverage",
         "Account",
-        "Metro Area",
-        "Email", 
-        "Phone", 
-        "Account: AUM", 
+        "Contact Metro Area",
+        "Email",
+        "Phone",
+        "Account: AUM",
         "Account: Account Type"
     ]
     print("Expected column headers for Investment Allocator Contacts tab:", expected_headers)

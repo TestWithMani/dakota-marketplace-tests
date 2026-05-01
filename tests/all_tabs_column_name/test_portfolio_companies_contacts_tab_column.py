@@ -88,10 +88,10 @@ def test_verify_portfolio_companies_contacts_tab_column(driver, base_url, creden
 
     # Update this list to match the actual column names for Portfolio Companies Contacts tab.
     expected_headers = [
-        "Contact Name", 
+        "Contact Name",
         "Company Name",
         "Title",
-        "Metro Area",
+        "Contact Metro Area",
         "Account: Sector",
         "Account: Industry",
         "Account: Sub-Industry"

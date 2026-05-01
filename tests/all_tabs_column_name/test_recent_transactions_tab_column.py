@@ -89,12 +89,12 @@ def test_verify_recent_transactions_tab_column_names(driver, base_url, credentia
         "Transaction Name",
         "Transaction Participants",
         "Type",
-        "Transaction Target",
-        "Sector",
+        "Transaction Target (Private Company)",
+        "Target Segment",
+        "Transaction's Target Sector",
         "Transaction Type",
         "Transaction Sub-Type",
-        "Transaction Value",
-        "Transaction Date"
+        "Transaction Value"
     ]
     print("Expected column headers for Recent Transactions tab:", expected_headers)
 
