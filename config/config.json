@@ -40,8 +40,8 @@
                     "password": "ria_uat_password"
                 },
                 "prod": {
-                    "username": "ria_prod_username",
-                    "password": "ria_prod_password"
+                    "username": "test_automation@dakota.com",
+                    "password": "@#$%1234uatest%%"
                 }
             },
             "dakota_transactions_ceos_access": {
