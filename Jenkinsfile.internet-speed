@@ -1,0 +1,117 @@
+pipeline {
+    agent any
+
+    options {
+        timestamps()
+        disableConcurrentBuilds()
+        buildDiscarder(logRotator(numToKeepStr: '20', artifactNumToKeepStr: '20'))
+        timeout(time: 20, unit: 'MINUTES')
+    }
+
+    parameters {
+        string(
+            name: 'RUN_LABEL',
+            defaultValue: 'manual-check',
+            description: 'Optional label for this speed test run.'
+        )
+    }
+
+    environment {
+        VENV_DIR = '.venv-speedtest'
+        REPORT_DIR = 'speedtest-reports'
+    }
+
+    stages {
+        stage('Prepare Environment') {
+            steps {
+                script {
+                    if (isUnix()) {
+                        sh """
+                            python3 -m venv ${VENV_DIR}
+                            ${VENV_DIR}/bin/python -m pip install --upgrade pip
+                            ${VENV_DIR}/bin/python -m pip install speedtest-cli
+                        """
+                    } else {
+                        bat """
+                            py -m venv %VENV_DIR%
+                            %VENV_DIR%\\Scripts\\python -m pip install --upgrade pip
+                            %VENV_DIR%\\Scripts\\python -m pip install speedtest-cli
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Run Speed Test') {
+            steps {
+                script {
+                    if (isUnix()) {
+                        sh """
+                            rm -rf ${REPORT_DIR} || true
+                            mkdir -p ${REPORT_DIR}
+                            ${VENV_DIR}/bin/python -m speedtest --secure --json > ${REPORT_DIR}/speedtest.json
+                            ${VENV_DIR}/bin/python - <<'PY'
+import json, datetime, pathlib
+p = pathlib.Path("${REPORT_DIR}/speedtest.json")
+d = json.loads(p.read_text(encoding="utf-8"))
+down_mbps = d.get("download", 0) / 1_000_000
+up_mbps = d.get("upload", 0) / 1_000_000
+ping_ms = d.get("ping", 0)
+sponsor = (d.get("server") or {}).get("sponsor", "N/A")
+isp = d.get("client", {}).get("isp", "N/A")
+stamp = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
+html = f\"\"\"<!doctype html>
+<html><head><meta charset='utf-8'><title>Internet Speed Report</title></head>
+<body style='font-family:Segoe UI,Arial,sans-serif;padding:18px;'>
+<h2>Internet Speed Report</h2>
+<p><b>Run label:</b> ${params.RUN_LABEL}</p>
+<p><b>Generated:</b> {stamp}</p>
+<table border='1' cellpadding='8' cellspacing='0' style='border-collapse:collapse;'>
+<tr><th>Metric</th><th>Value</th></tr>
+<tr><td>Download</td><td>{down_mbps:.2f} Mbps</td></tr>
+<tr><td>Upload</td><td>{up_mbps:.2f} Mbps</td></tr>
+<tr><td>Ping</td><td>{ping_ms:.2f} ms</td></tr>
+<tr><td>ISP</td><td>{isp}</td></tr>
+<tr><td>Server Sponsor</td><td>{sponsor}</td></tr>
+</table>
+</body></html>\"\"\"
+pathlib.Path("${REPORT_DIR}/speedtest.html").write_text(html, encoding="utf-8")
+print(f"Download: {down_mbps:.2f} Mbps")
+print(f"Upload: {up_mbps:.2f} Mbps")
+print(f"Ping: {ping_ms:.2f} ms")
+PY
+                        """
+                    } else {
+                        bat """
+                            if exist %REPORT_DIR% rmdir /s /q %REPORT_DIR%
+                            mkdir %REPORT_DIR%
+                            %VENV_DIR%\\Scripts\\python -m speedtest --secure --json > %REPORT_DIR%\\speedtest.json
+                            %VENV_DIR%\\Scripts\\python -c "import json,datetime,pathlib; p=pathlib.Path(r'%REPORT_DIR%/speedtest.json'); d=json.loads(p.read_text(encoding='utf-8')); down=d.get('download',0)/1000000; up=d.get('upload',0)/1000000; ping=d.get('ping',0); sponsor=(d.get('server') or {}).get('sponsor','N/A'); isp=d.get('client',{}).get('isp','N/A'); stamp=datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC'); html=f'''<!doctype html><html><head><meta charset=\"utf-8\"><title>Internet Speed Report</title></head><body style=\"font-family:Segoe UI,Arial,sans-serif;padding:18px;\"><h2>Internet Speed Report</h2><p><b>Run label:</b> ${params.RUN_LABEL}</p><p><b>Generated:</b> {stamp}</p><table border=\"1\" cellpadding=\"8\" cellspacing=\"0\" style=\"border-collapse:collapse;\"><tr><th>Metric</th><th>Value</th></tr><tr><td>Download</td><td>{down:.2f} Mbps</td></tr><tr><td>Upload</td><td>{up:.2f} Mbps</td></tr><tr><td>Ping</td><td>{ping:.2f} ms</td></tr><tr><td>ISP</td><td>{isp}</td></tr><tr><td>Server Sponsor</td><td>{sponsor}</td></tr></table></body></html>'''; pathlib.Path(r'%REPORT_DIR%/speedtest.html').write_text(html, encoding='utf-8'); print(f'Download: {down:.2f} Mbps'); print(f'Upload: {up:.2f} Mbps'); print(f'Ping: {ping:.2f} ms')"
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Publish') {
+            steps {
+                script {
+                    archiveArtifacts artifacts: "${REPORT_DIR}/**", allowEmptyArchive: false
+                    try {
+                        publishHTML(target: [
+                            reportName: 'Internet Speed Report',
+                            reportDir: "${REPORT_DIR}",
+                            reportFiles: 'speedtest.html',
+                            keepAll: true,
+                            alwaysLinkToLastBuild: true,
+                            allowMissing: false
+                        ])
+                    } catch (Exception ex) {
+                        echo "HTML publish skipped: ${ex.getMessage()}"
+                    }
+                }
+            }
+        }
+    }
+}
+
