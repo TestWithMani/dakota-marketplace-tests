@@ -92,7 +92,7 @@ def test_accounts_tab_fields_display_functionality(driver, base_url, credentials
     )
     print("'Dakota Marketplace' link is clickable.")
 
-    # wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
+    wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
     time.sleep(2)
     print("[✓] Accounts tab loaded.")
 
@@ -105,17 +105,11 @@ def test_accounts_tab_fields_display_functionality(driver, base_url, credentials
         driver.execute_script("arguments[0].click();", unpin_btn)
         time.sleep(1)
         driver.refresh()
-
-        marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
-        print("Waiting for 'Dakota Marketplace' link to be clickable...")
-        WebDriverWait(driver, 30).until(
-            EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
-        )
-
-        print("  Unpinned List View.")
-        time.sleep(5)
+        wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
+        print("[✓] List view unpinned and page refreshed.")
+        time.sleep(2)
     except Exception:
-        print("  Unpin not required or button not found.")
+        print("[i] No unpin needed (button not found or already unpinned).")
 
     # Step 4: Save Current Header
     print("[Step 4] Capturing original header for verification...")

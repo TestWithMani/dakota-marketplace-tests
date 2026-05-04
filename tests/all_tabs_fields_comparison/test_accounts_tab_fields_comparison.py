@@ -127,7 +127,7 @@ def test_accounts_tab_fields_comparison(driver, base_url, credentials):
     )
     print("'Dakota Marketplace' link is clickable.")
 
-    # wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
+    wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
 
     print("Step 3: Checking if Unpin is needed and performing if available...")
     try:
@@ -137,13 +137,7 @@ def test_accounts_tab_fields_comparison(driver, base_url, credentials):
         driver.execute_script("arguments[0].click();", unpin_btn)
         time.sleep(1)
         driver.refresh()
-
-        marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
-        print("Waiting for 'Dakota Marketplace' link to be clickable...")
-        WebDriverWait(driver, 30).until(
-            EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
-        )
-
+        wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
         print("  Unpinned List View.")
         time.sleep(5)
     except Exception:

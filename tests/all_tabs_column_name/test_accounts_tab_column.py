@@ -51,6 +51,9 @@ def test_verify_accounts_tab_column_names(driver, base_url, credentials):
 
     print("Waiting for Accounts page to load (header visible)...")
     wait = WebDriverWait(driver, 30)
+    header_selector = (By.XPATH, "//span[@class='headerTitle']")
+    wait.until(EC.visibility_of_element_located(header_selector))
+    print("Accounts page loaded.")
 
     print("Step 3: Checking if 'Unpin this List View' button appears and handling it if present...")
     try:
@@ -64,13 +67,8 @@ def test_verify_accounts_tab_column_names(driver, base_url, credentials):
         time.sleep(2)
 
         driver.refresh()
-
-        marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
-        print("Waiting for 'Dakota Marketplace' link to be clickable...")
-        WebDriverWait(driver, 30).until(
-            EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
-        )
-        
+        header_selector = (By.XPATH, "//span[@class='headerTitle']")
+        wait.until(EC.visibility_of_element_located(header_selector))
         print("Page refreshed after unpinning.")
     except Exception:
         print("No 'Unpin this List View' button found or error handling it, continuing.")

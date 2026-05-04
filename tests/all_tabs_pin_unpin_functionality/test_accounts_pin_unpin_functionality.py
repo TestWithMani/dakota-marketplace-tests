@@ -56,7 +56,7 @@ def test_accounts_pin_unpin_functionality(driver, base_url, credentials):
     )
     print("'Dakota Marketplace' row is clickable.")
 
-    # wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
+    wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
 
     print("Step 3: Checking whether Unpin is needed and clicking it if available...")
     try:
@@ -66,17 +66,10 @@ def test_accounts_pin_unpin_functionality(driver, base_url, credentials):
         driver.execute_script("arguments[0].click();", unpin_btn)
         time.sleep(1)
         driver.refresh()
-
-        marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
-        print("Waiting for 'Dakota Marketplace' link to be clickable...")
-        WebDriverWait(driver, 30).until(
-            EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
-        )
-
+        wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
         print("  Unpinned List View.")
-        time.sleep(5)
     except Exception:
-        print("  Unpin not required or button not found.")
+        print("  Unpin not required, or the button was not found.")
 
     # Wait for the "Dakota Marketplace" row to be clickable before proceeding
     marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
