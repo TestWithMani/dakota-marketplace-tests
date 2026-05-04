@@ -38,8 +38,43 @@ pipeline {
         choice(
             name: 'MARKERS',
             choices: ['All Tests', 'All Marketplace Access', 'Accounts Tab', 'Contact Tab', 'All Documents', '13F Filings & Investments Search', 'Benchmarking Tab', 'Conference Search', 'Consultant Reviews', 'Continuation Vehicle', 'Dakota City Guides', 'Dakota Searches', 'Dakota Video Search', 'Evergreen Fund Performance', 'Fee Schedules Dashboard', 'Forecasted Transactions', 'Fund Family Memos', 'Fund Launches', 'Fundraising News', 'Hedge Fund Performance', 'Investment Allocator - Accounts', 'Investment Allocator - Contacts', 'Investment Firm - Accounts', 'Investment Firm - Contacts', 'Manager Presentation Dashboard', 'My Accounts', 'Pension Documents', 'Portfolio Companies', 'Portfolio Companies - Contacts', 'Private Companies Transactions', 'Private Fund Search', 'Public Company Search', 'Public Investments Search', 'Public Plan Minutes Search', 'Recent Transactions', 'University Alumni - Contacts'],
-            description: 'Select one marker. Use "All Tests" for no marker filtering.'
+            description: 'Single-marker legacy dropdown. For multiple markers, use MARKER_* checkboxes below.'
         )
+        booleanParam(name: 'MARKER_ALL_MARKETPLACE_ACCESS', defaultValue: false, description: 'Marker: All Marketplace Access')
+        booleanParam(name: 'MARKER_ACCOUNTS_TAB', defaultValue: false, description: 'Marker: Accounts Tab')
+        booleanParam(name: 'MARKER_CONTACT_TAB', defaultValue: false, description: 'Marker: Contact Tab')
+        booleanParam(name: 'MARKER_ALL_DOCUMENTS', defaultValue: false, description: 'Marker: All Documents')
+        booleanParam(name: 'MARKER_13F_FILINGS_INVESTMENTS_SEARCH', defaultValue: false, description: 'Marker: 13F Filings & Investments Search')
+        booleanParam(name: 'MARKER_BENCHMARKING_TAB', defaultValue: false, description: 'Marker: Benchmarking Tab')
+        booleanParam(name: 'MARKER_CONFERENCE_SEARCH', defaultValue: false, description: 'Marker: Conference Search')
+        booleanParam(name: 'MARKER_CONSULTANT_REVIEWS', defaultValue: false, description: 'Marker: Consultant Reviews')
+        booleanParam(name: 'MARKER_CONTINUATION_VEHICLE', defaultValue: false, description: 'Marker: Continuation Vehicle')
+        booleanParam(name: 'MARKER_DAKOTA_CITY_GUIDES', defaultValue: false, description: 'Marker: Dakota City Guides')
+        booleanParam(name: 'MARKER_DAKOTA_SEARCHES', defaultValue: false, description: 'Marker: Dakota Searches')
+        booleanParam(name: 'MARKER_DAKOTA_VIDEO_SEARCH', defaultValue: false, description: 'Marker: Dakota Video Search')
+        booleanParam(name: 'MARKER_EVERGREEN_FUND_PERFORMANCE', defaultValue: false, description: 'Marker: Evergreen Fund Performance')
+        booleanParam(name: 'MARKER_FEE_SCHEDULES_DASHBOARD', defaultValue: false, description: 'Marker: Fee Schedules Dashboard')
+        booleanParam(name: 'MARKER_FORECASTED_TRANSACTIONS', defaultValue: false, description: 'Marker: Forecasted Transactions')
+        booleanParam(name: 'MARKER_FUND_FAMILY_MEMOS', defaultValue: false, description: 'Marker: Fund Family Memos')
+        booleanParam(name: 'MARKER_FUND_LAUNCHES', defaultValue: false, description: 'Marker: Fund Launches')
+        booleanParam(name: 'MARKER_FUNDRAISING_NEWS', defaultValue: false, description: 'Marker: Fundraising News')
+        booleanParam(name: 'MARKER_HEDGE_FUND_PERFORMANCE', defaultValue: false, description: 'Marker: Hedge Fund Performance')
+        booleanParam(name: 'MARKER_INVESTMENT_ALLOCATOR_ACCOUNTS', defaultValue: false, description: 'Marker: Investment Allocator - Accounts')
+        booleanParam(name: 'MARKER_INVESTMENT_ALLOCATOR_CONTACTS', defaultValue: false, description: 'Marker: Investment Allocator - Contacts')
+        booleanParam(name: 'MARKER_INVESTMENT_FIRM_ACCOUNTS', defaultValue: false, description: 'Marker: Investment Firm - Accounts')
+        booleanParam(name: 'MARKER_INVESTMENT_FIRM_CONTACTS', defaultValue: false, description: 'Marker: Investment Firm - Contacts')
+        booleanParam(name: 'MARKER_MANAGER_PRESENTATION_DASHBOARD', defaultValue: false, description: 'Marker: Manager Presentation Dashboard')
+        booleanParam(name: 'MARKER_MY_ACCOUNTS', defaultValue: false, description: 'Marker: My Accounts')
+        booleanParam(name: 'MARKER_PENSION_DOCUMENTS', defaultValue: false, description: 'Marker: Pension Documents')
+        booleanParam(name: 'MARKER_PORTFOLIO_COMPANIES', defaultValue: false, description: 'Marker: Portfolio Companies')
+        booleanParam(name: 'MARKER_PORTFOLIO_COMPANIES_CONTACTS', defaultValue: false, description: 'Marker: Portfolio Companies - Contacts')
+        booleanParam(name: 'MARKER_PRIVATE_COMPANIES_TRANSACTIONS', defaultValue: false, description: 'Marker: Private Companies Transactions')
+        booleanParam(name: 'MARKER_PRIVATE_FUND_SEARCH', defaultValue: false, description: 'Marker: Private Fund Search')
+        booleanParam(name: 'MARKER_PUBLIC_COMPANY_SEARCH', defaultValue: false, description: 'Marker: Public Company Search')
+        booleanParam(name: 'MARKER_PUBLIC_INVESTMENTS_SEARCH', defaultValue: false, description: 'Marker: Public Investments Search')
+        booleanParam(name: 'MARKER_PUBLIC_PLAN_MINUTES_SEARCH', defaultValue: false, description: 'Marker: Public Plan Minutes Search')
+        booleanParam(name: 'MARKER_RECENT_TRANSACTIONS', defaultValue: false, description: 'Marker: Recent Transactions')
+        booleanParam(name: 'MARKER_UNIVERSITY_ALUMNI_CONTACTS', defaultValue: false, description: 'Marker: University Alumni - Contacts')
         choice(
             name: 'BROWSER',
             choices: ['chrome', 'edge', 'firefox'],
@@ -173,7 +208,7 @@ pipeline {
                         params.NON_ASSERTION_RETRY_COUNT as String
                     )
                     def selectedPaths = resolveSelectedTestPaths(params.TEST_SUITE as String)
-                    def markerExpr = resolveMarkerExpression(params.MARKERS as String)
+                    def markerExpr = resolveMarkerExpression(params, params.MARKERS as String)
                     def collectCmd = buildPytestCommand(
                         selectedPaths,
                         markerExpr,
@@ -193,7 +228,7 @@ pipeline {
             steps {
                 script {
                     def selectedPaths = resolveSelectedTestPaths(params.TEST_SUITE as String)
-                    def markerExpr = resolveMarkerExpression(params.MARKERS as String)
+                    def markerExpr = resolveMarkerExpression(params, params.MARKERS as String)
                     def runCmd = buildPytestCommand(
                         selectedPaths,
                         markerExpr,
@@ -330,7 +365,19 @@ def resolveSelectedTestPaths(String testSuite) {
     return paths.isEmpty() ? ['tests/'] : paths
 }
 
-def resolveMarkerExpression(String markers) {
+def resolveMarkerExpression(def paramsObj, String markers) {
+    def markerFromCheckboxes = getMarkerCheckboxMap()
+        .findAll { row -> (paramsObj?."${row.param}" as boolean) }
+        .collect { row -> row.marker }
+        .unique()
+    if (!markerFromCheckboxes.isEmpty()) {
+        def legacyMarker = (markers ?: '').trim()
+        if (legacyMarker && legacyMarker != 'All Tests' && legacyMarker != 'all') {
+            echo "MARKER_* checkboxes selected; ignoring legacy MARKERS dropdown value '${legacyMarker}'."
+        }
+        return markerFromCheckboxes.join(' or ')
+    }
+
     if (!markers?.trim()) {
         return null
     }
@@ -341,6 +388,46 @@ def resolveMarkerExpression(String markers) {
         .collect { mapMarkerDisplayToInternal(it) }
         .unique()
     return markerList.isEmpty() ? null : markerList.join(' or ')
+}
+
+def getMarkerCheckboxMap() {
+    return [
+        [param: 'MARKER_ALL_MARKETPLACE_ACCESS', marker: 'all_marketplace_access'],
+        [param: 'MARKER_ACCOUNTS_TAB', marker: 'accounts'],
+        [param: 'MARKER_CONTACT_TAB', marker: 'contact'],
+        [param: 'MARKER_ALL_DOCUMENTS', marker: 'all_documents'],
+        [param: 'MARKER_13F_FILINGS_INVESTMENTS_SEARCH', marker: 'filings_13f_investments_search'],
+        [param: 'MARKER_BENCHMARKING_TAB', marker: 'benchmarking_tab'],
+        [param: 'MARKER_CONFERENCE_SEARCH', marker: 'conference_search'],
+        [param: 'MARKER_CONSULTANT_REVIEWS', marker: 'consultant_reviews'],
+        [param: 'MARKER_CONTINUATION_VEHICLE', marker: 'continuation_vehicle'],
+        [param: 'MARKER_DAKOTA_CITY_GUIDES', marker: 'dakota_city_guides'],
+        [param: 'MARKER_DAKOTA_SEARCHES', marker: 'dakota_searches'],
+        [param: 'MARKER_DAKOTA_VIDEO_SEARCH', marker: 'dakota_video_search'],
+        [param: 'MARKER_EVERGREEN_FUND_PERFORMANCE', marker: 'evergreen_fund_performance'],
+        [param: 'MARKER_FEE_SCHEDULES_DASHBOARD', marker: 'fee_schedules_dashboard'],
+        [param: 'MARKER_FORECASTED_TRANSACTIONS', marker: 'forecasted_transactions'],
+        [param: 'MARKER_FUND_FAMILY_MEMOS', marker: 'fund_family_memos'],
+        [param: 'MARKER_FUND_LAUNCHES', marker: 'fund_launches'],
+        [param: 'MARKER_FUNDRAISING_NEWS', marker: 'fundraising_news'],
+        [param: 'MARKER_HEDGE_FUND_PERFORMANCE', marker: 'hedge_fund_performance'],
+        [param: 'MARKER_INVESTMENT_ALLOCATOR_ACCOUNTS', marker: 'investment_allocator_accounts'],
+        [param: 'MARKER_INVESTMENT_ALLOCATOR_CONTACTS', marker: 'investment_allocator_contacts'],
+        [param: 'MARKER_INVESTMENT_FIRM_ACCOUNTS', marker: 'investment_firm_accounts'],
+        [param: 'MARKER_INVESTMENT_FIRM_CONTACTS', marker: 'investment_firm_contacts'],
+        [param: 'MARKER_MANAGER_PRESENTATION_DASHBOARD', marker: 'manager_presentation_dashboard'],
+        [param: 'MARKER_MY_ACCOUNTS', marker: 'my_accounts'],
+        [param: 'MARKER_PENSION_DOCUMENTS', marker: 'pension_documents'],
+        [param: 'MARKER_PORTFOLIO_COMPANIES', marker: 'portfolio_companies'],
+        [param: 'MARKER_PORTFOLIO_COMPANIES_CONTACTS', marker: 'portfolio_companies_contacts'],
+        [param: 'MARKER_PRIVATE_COMPANIES_TRANSACTIONS', marker: 'private_companies_transactions'],
+        [param: 'MARKER_PRIVATE_FUND_SEARCH', marker: 'private_fund_search'],
+        [param: 'MARKER_PUBLIC_COMPANY_SEARCH', marker: 'public_company_search'],
+        [param: 'MARKER_PUBLIC_INVESTMENTS_SEARCH', marker: 'public_investments_search'],
+        [param: 'MARKER_PUBLIC_PLAN_MINUTES_SEARCH', marker: 'public_plan_minutes_search'],
+        [param: 'MARKER_RECENT_TRANSACTIONS', marker: 'recent_transactions'],
+        [param: 'MARKER_UNIVERSITY_ALUMNI_CONTACTS', marker: 'university_alumni_contacts']
+    ]
 }
 
 def buildPytestCommand(List testPaths, String markerExpression, boolean runAllure, boolean collectOnly, String browser, String parallelWorkers, String nonAssertionRetryCount) {
@@ -423,7 +510,13 @@ def parseTestSelection(separator = ' | ') {
             testSelectionParts.add("Suites: ${suites.join(', ')}")
         }
     }
-    if (params.MARKERS && params.MARKERS.trim()) {
+    def selectedCheckboxMarkers = getMarkerCheckboxMap()
+        .findAll { row -> (params."${row.param}" as boolean) }
+        .collect { row -> row.marker }
+        .unique()
+    if (selectedCheckboxMarkers.size() > 0) {
+        testSelectionParts.add("Markers: ${selectedCheckboxMarkers.join(', ')}")
+    } else if (params.MARKERS && params.MARKERS.trim()) {
         def markers = params.MARKERS.split(',').collect { it.trim() }.findAll { it && it != 'All Tests' }
         if (markers.size() > 0) {
             testSelectionParts.add("Markers: ${markers.join(', ')}")
