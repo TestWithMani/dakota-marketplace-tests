@@ -268,14 +268,20 @@ pipeline {
                     }
 
                     if (params.RUN_ALLURE && fileExists(env.ALLURE_DIR)) {
-                        allure([
-                            includeProperties: false,
-                            jdk: '',
-                            properties: [],
-                            reportBuildPolicy: 'ALWAYS',
-                            results: [[path: env.ALLURE_DIR]],
-                            reportName: 'Allure Report'
-                        ])
+                        try {
+                            allure([
+                                includeProperties: false,
+                                jdk: '',
+                                properties: [],
+                                reportBuildPolicy: 'ALWAYS',
+                                results: [[path: env.ALLURE_DIR]],
+                                reportName: 'Allure Report'
+                            ])
+                        } catch (MissingMethodException ex) {
+                            echo "Allure plugin not installed; skipping allure publish step."
+                        } catch (Exception ex) {
+                            echo "Allure publish failed: ${ex.getMessage()}"
+                        }
                     } else if (params.RUN_ALLURE) {
                         echo "Skipping Allure publish: ${env.ALLURE_DIR} not found."
                     }
