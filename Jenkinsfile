@@ -159,19 +159,25 @@ pipeline {
                         """
                     )
 
-                    // Remove previous Jenkins builds so UI/build trend/allure trend starts fresh from this build.
-                    def job = currentBuild.rawBuild.parent
-                    def currentBuildNumber = currentBuild.number as int
-                    def deletedCount = 0
-                    job.builds.findAll { build -> (build.number as int) < currentBuildNumber }.each { build ->
-                        try {
-                            build.delete()
-                            deletedCount++
-                        } catch (Exception ex) {
-                            echo "Could not delete build #${build.number}: ${ex.getMessage()}"
+                    // Try to remove previous Jenkins builds.
+                    // In sandboxed Jenkins this may be blocked by Script Security; do not fail the build for that.
+                    try {
+                        def job = currentBuild.rawBuild.parent
+                        def currentBuildNumber = currentBuild.number as int
+                        def deletedCount = 0
+                        job.builds.findAll { build -> (build.number as int) < currentBuildNumber }.each { build ->
+                            try {
+                                build.delete()
+                                deletedCount++
+                            } catch (Exception ex) {
+                                echo "Could not delete build #${build.number}: ${ex.getMessage()}"
+                            }
                         }
+                        echo "Deleted ${deletedCount} previous build(s)."
+                    } catch (Exception ex) {
+                        echo "Build history deletion skipped due to Jenkins Script Security: ${ex.getMessage()}"
+                        echo "If you want automatic build-history purge, ask Jenkins admin to approve the required script signature."
                     }
-                    echo "Deleted ${deletedCount} previous build(s)."
                 }
             }
         }
