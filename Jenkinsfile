@@ -11,7 +11,7 @@ pipeline {
     parameters {
         choice(
             name: 'ENVIRONMENT',
-            choices: ['uat', 'prod'],
+            choices: ['PROD', 'UAT'],
             description: 'Select the test environment to run tests against'
         )
         choice(
