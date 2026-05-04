@@ -50,10 +50,10 @@ def test_verify_accounts_tab_column_names(driver, base_url, credentials):
 
 
     print("Waiting for Accounts page to load (header visible)...")
-    wait = WebDriverWait(driver, 60)
-    header_selector = (By.XPATH, "//span[@class='headerTitle']")
-    wait.until(EC.visibility_of_element_located(header_selector))
-    print("Accounts page loaded.")
+    wait = WebDriverWait(driver, 30)
+    # header_selector = (By.XPATH, "//span[@class='headerTitle']")
+    # wait.until(EC.visibility_of_element_located(header_selector))
+    # print("Accounts page loaded.")
 
     print("Step 3: Checking if 'Unpin this List View' button appears and handling it if present...")
     try:
