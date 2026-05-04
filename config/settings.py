@@ -1,4 +1,9 @@
-"""Shared runtime configuration helpers for tests and URL builders."""
+"""Shared runtime configuration helpers for tests and URL builders.
+
+Reads ``config/config.json`` for base URLs, credentials (All Marketplace Access
+plus per-portal overrides), and tab URL paths. ``ENV`` selects ``uat``/``prod``
+optionally with a portal suffix, for example ``uat_fa_data_set``.
+"""
 
 from __future__ import annotations
 
@@ -9,7 +14,18 @@ from typing import Dict, List, Optional, Tuple
 
 CONFIG_PATH = Path(__file__).with_name("config.json")
 DEFAULT_ENV = "uat"
-DEFAULT_PORTAL = "default"
+DEFAULT_PORTAL = "all_marketplace_access"
+
+# Old Jenkins/scripts may still set these ENV suffixes; map to current portal keys.
+_LEGACY_ENV_PORTAL_ALIASES = {
+    "default": "all_marketplace_access",
+    "fa_portal": "fa_data_set",
+    "ria_portal": "dakota_ria_portal",
+    "fo_portal": "dakota_family_office_portal",
+    "benchmark_portal": "dakota_private_markets_access",
+    "recommends_portal": "dakota_recommends_portal_access",
+    "fa_ria_portal": "dakota_private_wealth_portal",
+}
 
 
 def load_config() -> Dict[str, dict]:
@@ -35,7 +51,13 @@ def parse_environment_name(environment: Optional[str] = None) -> Tuple[str, str,
     parts = normalized.split("_", 1)
     base_env = parts[0] if parts and parts[0] else DEFAULT_ENV
     portal = parts[1] if len(parts) == 2 and parts[1] else DEFAULT_PORTAL
+    portal = _LEGACY_ENV_PORTAL_ALIASES.get(portal, portal)
     return base_env, portal, normalized
+
+
+def portal_keys_for_compound_env() -> List[str]:
+    """Portal keys used as ``ENV`` suffixes (excludes All Marketplace Access / base)."""
+    return [p for p in _supported_portals() if p != DEFAULT_PORTAL]
 
 
 def _supported_base_envs() -> List[str]:
@@ -45,7 +67,18 @@ def _supported_base_envs() -> List[str]:
 def _supported_portals() -> List[str]:
     return _get_meta().get(
         "supported_portals",
-        ["default", "fa_portal", "ria_portal", "fo_portal", "benchmark_portal", "recommends_portal", "fa_ria_portal"],
+        [
+            "all_marketplace_access",
+            "dakota_ria_portal",
+            "dakota_transactions_ceos_access",
+            "fa_data_set",
+            "is_deal_team",
+            "dakota_private_markets_access",
+            "dakota_recommends_portal_access",
+            "dakota_family_office_portal",
+            "dakota_private_wealth_portal",
+            "dakota_international_portal",
+        ],
     )
 
 

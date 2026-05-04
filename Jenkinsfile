@@ -16,8 +16,19 @@ pipeline {
         )
         choice(
             name: 'PORTAL',
-            choices: ['Default', 'FA Portal', 'RIA Portal', 'FO Portal', 'Benchmark Portal', 'Recommends Portal', 'FA and RIA Portal'],
-            description: 'Select the portal to run tests against. "Default" uses base uat/prod.'
+            choices: [
+                'All Marketplace Access',
+                'Dakota Ria Portal',
+                'Dakota Transactions & CEOs Access',
+                'FA Data Set',
+                'Is Deal Team?',
+                'Dakota Private Markets Access',
+                'Dakota Recommends Portal Access',
+                'Dakota Family Office Portal',
+                'Dakota private wealth portal',
+                'Dakota International portal'
+            ],
+            description: 'All Marketplace Access uses base uat/prod credentials (no portal suffix on ENV). Other choices set ENV to uat_<portal> / prod_<portal>.'
         )
         choice(
             name: 'TEST_SUITE',
@@ -26,7 +37,7 @@ pipeline {
         )
         choice(
             name: 'MARKERS',
-            choices: ['All Tests', 'Accounts Tab', 'Contact Tab', 'All Documents', '13F Filings & Investments Search', 'Benchmarking Tab', 'Conference Search', 'Consultant Reviews', 'Continuation Vehicle', 'Dakota City Guides', 'Dakota Searches', 'Dakota Video Search', 'Evergreen Fund Performance', 'Fee Schedules Dashboard', 'Forecasted Transactions', 'Fund Family Memos', 'Fund Launches', 'Fundraising News', 'Hedge Fund Performance', 'Investment Allocator - Accounts', 'Investment Allocator - Contacts', 'Investment Firm - Accounts', 'Investment Firm - Contacts', 'Manager Presentation Dashboard', 'My Accounts', 'Pension Documents', 'Portfolio Companies', 'Portfolio Companies - Contacts', 'Private Companies Transactions', 'Private Fund Search', 'Public Company Search', 'Public Investments Search', 'Public Plan Minutes Search', 'Recent Transactions', 'University Alumni - Contacts'],
+            choices: ['All Tests', 'All Marketplace Access', 'Accounts Tab', 'Contact Tab', 'All Documents', '13F Filings & Investments Search', 'Benchmarking Tab', 'Conference Search', 'Consultant Reviews', 'Continuation Vehicle', 'Dakota City Guides', 'Dakota Searches', 'Dakota Video Search', 'Evergreen Fund Performance', 'Fee Schedules Dashboard', 'Forecasted Transactions', 'Fund Family Memos', 'Fund Launches', 'Fundraising News', 'Hedge Fund Performance', 'Investment Allocator - Accounts', 'Investment Allocator - Contacts', 'Investment Firm - Accounts', 'Investment Firm - Contacts', 'Manager Presentation Dashboard', 'My Accounts', 'Pension Documents', 'Portfolio Companies', 'Portfolio Companies - Contacts', 'Private Companies Transactions', 'Private Fund Search', 'Public Company Search', 'Public Investments Search', 'Public Plan Minutes Search', 'Recent Transactions', 'University Alumni - Contacts'],
             description: 'Select one marker. Use "All Tests" for no marker filtering.'
         )
         choice(
@@ -90,16 +101,20 @@ pipeline {
             steps {
                 script {
                     def portalMap = [
+                        'All Marketplace Access': '',
                         'Default': '',
-                        'FA Portal': 'fa_portal',
-                        'RIA Portal': 'ria_portal',
-                        'FO Portal': 'fo_portal',
-                        'Benchmark Portal': 'benchmark_portal',
-                        'Recommends Portal': 'recommends_portal',
-                        'FA and RIA Portal': 'fa_ria_portal'
+                        'Dakota Ria Portal': 'dakota_ria_portal',
+                        'Dakota Transactions & CEOs Access': 'dakota_transactions_ceos_access',
+                        'FA Data Set': 'fa_data_set',
+                        'Is Deal Team?': 'is_deal_team',
+                        'Dakota Private Markets Access': 'dakota_private_markets_access',
+                        'Dakota Recommends Portal Access': 'dakota_recommends_portal_access',
+                        'Dakota Family Office Portal': 'dakota_family_office_portal',
+                        'Dakota private wealth portal': 'dakota_private_wealth_portal',
+                        'Dakota International portal': 'dakota_international_portal'
                     ]
                     def envName = params.ENVIRONMENT ?: 'uat'
-                    def portalName = params.PORTAL ?: 'Default'
+                    def portalName = params.PORTAL ?: 'All Marketplace Access'
                     def portalKey = portalMap[portalName] ?: ''
                     env.ENV = portalKey ? "${envName}_${portalKey}" : envName
                     echo "Environment configured: ${env.ENV}"
@@ -261,8 +276,8 @@ pipeline {
 
                 def durationDisplay = (currentBuild.durationString ?: 'N/A').replace(' and counting', '')
                 def envDisplay = params.ENVIRONMENT ?: 'uat'
-                def portalDisplay = params.PORTAL ?: 'Default'
-                envDisplay = (portalDisplay == 'Default') ? envDisplay.toUpperCase() : "${envDisplay.toUpperCase()} - ${portalDisplay}"
+                def portalDisplay = params.PORTAL ?: 'All Marketplace Access'
+                envDisplay = (portalDisplay == 'All Marketplace Access' || portalDisplay == 'Default') ? envDisplay.toUpperCase() : "${envDisplay.toUpperCase()} - ${portalDisplay}"
 
                 currentBuild.description = """
                     Environment: ${envDisplay} |
@@ -603,12 +618,16 @@ def mapMarkerDisplayToInternal(displayName) {
         'Public Plan Minutes Search': 'public_plan_minutes_search',
         'Recent Transactions': 'recent_transactions',
         'University Alumni - Contacts': 'university_alumni_contacts',
-        'FA Portal': 'fa_portal',
-        'RIA Portal': 'ria_portal',
-        'FO Portal': 'fo_portal',
-        'Benchmark Portal': 'benchmark_portal',
-        'Recommends Portal': 'recommends_portal',
-        'FA and RIA Portal': 'fa_ria_portal'
+        'All Marketplace Access': 'all_marketplace_access',
+        'Dakota Ria Portal': 'dakota_ria_portal',
+        'Dakota Transactions & CEOs Access': 'dakota_transactions_ceos_access',
+        'FA Data Set': 'fa_data_set',
+        'Is Deal Team?': 'is_deal_team',
+        'Dakota Private Markets Access': 'dakota_private_markets_access',
+        'Dakota Recommends Portal Access': 'dakota_recommends_portal_access',
+        'Dakota Family Office Portal': 'dakota_family_office_portal',
+        'Dakota private wealth portal': 'dakota_private_wealth_portal',
+        'Dakota International portal': 'dakota_international_portal'
     ]
     return markerMapping.get(displayName, displayName)
 }
@@ -720,7 +739,7 @@ def sendEmailNotification(String buildStatus) {
                   <tr><td width="32%" style="padding:10px 12px;background:#dbeafe;"><strong>Build</strong></td><td style="padding:10px 12px;">#${env.BUILD_NUMBER}</td></tr>
                   <tr><td style="padding:10px 12px;background:#dbeafe;"><strong>Status</strong></td><td style="padding:10px 12px;color:${statusColor};font-weight:700;">${actualStatus}</td></tr>
                   <tr><td style="padding:10px 12px;background:#dbeafe;"><strong>Environment</strong></td><td style="padding:10px 12px;">${(params.ENVIRONMENT ?: 'uat').toUpperCase()}</td></tr>
-                  <tr><td style="padding:10px 12px;background:#dbeafe;"><strong>Portal</strong></td><td style="padding:10px 12px;">${params.PORTAL ?: 'Default'}</td></tr>
+                  <tr><td style="padding:10px 12px;background:#dbeafe;"><strong>Portal</strong></td><td style="padding:10px 12px;">${params.PORTAL ?: 'All Marketplace Access'}</td></tr>
                   <tr><td style="padding:10px 12px;background:#dbeafe;"><strong>Selection</strong></td><td style="padding:10px 12px;">${parseTestSelection(' | ')}</td></tr>
                   <tr><td style="padding:10px 12px;background:#dbeafe;"><strong>Duration</strong></td><td style="padding:10px 12px;">${durationString}</td></tr>
                   <tr><td style="padding:10px 12px;background:#dbeafe;"><strong>Pass Percentage</strong></td><td style="padding:10px 12px;color:#0f766e;font-weight:700;">${passRate}%</td></tr>

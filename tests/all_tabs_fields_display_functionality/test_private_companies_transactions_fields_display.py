@@ -40,12 +40,16 @@ def click_button_if_present(driver, xpath, timeout=2):
         return False
 @pytest.mark.private_companies_transactions
 @pytest.mark.fields_display
-@pytest.mark.fa_portal
-@pytest.mark.ria_portal
-@pytest.mark.fo_portal
-@pytest.mark.benchmark_portal
-@pytest.mark.recommends_portal
-@pytest.mark.fa_ria_portal
+@pytest.mark.all_marketplace_access
+@pytest.mark.dakota_ria_portal
+@pytest.mark.dakota_transactions_ceos_access
+@pytest.mark.fa_data_set
+@pytest.mark.is_deal_team
+@pytest.mark.dakota_private_markets_access
+@pytest.mark.dakota_recommends_portal_access
+@pytest.mark.dakota_family_office_portal
+@pytest.mark.dakota_private_wealth_portal
+@pytest.mark.dakota_international_portal
 
 def test_private_companies_transactions_fields_display_functionality(driver, base_url, credentials):
     """
@@ -53,7 +57,7 @@ def test_private_companies_transactions_fields_display_functionality(driver, bas
     Test Steps:
       1. Log in and capture the state.
       2. Navigate to the target tab.
-      3. Unpin default list view, if present.
+      3. Unpin All Marketplace Access list view, if present.
       4. Capture and print original table column headers.
       5. Open 'Select Fields To Display' and fetch all field names.
       6. Move the last field to 'Available', first field to 'Selected'.

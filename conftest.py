@@ -34,9 +34,22 @@ def credentials():
 
 @pytest.fixture(scope="session")
 def environment():
-    """Get the current environment name"""
+    """Resolved label for ``ENV`` (e.g. ``uat`` or ``uat_fa_data_set``)."""
     runtime = resolve_runtime_config(os.environ.get("ENV"))
     return runtime["environment"]
+
+
+@pytest.fixture(scope="session")
+def portal():
+    """Current portal key from ``config.json`` (``all_marketplace_access`` when ``ENV`` is base-only)."""
+    runtime = resolve_runtime_config(os.environ.get("ENV"))
+    return runtime["portal"]
+
+
+@pytest.fixture(scope="session")
+def runtime_config():
+    """Full dict from ``resolve_runtime_config`` (url, credentials, urls map, base_env, portal, …)."""
+    return resolve_runtime_config(os.environ.get("ENV"))
 
 @pytest.fixture(scope="session")
 def browser_name(request):

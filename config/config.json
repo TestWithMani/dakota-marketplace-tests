@@ -6,13 +6,16 @@
             "prod"
         ],
         "supported_portals": [
-            "default",
-            "fa_portal",
-            "ria_portal",
-            "fo_portal",
-            "benchmark_portal",
-            "recommends_portal",
-            "fa_ria_portal"
+            "all_marketplace_access",
+            "dakota_ria_portal",
+            "dakota_transactions_ceos_access",
+            "fa_data_set",
+            "is_deal_team",
+            "dakota_private_markets_access",
+            "dakota_recommends_portal_access",
+            "dakota_family_office_portal",
+            "dakota_private_wealth_portal",
+            "dakota_international_portal"
         ]
     },
     "base_urls": {
@@ -31,17 +34,7 @@
             }
         },
         "portals": {
-            "fa_portal": {
-                "uat": {
-                    "username": "fa_uat_username",
-                    "password": "fa_uat_password"
-                },
-                "prod": {
-                    "username": "fa_prod_username",
-                    "password": "fa_prod_password"
-                }
-            },
-            "ria_portal": {
+            "dakota_ria_portal": {
                 "uat": {
                     "username": "ria_uat_username",
                     "password": "ria_uat_password"
@@ -51,17 +44,37 @@
                     "password": "ria_prod_password"
                 }
             },
-            "fo_portal": {
+            "dakota_transactions_ceos_access": {
                 "uat": {
-                    "username": "family.office.mani@rolustech.com",
-                    "password": "@a123123"
+                    "username": "transactions_ceos_uat_username",
+                    "password": "transactions_ceos_uat_password"
                 },
                 "prod": {
-                    "username": "fo_prod_username",
-                    "password": "fo_prod_password"
+                    "username": "transactions_ceos_prod_username",
+                    "password": "transactions_ceos_prod_password"
                 }
             },
-            "benchmark_portal": {
+            "fa_data_set": {
+                "uat": {
+                    "username": "fa_uat_username",
+                    "password": "fa_uat_password"
+                },
+                "prod": {
+                    "username": "fa_prod_username",
+                    "password": "fa_prod_password"
+                }
+            },
+            "is_deal_team": {
+                "uat": {
+                    "username": "deal_team_uat_username",
+                    "password": "deal_team_uat_password"
+                },
+                "prod": {
+                    "username": "deal_team_prod_username",
+                    "password": "deal_team_prod_password"
+                }
+            },
+            "dakota_private_markets_access": {
                 "uat": {
                     "username": "private.markets.mani@gmail.com",
                     "password": "@a123456"
@@ -71,7 +84,7 @@
                     "password": "@a123123"
                 }
             },
-            "recommends_portal": {
+            "dakota_recommends_portal_access": {
                 "uat": {
                     "username": "recommends_uat_username",
                     "password": "recommends_uat_password"
@@ -81,7 +94,17 @@
                     "password": "recommends_prod_password"
                 }
             },
-            "fa_ria_portal": {
+            "dakota_family_office_portal": {
+                "uat": {
+                    "username": "family.office.mani@rolustech.com",
+                    "password": "@a123123"
+                },
+                "prod": {
+                    "username": "fo_prod_username",
+                    "password": "fo_prod_password"
+                }
+            },
+            "dakota_private_wealth_portal": {
                 "uat": {
                     "username": "ria.fo.mani@dakota.com",
                     "password": "@a1234567"
@@ -89,6 +112,16 @@
                 "prod": {
                     "username": "fa_ria_prod_username",
                     "password": "fa_ria_prod_password"
+                }
+            },
+            "dakota_international_portal": {
+                "uat": {
+                    "username": "international_uat_username",
+                    "password": "international_uat_password"
+                },
+                "prod": {
+                    "username": "international_prod_username",
+                    "password": "international_prod_password"
                 }
             }
         }

@@ -8,12 +8,16 @@ from selenium.webdriver.support import expected_conditions as EC
 import pytest
 @pytest.mark.investment_allocator_contacts
 @pytest.mark.lazy_loading
-@pytest.mark.fa_portal
-@pytest.mark.ria_portal
-@pytest.mark.fo_portal
-@pytest.mark.benchmark_portal
-@pytest.mark.recommends_portal
-@pytest.mark.fa_ria_portal
+@pytest.mark.all_marketplace_access
+@pytest.mark.dakota_ria_portal
+@pytest.mark.dakota_transactions_ceos_access
+@pytest.mark.fa_data_set
+@pytest.mark.is_deal_team
+@pytest.mark.dakota_private_markets_access
+@pytest.mark.dakota_recommends_portal_access
+@pytest.mark.dakota_family_office_portal
+@pytest.mark.dakota_private_wealth_portal
+@pytest.mark.dakota_international_portal
 
 
 def test_investment_allocator_contacts_tab_lazy_loading(driver, base_url, credentials):

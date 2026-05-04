@@ -2,7 +2,7 @@
 
 from typing import Dict, List, Optional, Set
 
-from .settings import resolve_runtime_config
+from .settings import portal_keys_for_compound_env, resolve_runtime_config
 
 
 def _normalize_url_path(raw_path: str) -> str:
@@ -111,14 +111,7 @@ class URLs:
         environments: List[str] = []
         for base_env in ("uat", "prod"):
             environments.append(base_env)
-            for portal in (
-                "fa_portal",
-                "ria_portal",
-                "fo_portal",
-                "benchmark_portal",
-                "recommends_portal",
-                "fa_ria_portal",
-            ):
+            for portal in portal_keys_for_compound_env():
                 environments.append(f"{base_env}_{portal}")
         return environments
 

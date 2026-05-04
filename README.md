@@ -30,15 +30,15 @@ Selenium-based test automation framework for Dakota Marketplace using pytest.
 ```
 Dakota_MP/
 ├── config/
-│   └── config.json          # Environment configurations
-├── pages/
-│   └── login_page.py        # Page Object Model classes
-├── tests/
-│   └── test_login.py        # Test cases
-├── reports/                 # Test reports (generated)
-├── conftest.py             # Pytest fixtures and configuration
-├── requirements.txt        # Python dependencies
-└── pytest.ini             # Pytest configuration
+│   ├── config.json          # URLs, credentials, supported portals
+│   ├── settings.py        # ENV parsing, resolve_runtime_config
+│   └── urls.py            # URL key helpers
+├── login_page.py          # Login page object
+├── tests/                 # Tab tests (markers for suites + portals)
+├── reports/               # Test reports (generated)
+├── conftest.py            # Pytest fixtures (driver, base_url, portal, …)
+├── requirements.txt
+└── pytest.ini
 ```
 
 ## 🛠️ Manual Setup
@@ -82,12 +82,12 @@ pytest
 $env:ENV="uat"
 .\venv\Scripts\python.exe -m pytest
 
-# Run with UAT FA Portal
-$env:ENV="uat_fa_portal"
+# Run with UAT FA Data Set portal
+$env:ENV="uat_fa_data_set"
 .\venv\Scripts\python.exe -m pytest
 
-# Run with PROD RIA Portal
-$env:ENV="prod_ria_portal"
+# Run with PROD Dakota Ria Portal
+$env:ENV="prod_dakota_ria_portal"
 .\venv\Scripts\python.exe -m pytest
 ```
 
@@ -101,14 +101,22 @@ $env:ENV="prod_ria_portal"
 `config/config.json` is now normalized for easy maintenance:
 
 - `base_urls`: one URL per base environment (`uat`, `prod`)
-- `credentials.base`: default creds per base environment
+- `credentials.base`: All Marketplace Access (base) credentials per environment (`uat` / `prod`)
 - `credentials.portals`: portal-specific creds per base environment
 - `urls`: single shared URL key map used by all environments
 
 Set runtime environment with `ENV`:
 
-- Base only: `uat` / `prod`
-- Portal specific: `uat_fa_portal`, `prod_ria_portal`, `uat_benchmark_portal`, etc.
+- All Marketplace Access: `uat` / `prod` (uses `credentials.base`)
+- Other portals: `uat_fa_data_set`, `prod_dakota_ria_portal`, `uat_dakota_private_markets_access`, etc. (uses `credentials.portals.<portal_key>`)
+
+Filter tests by portal marker, for example:
+
+```powershell
+.\venv\Scripts\python.exe -m pytest -m all_marketplace_access
+```
+
+**Legacy ``ENV`` suffixes** (still accepted and mapped to the current portal keys): `uat_default`, `uat_fa_portal`, `uat_ria_portal`, `uat_fo_portal`, `uat_benchmark_portal`, `uat_recommends_portal`, `uat_fa_ria_portal`, and the same under `prod_`.
 
 ## 📦 Dependencies
 
