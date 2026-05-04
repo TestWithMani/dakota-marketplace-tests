@@ -56,6 +56,11 @@ pipeline {
             description: 'Generate and publish Allure report in Jenkins.'
         )
         booleanParam(
+            name: 'RESET_BUILD_AND_ALLURE_HISTORY',
+            defaultValue: false,
+            description: 'If true, deletes previous Jenkins build history and clears any local Allure history before running tests.'
+        )
+        booleanParam(
             name: 'SEND_EMAIL',
             defaultValue: true,
             description: 'Send email notification after build completion'
@@ -127,6 +132,46 @@ pipeline {
                     checkout scm
                     def shortCommit = env.GIT_COMMIT ? env.GIT_COMMIT.take(7) : 'N/A'
                     echo "Branch: ${env.BRANCH_NAME ?: 'N/A'} | Commit: ${shortCommit}"
+                }
+            }
+        }
+
+        stage('Reset History (Optional)') {
+            when {
+                expression { return params.RESET_BUILD_AND_ALLURE_HISTORY as boolean }
+            }
+            steps {
+                script {
+                    echo "RESET_BUILD_AND_ALLURE_HISTORY=true -> purging historical Jenkins builds and local Allure history."
+
+                    // Clean workspace-level report directories/files so Allure starts from fresh results only.
+                    runShell(
+                        """
+                            rm -rf reports ${env.ALLURE_DIR} allure-report || true
+                            mkdir -p reports ${env.ALLURE_DIR}
+                        """,
+                        """
+                            if exist reports rmdir /s /q reports
+                            if exist %ALLURE_DIR% rmdir /s /q %ALLURE_DIR%
+                            if exist allure-report rmdir /s /q allure-report
+                            mkdir reports
+                            mkdir %ALLURE_DIR%
+                        """
+                    )
+
+                    // Remove previous Jenkins builds so UI/build trend/allure trend starts fresh from this build.
+                    def job = currentBuild.rawBuild.parent
+                    def currentBuildNumber = currentBuild.number as int
+                    def deletedCount = 0
+                    job.builds.findAll { build -> (build.number as int) < currentBuildNumber }.each { build ->
+                        try {
+                            build.delete()
+                            deletedCount++
+                        } catch (Exception ex) {
+                            echo "Could not delete build #${build.number}: ${ex.getMessage()}"
+                        }
+                    }
+                    echo "Deleted ${deletedCount} previous build(s)."
                 }
             }
         }
