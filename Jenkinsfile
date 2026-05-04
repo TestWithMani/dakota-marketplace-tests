@@ -130,13 +130,13 @@ pipeline {
                             python3 -m venv ${env.VENV_DIR}
                             ${env.VENV_DIR}/bin/python -m pip install --upgrade pip
                             ${env.VENV_DIR}/bin/python -m pip install -r requirements.txt
-                            ${env.VENV_DIR}/bin/python -m pip install pytest-html pytest-json-report allure-pytest pytest-xdist
+                            ${env.VENV_DIR}/bin/python -m pip install pytest-html pytest-json-report allure-pytest pytest-xdist pytest-rerunfailures
                         """,
                         """
                             py -m venv %VENV_DIR%
                             %VENV_DIR%\\Scripts\\python -m pip install --upgrade pip
                             %VENV_DIR%\\Scripts\\python -m pip install -r requirements.txt
-                            %VENV_DIR%\\Scripts\\python -m pip install pytest-html pytest-json-report allure-pytest pytest-xdist
+                            %VENV_DIR%\\Scripts\\python -m pip install pytest-html pytest-json-report allure-pytest pytest-xdist pytest-rerunfailures
                         """
                     )
                 }
@@ -180,7 +180,8 @@ pipeline {
                         false,
                         true,
                         params.BROWSER as String,
-                        params.PARALLEL_WORKERS as String
+                        params.PARALLEL_WORKERS as String,
+                        params.NON_ASSERTION_RETRY_COUNT as String
                     )
                     runPytest('--version')
                     runPytest(collectCmd)
@@ -199,25 +200,13 @@ pipeline {
                         params.RUN_ALLURE as boolean,
                         false,
                         params.BROWSER as String,
-                        params.PARALLEL_WORKERS as String
+                        params.PARALLEL_WORKERS as String,
+                        params.NON_ASSERTION_RETRY_COUNT as String
                     )
                     echo "Pytest command: pytest ${runCmd}"
 
                     withEnv(["ENV=${env.ENV}", "BROWSER=${(params.BROWSER ?: 'chrome').trim().toLowerCase()}"]) {
-                        def retryCount = parseRetryCount(params.NON_ASSERTION_RETRY_COUNT as String)
-                        def retrySummary = runPytestWithSelectiveRetries(
-                            runCmd,
-                            retryCount,
-                            params.RUN_ALLURE as boolean,
-                            params.BROWSER as String
-                        )
-                        env.EFFECTIVE_FAILED_COUNT = "${(retrySummary.nonRetryable.size() + retrySummary.unrecoveredRetryable.size())}"
-                        env.NON_RETRYABLE_FAILED_COUNT = "${retrySummary.nonRetryable.size()}"
-                        env.UNRECOVERED_RETRYABLE_FAILED_COUNT = "${retrySummary.unrecoveredRetryable.size()}"
-                        echo "Selective retry summary -> non-retryable(assertion): ${env.NON_RETRYABLE_FAILED_COUNT}, unrecovered retryable: ${env.UNRECOVERED_RETRYABLE_FAILED_COUNT}"
-                        if (!retrySummary.success) {
-                            error("Pytest failed after selective retries. Non-retryable failures: ${retrySummary.nonRetryable.size()}, unrecovered retryable failures: ${retrySummary.unrecoveredRetryable.size()}")
-                        }
+                        runPytest(runCmd)
                     }
                 }
             }
@@ -354,7 +343,7 @@ def resolveMarkerExpression(String markers) {
     return markerList.isEmpty() ? null : markerList.join(' or ')
 }
 
-def buildPytestCommand(List testPaths, String markerExpression, boolean runAllure, boolean collectOnly, String browser, String parallelWorkers) {
+def buildPytestCommand(List testPaths, String markerExpression, boolean runAllure, boolean collectOnly, String browser, String parallelWorkers, String nonAssertionRetryCount) {
     def parts = []
     parts << '-v'
     parts << '--tb=short'
@@ -371,6 +360,20 @@ def buildPytestCommand(List testPaths, String markerExpression, boolean runAllur
         parts << '--collect-only'
         parts << '-q'
     } else {
+        def retries = parseRetryCount(nonAssertionRetryCount)
+        if (retries > 0) {
+            parts << "--reruns=${retries}"
+            parts << '--reruns-delay=2'
+            parts << '--only-rerun=(selenium\\.common\\.exceptions\\.)?TimeoutException'
+            parts << '--only-rerun=(selenium\\.common\\.exceptions\\.)?NoSuchElementException'
+            parts << '--only-rerun=(selenium\\.common\\.exceptions\\.)?StaleElementReferenceException'
+            parts << '--only-rerun=(selenium\\.common\\.exceptions\\.)?ElementClickInterceptedException'
+            parts << '--only-rerun=(selenium\\.common\\.exceptions\\.)?WebDriverException'
+            parts << '--only-rerun=SessionNotCreatedException'
+            parts << '--only-rerun=disconnected:\\s+not\\s+connected\\s+to\\s+DevTools'
+            parts << '--only-rerun=chrome\\s+not\\s+reachable'
+            parts << '--only-rerun=ERR_CONNECTION_RESET'
+        }
         parts << "--junitxml=${env.PYTEST_JUNIT}"
         parts << "--html=${env.PYTEST_HTML}"
         parts << '--self-contained-html'
@@ -402,139 +405,6 @@ def parseRetryCount(String retryCount) {
         return 1
     }
     return normalized as int
-}
-
-def runPytestWithSelectiveRetries(String baseRunCmd, int maxRetries, boolean runAllure, String browser) {
-    def nonRetryable = []
-    def retryable = []
-    def unrecoveredRetryable = []
-
-    try {
-        runPytest(baseRunCmd)
-        echo "Initial pytest run passed. No retries needed."
-        return [success: true, nonRetryable: nonRetryable, unrecoveredRetryable: unrecoveredRetryable]
-    } catch (Exception e) {
-        echo "Initial pytest run failed: ${e.getMessage()}"
-    }
-
-    def initialAnalysis = analyzePytestFailures(env.PYTEST_JSON)
-    nonRetryable.addAll(initialAnalysis.nonRetryable as List)
-    retryable = (initialAnalysis.retryable as List).unique()
-
-    echo "Failure analysis after initial run -> non-retryable(assertion): ${nonRetryable.size()}, retryable(non-assertion): ${retryable.size()}"
-    if (retryable.isEmpty() || maxRetries <= 0) {
-        unrecoveredRetryable = retryable
-        return [success: (nonRetryable + unrecoveredRetryable).isEmpty(), nonRetryable: nonRetryable.unique(), unrecoveredRetryable: unrecoveredRetryable.unique()]
-    }
-
-    for (int attempt = 1; attempt <= maxRetries && !retryable.isEmpty(); attempt++) {
-        def retryCmd = buildRetryPytestCommand(retryable, runAllure, browser, attempt)
-        echo "Selective retry attempt ${attempt}/${maxRetries} for ${retryable.size()} node(s)."
-        try {
-            runPytest(retryCmd)
-            echo "Selective retry attempt ${attempt} passed for all targeted tests."
-            retryable = []
-            break
-        } catch (Exception retryErr) {
-            echo "Selective retry attempt ${attempt} failed: ${retryErr.getMessage()}"
-        }
-
-        def retryJson = "reports/report-retry-${attempt}.json"
-        def retryAnalysis = analyzePytestFailures(retryJson)
-        nonRetryable.addAll(retryAnalysis.nonRetryable as List)
-        def stillFailed = ((retryAnalysis.retryable as List) + (retryAnalysis.nonRetryable as List)).unique()
-        retryable = retryable.findAll { stillFailed.contains(it) }
-        echo "After retry ${attempt} -> still failing retryable tests: ${retryable.size()}"
-    }
-
-    unrecoveredRetryable = retryable.unique()
-    def finalFailures = (nonRetryable + unrecoveredRetryable).unique()
-    return [success: finalFailures.isEmpty(), nonRetryable: nonRetryable.unique(), unrecoveredRetryable: unrecoveredRetryable]
-}
-
-def buildRetryPytestCommand(List nodeIds, boolean runAllure, String browser, int attempt) {
-    def parts = []
-    parts << '-v'
-    parts << '--tb=short'
-    parts << '--color=no'
-    parts << "--junitxml=reports/junit-retry-${attempt}.xml"
-    parts << '--json-report'
-    parts << "--json-report-file=reports/report-retry-${attempt}.json"
-    if (runAllure) {
-        parts << "--alluredir=${env.ALLURE_DIR}"
-    }
-    nodeIds.each { nodeId ->
-        parts << "\"${escapeForDoubleQuotes(nodeId as String)}\""
-    }
-    parts << "--browser=${(browser ?: 'chrome').trim().toLowerCase()}"
-    return parts.join(' ')
-}
-
-def analyzePytestFailures(String jsonFilePath) {
-    def analysis = [retryable: [], nonRetryable: []]
-    if (!fileExists(jsonFilePath)) {
-        echo "pytest JSON report '${jsonFilePath}' not found; skipping retry analysis."
-        return analysis
-    }
-
-    try {
-        // Prefer Jenkins readJSON (more reliable in Pipeline sandbox), with a Groovy fallback.
-        def jsonData = null
-        try {
-            jsonData = readJSON file: jsonFilePath
-        } catch (Exception ignored) {
-            jsonData = new groovy.json.JsonSlurper().parseText(readFile(jsonFilePath))
-        }
-        def tests = (jsonData?.tests instanceof List) ? jsonData.tests : []
-        tests.each { testItem ->
-            def outcome = (testItem?.outcome ?: '').toString().toLowerCase()
-            if (outcome in ['failed', 'error']) {
-                def nodeId = (testItem?.nodeid ?: '').toString()
-                if (nodeId) {
-                    def failureText = extractFailureText(testItem)
-                    if (isAssertionFailure(failureText)) {
-                        analysis.nonRetryable << nodeId
-                    } else {
-                        analysis.retryable << nodeId
-                    }
-                }
-            }
-        }
-    } catch (Exception ex) {
-        echo "Failed to analyze pytest failures from '${jsonFilePath}': ${ex.getClass().getSimpleName()} - ${ex.getMessage()}"
-    }
-
-    analysis.retryable = (analysis.retryable as List).unique()
-    analysis.nonRetryable = (analysis.nonRetryable as List).unique()
-    return analysis
-}
-
-def extractFailureText(def testItem) {
-    def candidates = [
-        testItem?.call?.longrepr,
-        testItem?.setup?.longrepr,
-        testItem?.teardown?.longrepr,
-        testItem?.longrepr,
-        testItem?.keywords?.toString()
-    ].findAll { it != null }
-
-    return candidates.collect { candidate ->
-        if (candidate instanceof Map || candidate instanceof List) {
-            return groovy.json.JsonOutput.toJson(candidate)
-        }
-        return candidate.toString()
-    }.join('\n').toLowerCase()
-}
-
-def isAssertionFailure(String failureText) {
-    if (!failureText?.trim()) {
-        return false
-    }
-    return failureText.contains('assertionerror') || failureText =~ /\bassert\b/
-}
-
-def escapeForDoubleQuotes(String value) {
-    return (value ?: '').replace('\\', '\\\\').replace('"', '\\"')
 }
 
 def runShell(String unixCommand, String windowsCommand) {
