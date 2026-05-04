@@ -75,7 +75,6 @@ pipeline {
             defaultValue: 'Select one or more TAB_* checkboxes below to filter tests by tabs.\nIf none are selected, no tab marker filter is applied.',
             description: 'Read-only help text for tab selection.'
         )
-        booleanParam(name: 'TAB_ALL_MARKETPLACE_ACCESS', defaultValue: false, description: 'All Marketplace Access')
         booleanParam(name: 'TAB_ACCOUNTS', defaultValue: false, description: 'Accounts Tab')
         booleanParam(name: 'TAB_CONTACT', defaultValue: false, description: 'Contact Tab')
         booleanParam(name: 'TAB_ALL_DOCUMENTS', defaultValue: false, description: 'All Documents')
