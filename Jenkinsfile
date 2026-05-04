@@ -478,7 +478,13 @@ def analyzePytestFailures(String jsonFilePath) {
     }
 
     try {
-        def jsonData = new groovy.json.JsonSlurperClassic().parseText(readFile(jsonFilePath))
+        // Prefer Jenkins readJSON (more reliable in Pipeline sandbox), with a Groovy fallback.
+        def jsonData = null
+        try {
+            jsonData = readJSON file: jsonFilePath
+        } catch (Exception ignored) {
+            jsonData = new groovy.json.JsonSlurper().parseText(readFile(jsonFilePath))
+        }
         def tests = (jsonData?.tests instanceof List) ? jsonData.tests : []
         tests.each { testItem ->
             def outcome = (testItem?.outcome ?: '').toString().toLowerCase()
@@ -495,7 +501,7 @@ def analyzePytestFailures(String jsonFilePath) {
             }
         }
     } catch (Exception ex) {
-        echo "Failed to analyze pytest failures from '${jsonFilePath}': ${ex.getMessage()}"
+        echo "Failed to analyze pytest failures from '${jsonFilePath}': ${ex.getClass().getSimpleName()} - ${ex.getMessage()}"
     }
 
     analysis.retryable = (analysis.retryable as List).unique()
