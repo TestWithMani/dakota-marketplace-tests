@@ -239,7 +239,9 @@ pipeline {
                     echo "Pytest command: pytest ${runCmd}"
 
                     withEnv(["ENV=${env.ENV}", "BROWSER=${(params.BROWSER ?: 'chrome').trim().toLowerCase()}"]) {
-                        runPytest(runCmd)
+                        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                            runPytest(runCmd)
+                        }
                     }
                 }
             }
