@@ -16,18 +16,6 @@ CONFIG_PATH = Path(__file__).with_name("config.json")
 DEFAULT_ENV = "uat"
 DEFAULT_PORTAL = "all_marketplace_access"
 
-# Old Jenkins/scripts may still set these ENV suffixes; map to current portal keys.
-_LEGACY_ENV_PORTAL_ALIASES = {
-    "default": "all_marketplace_access",
-    "fa_portal": "fa_data_set",
-    "ria_portal": "dakota_ria_portal",
-    "fo_portal": "dakota_family_office_portal",
-    "benchmark_portal": "dakota_private_markets_access",
-    "recommends_portal": "dakota_recommends_portal_access",
-    "fa_ria_portal": "dakota_private_wealth_portal",
-}
-
-
 def load_config() -> Dict[str, dict]:
     with CONFIG_PATH.open(encoding="utf-8") as config_file:
         return json.load(config_file)
@@ -51,7 +39,6 @@ def parse_environment_name(environment: Optional[str] = None) -> Tuple[str, str,
     parts = normalized.split("_", 1)
     base_env = parts[0] if parts and parts[0] else DEFAULT_ENV
     portal = parts[1] if len(parts) == 2 and parts[1] else DEFAULT_PORTAL
-    portal = _LEGACY_ENV_PORTAL_ALIASES.get(portal, portal)
     return base_env, portal, normalized
 
 

@@ -116,7 +116,6 @@ Filter tests by portal marker, for example:
 .\venv\Scripts\python.exe -m pytest -m all_marketplace_access
 ```
 
-**Legacy ``ENV`` suffixes** (still accepted and mapped to the current portal keys): `uat_default`, `uat_fa_portal`, `uat_ria_portal`, `uat_fo_portal`, `uat_benchmark_portal`, `uat_recommends_portal`, `uat_fa_ria_portal`, and the same under `prod_`.
 
 ## 📦 Dependencies
 
