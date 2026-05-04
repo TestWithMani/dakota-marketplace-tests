@@ -26,7 +26,7 @@ pipeline {
         )
         choice(
             name: 'MARKERS',
-            choices: ['All Tests', 'Accounts Tab', 'Contact Tab', 'All Documents', '13F Filings & Investments Search', 'Conference Search', 'Consultant Reviews', 'Continuation Vehicle', 'Dakota City Guides', 'Dakota Searches', 'Dakota Video Search', 'Fee Schedules Dashboard', 'Fund Family Memos', 'Fund Launches', 'Investment Allocator - Accounts', 'Investment Allocator - Contacts', 'Investment Firm - Accounts', 'Investment Firm - Contacts', 'Manager Presentation Dashboard', 'My Accounts', 'Pension Documents', 'Portfolio Companies', 'Portfolio Companies - Contacts', 'Private Fund Search', 'Public Company Search', 'Public Investments Search', 'Public Plan Minutes Search', 'Recent Transactions', 'University Alumni - Contacts'],
+            choices: ['All Tests', 'Accounts Tab', 'Contact Tab', 'All Documents', '13F Filings & Investments Search', 'Benchmarking Tab', 'Conference Search', 'Consultant Reviews', 'Continuation Vehicle', 'Dakota City Guides', 'Dakota Searches', 'Dakota Video Search', 'Evergreen Fund Performance', 'Fee Schedules Dashboard', 'Forecasted Transactions', 'Fund Family Memos', 'Fund Launches', 'Fundraising News', 'Hedge Fund Performance', 'Investment Allocator - Accounts', 'Investment Allocator - Contacts', 'Investment Firm - Accounts', 'Investment Firm - Contacts', 'Manager Presentation Dashboard', 'My Accounts', 'Pension Documents', 'Portfolio Companies', 'Portfolio Companies - Contacts', 'Private Companies Transactions', 'Private Fund Search', 'Public Company Search', 'Public Investments Search', 'Public Plan Minutes Search', 'Recent Transactions', 'University Alumni - Contacts'],
             description: 'Select one marker. Use "All Tests" for no marker filtering.'
         )
         choice(
@@ -573,15 +573,20 @@ def mapMarkerDisplayToInternal(displayName) {
         'Contact Tab': 'contact',
         'All Documents': 'all_documents',
         '13F Filings & Investments Search': 'filings_13f_investments_search',
+        'Benchmarking Tab': 'benchmarking_tab',
         'Conference Search': 'conference_search',
         'Consultant Reviews': 'consultant_reviews',
         'Continuation Vehicle': 'continuation_vehicle',
         'Dakota City Guides': 'dakota_city_guides',
         'Dakota Searches': 'dakota_searches',
         'Dakota Video Search': 'dakota_video_search',
+        'Evergreen Fund Performance': 'evergreen_fund_performance',
         'Fee Schedules Dashboard': 'fee_schedules_dashboard',
+        'Forecasted Transactions': 'forecasted_transactions',
         'Fund Family Memos': 'fund_family_memos',
         'Fund Launches': 'fund_launches',
+        'Fundraising News': 'fundraising_news',
+        'Hedge Fund Performance': 'hedge_fund_performance',
         'Investment Allocator - Accounts': 'investment_allocator_accounts',
         'Investment Allocator - Contacts': 'investment_allocator_contacts',
         'Investment Firm - Accounts': 'investment_firm_accounts',
@@ -591,6 +596,7 @@ def mapMarkerDisplayToInternal(displayName) {
         'Pension Documents': 'pension_documents',
         'Portfolio Companies': 'portfolio_companies',
         'Portfolio Companies - Contacts': 'portfolio_companies_contacts',
+        'Private Companies Transactions': 'private_companies_transactions',
         'Private Fund Search': 'private_fund_search',
         'Public Company Search': 'public_company_search',
         'Public Investments Search': 'public_investments_search',

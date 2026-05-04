@@ -119,6 +119,12 @@
         "continuation_vehicle": "continuation-vehicle",
         "portfolio_companies": "portfolio-companies",
         "recent_transactions": "recent-transactions",
+        "benchmarking_tab": "benchmarking-tab",
+        "hedge_fund_performance": "hedge-fund-performance",
+        "evergreen_fund_performance": "evergreen-fund-performance",
+        "forecasted_transactions": "forecasted-transactions",
+        "private_companies_transactions": "private-companies-transactions",
+        "fundraising_news": "fundraising-news",
         "conference_search_tab": "conference-search-tab",
         "dakota_video_search_tab": "dakota-videos",
         "public_company_search_tab": "public-company-search-tab"

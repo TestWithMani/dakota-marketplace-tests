@@ -39,6 +39,12 @@ class URLs:
     CONTINUATION_VEHICLE = "continuation_vehicle"
     PORTFOLIO_COMPANIES = "portfolio_companies"
     RECENT_TRANSACTIONS = "recent_transactions"
+    BENCHMARKING_TAB = "benchmarking_tab"
+    HEDGE_FUND_PERFORMANCE = "hedge_fund_performance"
+    EVERGREEN_FUND_PERFORMANCE = "evergreen_fund_performance"
+    FORECASTED_TRANSACTIONS = "forecasted_transactions"
+    PRIVATE_COMPANIES_TRANSACTIONS = "private_companies_transactions"
+    FUNDRAISING_NEWS = "fundraising_news"
     CONFERENCE_SEARCH_TAB = "conference_search_tab"
     DAKOTA_VIDEO_SEARCH_TAB = "dakota_video_search_tab"
     PUBLIC_COMPANY_SEARCH_TAB = "public_company_search_tab"
@@ -69,6 +75,12 @@ class URLs:
         CONTINUATION_VEHICLE,
         PORTFOLIO_COMPANIES,
         RECENT_TRANSACTIONS,
+        BENCHMARKING_TAB,
+        HEDGE_FUND_PERFORMANCE,
+        EVERGREEN_FUND_PERFORMANCE,
+        FORECASTED_TRANSACTIONS,
+        PRIVATE_COMPANIES_TRANSACTIONS,
+        FUNDRAISING_NEWS,
         CONFERENCE_SEARCH_TAB,
         DAKOTA_VIDEO_SEARCH_TAB,
         PUBLIC_COMPANY_SEARCH_TAB,
