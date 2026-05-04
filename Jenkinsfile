@@ -437,7 +437,6 @@ def buildPytestCommand(List testPaths, String markerExpression, boolean runAllur
             parts << '--only-rerun=(selenium\\.common\\.exceptions\\.)?StaleElementReferenceException'
             parts << '--only-rerun=(selenium\\.common\\.exceptions\\.)?ElementClickInterceptedException'
             parts << '--only-rerun=(selenium\\.common\\.exceptions\\.)?WebDriverException'
-            parts << '--only-rerun=SessionNotCreatedException'
             parts << '--only-rerun=disconnected:\\s+not\\s+connected\\s+to\\s+DevTools'
             parts << '--only-rerun=chrome\\s+not\\s+reachable'
             parts << '--only-rerun=ERR_CONNECTION_RESET'
