@@ -172,21 +172,9 @@ pipeline {
         stage('Setup Environment') {
             steps {
                 script {
-                    def portalMap = [
-                        'All Marketplace Access': '',
-                        'Dakota Ria Portal': 'dakota_ria_portal',
-                        'Dakota Transactions & CEOs Access': 'dakota_transactions_ceos_access',
-                        'FA Data Set': 'fa_data_set',
-                        'Is Deal Team?': 'is_deal_team',
-                        'Dakota Private Markets Access': 'dakota_private_markets_access',
-                        'Dakota Recommends Portal Access': 'dakota_recommends_portal_access',
-                        'Dakota Family Office Portal': 'dakota_family_office_portal',
-                        'Dakota private wealth portal': 'dakota_private_wealth_portal',
-                        'Dakota International portal': 'dakota_international_portal'
-                    ]
                     def envName = (params.ENVIRONMENT ?: 'UAT').toLowerCase()
                     def portalName = params.PORTAL ?: 'All Marketplace Access'
-                    def portalKey = portalMap[portalName] ?: ''
+                    def portalKey = getPortalMap()[portalName] ?: ''
                     env.TEST_ENV = portalKey ? "${envName}_${portalKey}" : envName
                     echo "Environment configured: ${env.TEST_ENV}"
                 }
@@ -196,22 +184,7 @@ pipeline {
         stage('Setup Python Environment') {
             steps {
                 script {
-                    runShell(
-                        """
-                            if [ ! -x "${env.VENV_DIR}/bin/python" ]; then
-                                python3 -m venv ${env.VENV_DIR}
-                            fi
-                            ${env.VENV_DIR}/bin/python -m pip install --upgrade pip
-                            ${env.VENV_DIR}/bin/python -m pip install -r requirements.txt
-                            ${env.VENV_DIR}/bin/python -m pip install pytest-html pytest-json-report allure-pytest pytest-xdist pytest-rerunfailures
-                        """,
-                        """
-                            if not exist %VENV_DIR%\\Scripts\\python py -m venv %VENV_DIR%
-                            %VENV_DIR%\\Scripts\\python -m pip install --upgrade pip
-                            %VENV_DIR%\\Scripts\\python -m pip install -r requirements.txt
-                            %VENV_DIR%\\Scripts\\python -m pip install pytest-html pytest-json-report allure-pytest pytest-xdist pytest-rerunfailures
-                        """
-                    )
+                    setupPythonEnvironment()
                 }
             }
         }
@@ -271,7 +244,6 @@ pipeline {
                     echo "Pytest command: pytest ${runCmd}"
 
                     withEnv([
-                        "ENV=${env.TEST_ENV}",
                         "TEST_ENV=${env.TEST_ENV}",
                         "BROWSER=${(params.BROWSER ?: 'chrome').trim().toLowerCase()}",
                         "HEADLESS=${params.HEADLESS as boolean}",
@@ -344,7 +316,7 @@ pipeline {
                 }
 
                 def durationDisplay = (currentBuild.durationString ?: 'N/A').replace(' and counting', '')
-                def envDisplay = params.ENVIRONMENT ?: 'uat'
+                def envDisplay = params.ENVIRONMENT ?: 'UAT'
                 def portalDisplay = params.PORTAL ?: 'All Marketplace Access'
                 envDisplay = (portalDisplay == 'All Marketplace Access' || portalDisplay == 'Default') ? envDisplay.toUpperCase() : "${envDisplay.toUpperCase()} - ${portalDisplay}"
 
@@ -372,24 +344,57 @@ pipeline {
     }
 }
 
+def getPortalMap() {
+    return [
+        'All Marketplace Access': '',
+        'Dakota Ria Portal': 'dakota_ria_portal',
+        'Dakota Transactions & CEOs Access': 'dakota_transactions_ceos_access',
+        'FA Data Set': 'fa_data_set',
+        'Is Deal Team?': 'is_deal_team',
+        'Dakota Private Markets Access': 'dakota_private_markets_access',
+        'Dakota Recommends Portal Access': 'dakota_recommends_portal_access',
+        'Dakota Family Office Portal': 'dakota_family_office_portal',
+        'Dakota private wealth portal': 'dakota_private_wealth_portal',
+        'Dakota International portal': 'dakota_international_portal'
+    ]
+}
+
+def setupPythonEnvironment() {
+    if (isUnix()) {
+        sh """
+            if [ ! -x "${env.VENV_DIR}/bin/python" ]; then
+                python3 -m venv ${env.VENV_DIR}
+            fi
+            ${env.VENV_DIR}/bin/python -m pip install --upgrade pip
+            ${env.VENV_DIR}/bin/python -m pip install -r requirements.txt
+            ${env.VENV_DIR}/bin/python -m pip install pytest-html pytest-json-report allure-pytest pytest-xdist pytest-rerunfailures
+        """
+    } else {
+        bat 'if not exist "%VENV_DIR%\\Scripts\\python" py -m venv %VENV_DIR%'
+        bat '%VENV_DIR%\\Scripts\\python -m pip install --upgrade pip'
+        bat '%VENV_DIR%\\Scripts\\python -m pip install -r requirements.txt'
+        bat '%VENV_DIR%\\Scripts\\python -m pip install pytest-html pytest-json-report allure-pytest pytest-xdist pytest-rerunfailures'
+    }
+}
+
 def validateRuntimeParameters(String testSuite, String browser, String parallelWorkers, String nonAssertionRetryCount, String browserWidth, String browserHeight) {
-    if (testSuite && !testSuite.trim()) {
+    if (testSuite != null && !testSuite.trim()) {
         error("Invalid TEST_SUITE value.")
     }
+
     def normalizedBrowser = (browser ?: '').trim().toLowerCase()
     if (!(normalizedBrowser in ['chrome', 'edge', 'firefox'])) {
         error("Invalid BROWSER value '${browser}'. Supported values: chrome, edge, firefox.")
     }
 
     def workers = (parallelWorkers ?: '1').trim().toLowerCase()
-    if (workers == 'auto') {
-        return
-    }
-    if (!(workers ==~ /^\d+$/)) {
-        error("Invalid PARALLEL_WORKERS value '${parallelWorkers}'. Use '1', integer >1, or 'auto'.")
-    }
-    if ((workers as int) < 1) {
-        error("PARALLEL_WORKERS must be >= 1, got '${parallelWorkers}'.")
+    if (workers != 'auto') {
+        if (!(workers ==~ /^\d+$/)) {
+            error("Invalid PARALLEL_WORKERS value '${parallelWorkers}'. Use '1', integer >1, or 'auto'.")
+        }
+        if ((workers as int) < 1) {
+            error("PARALLEL_WORKERS must be >= 1, got '${parallelWorkers}'.")
+        }
     }
 
     def retryCount = (nonAssertionRetryCount ?: '1').trim()
@@ -472,13 +477,31 @@ def getTabCheckboxMap() {
     ]
 }
 
+
+def resolveEffectiveParallelWorkers(String parallelWorkers) {
+    def requestedWorkers = (parallelWorkers ?: '1').trim().toLowerCase()
+    if (requestedWorkers != 'auto') {
+        return requestedWorkers
+    }
+
+    def detectedWorkers = isUnix()
+        ? sh(script: 'getconf _NPROCESSORS_ONLN 2>/dev/null || nproc 2>/dev/null || echo 2', returnStdout: true).trim()
+        : bat(script: '@echo off\r\necho %NUMBER_OF_PROCESSORS%', returnStdout: true).trim()
+
+    if (!(detectedWorkers ==~ /^\d+$/) || (detectedWorkers as int) < 1) {
+        echo "Unable to detect worker count for PARALLEL_WORKERS=auto. Falling back to 2."
+        return '2'
+    }
+    return detectedWorkers
+}
+
 def buildPytestCommand(List testPaths, String markerExpression, boolean runAllure, boolean collectOnly, String browser, String parallelWorkers, String nonAssertionRetryCount) {
     def parts = []
     parts << '-v'
     parts << '--tb=short'
     parts << '--color=no'
     def selectedBrowser = (browser ?: 'chrome').trim().toLowerCase()
-    def workers = (parallelWorkers ?: '1').trim().toLowerCase()
+    def workers = resolveEffectiveParallelWorkers(parallelWorkers)
 
     if (workers != '1') {
         parts << '-n'
@@ -511,7 +534,7 @@ def buildPytestCommand(List testPaths, String markerExpression, boolean runAllur
     parts.addAll(testPaths)
     if (markerExpression?.trim()) {
         parts << '-m'
-        parts << "\"${formatMarkerExpression(markerExpression)}\""
+        parts << formatMarkerExpression(markerExpression)
     }
     if (!collectOnly) {
         parts << "--browser=${selectedBrowser}"
@@ -547,14 +570,7 @@ def runShell(String unixCommand, String windowsCommand) {
 }
 
 def formatMarkerExpression(String markerExpression) {
-    def normalized = (markerExpression ?: '').trim()
-    if (!normalized) {
-        return ''
-    }
-    if (normalized.startsWith('(') && normalized.endsWith(')') && normalized.length() > 2) {
-        normalized = normalized.substring(1, normalized.length() - 1).trim()
-    }
-    return "(${normalized})"
+    return (markerExpression ?: '').trim()
 }
 
 def clearReportDirectories() {
@@ -564,18 +580,27 @@ def clearReportDirectories() {
 
 def cleanDirs(List dirs) {
     def normalizedDirs = dirs.findAll { it?.trim() }
-    runShell(
-        """
+    if (normalizedDirs.isEmpty()) {
+        return
+    }
+
+    if (isUnix()) {
+        sh """
             for path in ${normalizedDirs.collect { "'${it}'" }.join(' ')}; do
-                if [ -e "$path" ]; then
-                    rm -rf "$path"
+                if [ -e "\$path" ]; then
+                    rm -rf "\$path"
                 fi
             done
-        """,
         """
-            ${normalizedDirs.collect { d -> "if exist \"${d}\" rmdir /s /q \"${d}\"" }.join('\n            ')}
-        """
-    )
+    } else {
+        normalizedDirs.each { d ->
+            bat """
+                if exist "${d}" (
+                    rmdir /s /q "${d}" || (ping -n 3 127.0.0.1 > nul && rmdir /s /q "${d}")
+                )
+            """
+        }
+    }
 }
 
 def setupReports() {
@@ -631,57 +656,6 @@ def mapSuiteDisplayToInternal(displayName) {
         'Pin/Unpin Functionality': 'pin_unpin'
     ]
     return suiteMapping.get(displayName, displayName)
-}
-
-def mapMarkerDisplayToInternal(displayName) {
-    def markerMapping = [
-        'All Tests': 'all',
-        'Accounts Tab': 'accounts',
-        'Contact Tab': 'contact',
-        'All Documents': 'all_documents',
-        '13F Filings & Investments Search': 'filings_13f_investments_search',
-        'Benchmarking Tab': 'benchmarking_tab',
-        'Conference Search': 'conference_search',
-        'Consultant Reviews': 'consultant_reviews',
-        'Continuation Vehicle': 'continuation_vehicle',
-        'Dakota City Guides': 'dakota_city_guides',
-        'Dakota Searches': 'dakota_searches',
-        'Dakota Video Search': 'dakota_video_search',
-        'Evergreen Fund Performance': 'evergreen_fund_performance',
-        'Fee Schedules Dashboard': 'fee_schedules_dashboard',
-        'Forecasted Transactions': 'forecasted_transactions',
-        'Fund Family Memos': 'fund_family_memos',
-        'Fund Launches': 'fund_launches',
-        'Fundraising News': 'fundraising_news',
-        'Hedge Fund Performance': 'hedge_fund_performance',
-        'Investment Allocator - Accounts': 'investment_allocator_accounts',
-        'Investment Allocator - Contacts': 'investment_allocator_contacts',
-        'Investment Firm - Accounts': 'investment_firm_accounts',
-        'Investment Firm - Contacts': 'investment_firm_contacts',
-        'Manager Presentation Dashboard': 'manager_presentation_dashboard',
-        'My Accounts': 'my_accounts',
-        'Pension Documents': 'pension_documents',
-        'Portfolio Companies': 'portfolio_companies',
-        'Portfolio Companies - Contacts': 'portfolio_companies_contacts',
-        'Private Companies Transactions': 'private_companies_transactions',
-        'Private Fund Search': 'private_fund_search',
-        'Public Company Search': 'public_company_search',
-        'Public Investments Search': 'public_investments_search',
-        'Public Plan Minutes Search': 'public_plan_minutes_search',
-        'Recent Transactions': 'recent_transactions',
-        'University Alumni - Contacts': 'university_alumni_contacts',
-        'All Marketplace Access': 'all_marketplace_access',
-        'Dakota Ria Portal': 'dakota_ria_portal',
-        'Dakota Transactions & CEOs Access': 'dakota_transactions_ceos_access',
-        'FA Data Set': 'fa_data_set',
-        'Is Deal Team?': 'is_deal_team',
-        'Dakota Private Markets Access': 'dakota_private_markets_access',
-        'Dakota Recommends Portal Access': 'dakota_recommends_portal_access',
-        'Dakota Family Office Portal': 'dakota_family_office_portal',
-        'Dakota private wealth portal': 'dakota_private_wealth_portal',
-        'Dakota International portal': 'dakota_international_portal'
-    ]
-    return markerMapping.get(displayName, displayName)
 }
 
 def getTestPath(testSuite) {
@@ -770,8 +744,8 @@ def sendEmailNotification(String buildStatus) {
         actualStatus = testStats.failed > 0 ? 'FAILURE' : 'SUCCESS'
     }
     def recipients = collectRecipientEmails(params.DEFAULT_EMAIL as String, params.ADDITIONAL_EMAILS as String)
-    if (recipients.isEmpty() && EMAIL_RECIPIENT?.trim()) {
-        recipients = [EMAIL_RECIPIENT]
+    if (recipients.isEmpty() && env.EMAIL_RECIPIENT?.trim()) {
+        recipients = [env.EMAIL_RECIPIENT]
     }
     if (recipients.isEmpty()) {
         echo "No recipients configured, skipping email."
