@@ -256,13 +256,13 @@ def test_contact_tab_fields_display_functionality(driver, base_url, credentials)
     )
     print("    Main grid row is clickable.")
 
-    name_input = WebDriverWait(driver, 10).until(
+    name_input = WebDriverWait(driver, 30).until(
         EC.visibility_of_element_located((By.XPATH, "//input[@name='enter-list-view-name']"))
     )
     name_input.clear()
     name_input.send_keys(new_list_view_name)
 
-    save_btn = WebDriverWait(driver, 10).until(
+    save_btn = WebDriverWait(driver, 30).until(
         EC.element_to_be_clickable((By.XPATH, "(//button[normalize-space(.)='Save'])[2]"))
     )
     driver.execute_script("arguments[0].click();", save_btn)
@@ -347,6 +347,13 @@ def test_contact_tab_fields_display_functionality(driver, base_url, credentials)
     )
     driver.execute_script("arguments[0].click();", confirm_delete_btn)
     time.sleep(12)
+
+    marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
+    print("Waiting for 'Dakota Marketplace' row to be clickable...")
+    WebDriverWait(driver, 60).until(
+        EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
+    )
+    print("'Dakota Marketplace' row is clickable.")
     wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
 
     select_list_view_btn = WebDriverWait(driver, 10).until(

@@ -84,13 +84,13 @@ def test_accounts_tab_fields_display_functionality(driver, base_url, credentials
     print("[Step 2] Navigating to Accounts tab...")
     driver.get(get_url(base_url, URLs.ACCOUNTS_DEFAULT))
 
-    # Wait for the "Dakota Marketplace" link to be clickable before proceeding
+    # Wait for the "Dakota Marketplace" row to be clickable before proceeding
     marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
-    print("Waiting for 'Dakota Marketplace' link to be clickable...")
+    print("Waiting for 'Dakota Marketplace' row to be clickable...")
     WebDriverWait(driver, 60).until(
         EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
     )
-    print("'Dakota Marketplace' link is clickable.")
+    print("'Dakota Marketplace' row is clickable.")
 
     wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
     time.sleep(2)
@@ -107,7 +107,7 @@ def test_accounts_tab_fields_display_functionality(driver, base_url, credentials
         driver.refresh()
         wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
         print("[✓] List view unpinned and page refreshed.")
-        time.sleep(2)
+        time.sleep(5)
     except Exception:
         print("[i] No unpin needed (button not found or already unpinned).")
 
@@ -229,27 +229,41 @@ def test_accounts_tab_fields_display_functionality(driver, base_url, credentials
     print("    Add button clicked.")
     time.sleep(6)
 
+    marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
+    print("Waiting for 'Dakota Marketplace' row to be clickable...")
+    WebDriverWait(driver, 60).until(
+        EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
+    )
+    print("'Dakota Marketplace' row is clickable.")
+
     # Step 11: Create new list view (Save As)
     print("[Step 11] Performing 'Save As' to create a custom list view...")
     save_as_btn = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.XPATH, "(//button[normalize-space(.)='Save As'])[1]"))
     )
     driver.execute_script("arguments[0].click();", save_as_btn)
-    time.sleep(2)
+    time.sleep(5)
     new_list_view_name = f"Automation by Mani {random.randint(1000, 9999)}"
     print(f"    Created List View Name: {new_list_view_name}")
 
-    name_input = WebDriverWait(driver, 10).until(
+    name_input = WebDriverWait(driver, 30).until(
         EC.visibility_of_element_located((By.XPATH, "//input[@name='enter-list-view-name']"))
     )
     name_input.clear()
     name_input.send_keys(new_list_view_name)
 
-    save_btn = WebDriverWait(driver, 10).until(
+    save_btn = WebDriverWait(driver, 30).until(
         EC.element_to_be_clickable((By.XPATH, "(//button[normalize-space(.)='Save'])[2]"))
     )
     driver.execute_script("arguments[0].click();", save_btn)
     time.sleep(6)
+
+    marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
+    print("Waiting for 'Dakota Marketplace' row to be clickable...")
+    WebDriverWait(driver, 60).until(
+        EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
+    )
+    print("'Dakota Marketplace' row is clickable.")
 
     saved_header = WebDriverWait(driver, 12).until(
         EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']"))
@@ -313,6 +327,14 @@ def test_accounts_tab_fields_display_functionality(driver, base_url, credentials
     )
     driver.execute_script("arguments[0].click();", confirm_delete_btn)
     time.sleep(12)
+
+    marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
+    print("Waiting for 'Dakota Marketplace' row to be clickable...")
+    WebDriverWait(driver, 60).until(
+        EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
+    )
+    print("'Dakota Marketplace' row is clickable.")
+
     wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
 
     select_list_view_btn = WebDriverWait(driver, 10).until(
@@ -320,7 +342,7 @@ def test_accounts_tab_fields_display_functionality(driver, base_url, credentials
     )
     driver.execute_script("arguments[0].click();", select_list_view_btn)
     time.sleep(1.2)
-    views_after_delete = WebDriverWait(driver, 10).until(
+    views_after_delete = WebDriverWait(driver, 30).until(
         EC.presence_of_all_elements_located((By.XPATH, "//div[@role='main']//li//a[1]"))
     )
     names_after = [el.text.strip() for el in views_after_delete]

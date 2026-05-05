@@ -34,13 +34,13 @@ def test_contact_list_view_crud(driver, base_url, credentials):
     """
     wait = WebDriverWait(driver, 20)
 
-    print("Step 1: Logging in...")
+    print("[Step 1] Logging in to the application...")
     username, password = credentials
     login_page = LoginPage(driver)
     login_page.navigate_to_login(base_url)
     login_page.login(username, password)
 
-    print("Step 2: Navigating to Contact tab...")
+    print("[Step 2] Navigating to Contact tab...")
     driver.get(get_url(base_url, URLs.CONTACT_DEFAULT))
 
     # Wait for the "Dakota Marketplace" row to be clickable before proceeding
@@ -53,7 +53,7 @@ def test_contact_list_view_crud(driver, base_url, credentials):
 
     wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
 
-    print("Step 3: Checking whether Unpin is needed and clicking it if available...")
+    print("[Step 3] Checking for 'Unpin this List View' button...")
     try:
         unpin_btn = WebDriverWait(driver, 5).until(
             EC.element_to_be_clickable((By.XPATH, "//button[@title='Unpin this List View']"))
@@ -74,21 +74,21 @@ def test_contact_list_view_crud(driver, base_url, credentials):
     )
     print("'Dakota Marketplace' row is clickable.")
 
-    print("Step 4: Capturing the original header/base text...")
+    print("[Step 4] Capturing original header for verification...")
     original_header = wait.until(
         EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']"))
     ).text.strip()
     original_base = re.split(r'\s*\(', original_header, 1)[0].strip()
     time.sleep(1)
 
-    print("Step 5: Collecting original column texts...")
+    print("[Step 5] Capturing original table column texts...")
     initial_cols = [el.text.strip() for el in driver.find_elements(By.XPATH, "//div[@class='slds-truncate']")]
 
     print("Screenshot: Before saving a list view")
     with allure.step("Before saving new Contact list view"):
         allure.attach(driver.get_screenshot_as_png(), attachment_type=allure.attachment_type.PNG)
 
-    print("Step 6: Performing 'Save As' to create a new list view...")
+    print("[Step 6] Performing 'Save As' to create a custom list view...")
     save_as_btn = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.XPATH, "(//button[normalize-space(.)=\'Save As\'])[1]"))
     )
@@ -127,7 +127,7 @@ def test_contact_list_view_crud(driver, base_url, credentials):
     with allure.step(f"After save as new list view: {new_list_view_name}"):
         allure.attach(driver.get_screenshot_as_png(), name=f'{new_list_view_name}_after_save.png', attachment_type=allure.attachment_type.PNG)
 
-    print("Step 7: Renaming the list view...")
+    print("[Step 7] Renaming the list view...")
     rename_list_view_btn = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.XPATH, "//button[@title=\'Rename List View\']"))
     )
@@ -164,12 +164,12 @@ def test_contact_list_view_crud(driver, base_url, credentials):
     renamed_base = re.split(r'\s*\(', renamed_header, 1)[0].strip()
     assert renamed_base == renamed_name
 
-    print("Step 8: Deleting the list view and confirming the deletion...")
-    delete_btn = WebDriverWait(driver, 10).until(
+    print("[Step 8] Deleting the list view and confirming deletion...")
+    delete_btn = WebDriverWait(driver, 30).until(
         EC.element_to_be_clickable((By.XPATH, "//button[.//svg[@data-key='delete'] or contains(@title,'Delete') or .//span[contains(normalize-space(.),'Delete')]]"))
     )
     driver.execute_script("arguments[0].click();", delete_btn)
-    confirm_delete_btn = WebDriverWait(driver, 10).until(
+    confirm_delete_btn = WebDriverWait(driver, 30).until(
         EC.element_to_be_clickable((By.XPATH, "(//button[contains(text(),\'Delete\')])"))
     )
     driver.execute_script("arguments[0].click();", confirm_delete_btn)
@@ -185,13 +185,13 @@ def test_contact_list_view_crud(driver, base_url, credentials):
 
     wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
 
-    print("Step 9: Checking that the deleted list view is removed from the dropdown...")
-    select_list_view_btn = WebDriverWait(driver, 10).until(
+    print("[Step 9] Verifying deleted list view is removed from dropdown...")
+    select_list_view_btn = WebDriverWait(driver, 30).until(
         EC.element_to_be_clickable((By.XPATH, "//button[@title='Select a List View']"))
     )
     driver.execute_script("arguments[0].click();", select_list_view_btn)
     time.sleep(2)
-    views_after_delete = WebDriverWait(driver, 10).until(
+    views_after_delete = WebDriverWait(driver, 30).until(
         EC.presence_of_all_elements_located((By.XPATH, "//div[@role='main']//li//a[1]"))
     )
     names_after = [el.text.strip() for el in views_after_delete]

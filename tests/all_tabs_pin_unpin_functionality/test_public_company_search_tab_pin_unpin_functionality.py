@@ -39,13 +39,13 @@ def test_public_company_search_tab_pin_unpin_functionality(driver, base_url, cre
     """
     wait = WebDriverWait(driver, 20)
 
-    print("Step 1: Logging in...")
+    print("[Step 1] Logging in...")
     username, password = credentials
     login_page = LoginPage(driver)
     login_page.navigate_to_login(base_url)
     login_page.login(username, password)
 
-    print("Step 2: Navigating to Public Company Search tab...")
+    print("[Step 2] Navigating to Public Company Search tab...")
     driver.get(get_url(base_url, URLs.PUBLIC_COMPANY_SEARCH_TAB))
 
     # Wait for the "Dakota Marketplace" row to be clickable before proceeding
@@ -58,7 +58,7 @@ def test_public_company_search_tab_pin_unpin_functionality(driver, base_url, cre
 
     wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
 
-    print("Step 3: Checking whether Unpin is needed and clicking it if available...")
+    print("[Step 3] Checking whether Unpin is needed and clicking it if available...")
     try:
         unpin_btn = WebDriverWait(driver, 5).until(
             EC.element_to_be_clickable((By.XPATH, "//button[@title='Unpin this List View']"))
@@ -79,7 +79,7 @@ def test_public_company_search_tab_pin_unpin_functionality(driver, base_url, cre
     )
     print("'Dakota Marketplace' row is clickable.")
 
-    print("Step 4: Capturing original header...")
+    print("[Step 4] Capturing original header...")
     original_header = wait.until(
         EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']"))
     ).text.strip()
@@ -92,7 +92,7 @@ def test_public_company_search_tab_pin_unpin_functionality(driver, base_url, cre
     with allure.step("Before creating a new Public Company Search tab list view"):
         allure.attach(driver.get_screenshot_as_png(), attachment_type=allure.attachment_type.PNG)
 
-    print("Step 5: Creating a new list view...")
+    print("[Step 5] Creating a new list view...")
     save_as_btn = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.XPATH, "(//button[normalize-space(.)='Save As'])[1]"))
     )
@@ -132,7 +132,7 @@ def test_public_company_search_tab_pin_unpin_functionality(driver, base_url, cre
     with allure.step(f"After creating new list view: {new_list_view_name}"):
         allure.attach(driver.get_screenshot_as_png(), name=f'{new_list_view_name}_after_create.png', attachment_type=allure.attachment_type.PNG)
 
-    print("Step 6: Pinning the new list view...")
+    print("[Step 6] Pinning the new list view...")
     pin_btn = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.XPATH, "//button[@title='Pin this List View']"))
     )
@@ -143,7 +143,7 @@ def test_public_company_search_tab_pin_unpin_functionality(driver, base_url, cre
     with allure.step(f"After pinning list view: {new_list_view_name}"):
         allure.attach(driver.get_screenshot_as_png(), name=f'{new_list_view_name}_after_pin.png', attachment_type=allure.attachment_type.PNG)
 
-    print("Step 7: Refreshing page and verifying the pinned list view appears...")
+    print("[Step 7] Refreshing page and verifying the pinned list view appears...")
     driver.refresh()
     wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
 
@@ -165,8 +165,8 @@ def test_public_company_search_tab_pin_unpin_functionality(driver, base_url, cre
     with allure.step(f"After refresh - pinned list view appears: {refreshed_base}"):
         allure.attach(driver.get_screenshot_as_png(), name=f'{refreshed_base}_after_refresh_pinned.png', attachment_type=allure.attachment_type.PNG)
 
-    print("Step 8: Unpinning the list view and refreshing again...")
-    unpin_btn = WebDriverWait(driver, 10).until(
+    print("[Step 8] Unpinning the list view and refreshing again...")
+    unpin_btn = WebDriverWait(driver, 30).until(
         EC.element_to_be_clickable((By.XPATH, "//button[@title='Unpin this List View']"))
     )
     driver.execute_script("arguments[0].click();", unpin_btn)
@@ -191,7 +191,14 @@ def test_public_company_search_tab_pin_unpin_functionality(driver, base_url, cre
         allure.attach(driver.get_screenshot_as_png(), name=f'after_unpin_refresh.png', attachment_type=allure.attachment_type.PNG)
     time.sleep(10)
 
-    print("Step 9: Verifying the original header appears after unpin...")
+    marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
+    print("Waiting for 'Dakota Marketplace' row to be clickable...")
+    WebDriverWait(driver, 60).until(
+        EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
+    )
+    print("'Dakota Marketplace' row is clickable.")
+
+    print("[Step 9] Verifying the original header appears after unpin...")
     after_unpin_header = wait.until(
         EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']"))
     ).text.strip()
@@ -202,7 +209,7 @@ def test_public_company_search_tab_pin_unpin_functionality(driver, base_url, cre
     with allure.step(f"Original header restored: {after_unpin_base}"):
         allure.attach(driver.get_screenshot_as_png(), name=f'{after_unpin_base}_original_restored.png', attachment_type=allure.attachment_type.PNG)
 
-    print("Step 10: Deleting the created list view...")
+    print("[Step 10] Deleting the created list view...")
     # Navigate to the created list view first by selecting it from the dropdown
     select_list_view_btn = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.XPATH, "//button[@title='Select a List View']"))
@@ -229,11 +236,11 @@ def test_public_company_search_tab_pin_unpin_functionality(driver, base_url, cre
     wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
 
     # Delete the list view
-    delete_btn = WebDriverWait(driver, 10).until(
+    delete_btn = WebDriverWait(driver, 30).until(
         EC.element_to_be_clickable((By.XPATH, "//button[.//svg[@data-key='delete'] or contains(@title,'Delete') or .//span[contains(normalize-space(.),'Delete')]]"))
     )
     driver.execute_script("arguments[0].click();", delete_btn)
-    confirm_delete_btn = WebDriverWait(driver, 10).until(
+    confirm_delete_btn = WebDriverWait(driver, 30).until(
         EC.element_to_be_clickable((By.XPATH, "(//button[contains(text(),'Delete')])"))
     )
     driver.execute_script("arguments[0].click();", confirm_delete_btn)
@@ -250,12 +257,12 @@ def test_public_company_search_tab_pin_unpin_functionality(driver, base_url, cre
     wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
 
     print("  Verifying that the deleted list view is removed from the dropdown...")
-    select_list_view_btn = WebDriverWait(driver, 10).until(
+    select_list_view_btn = WebDriverWait(driver, 30).until(
         EC.element_to_be_clickable((By.XPATH, "//button[@title='Select a List View']"))
     )
     driver.execute_script("arguments[0].click();", select_list_view_btn)
     time.sleep(2)
-    views_after_delete = WebDriverWait(driver, 10).until(
+    views_after_delete = WebDriverWait(driver, 30).until(
         EC.presence_of_all_elements_located((By.XPATH, "//div[@role='main']//li//a[1]"))
     )
     names_after = [el.text.strip() for el in views_after_delete]

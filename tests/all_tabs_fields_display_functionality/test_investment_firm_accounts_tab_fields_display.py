@@ -232,6 +232,13 @@ def test_investment_firm_accounts_tab_fields_display_functionality(driver, base_
     print("    Add button clicked.")
     time.sleep(6)
 
+
+    marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
+    print("Waiting for 'Dakota Marketplace' row to be clickable...")
+    WebDriverWait(driver, 60).until(
+        EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
+    )
+    print("'Dakota Marketplace' row is clickable.")
     # Step 11: Create new list view (Save As)
     print("[Step 11] Performing 'Save As' to create a custom list view...")
     save_as_btn = WebDriverWait(driver, 10).until(
@@ -242,18 +249,25 @@ def test_investment_firm_accounts_tab_fields_display_functionality(driver, base_
     new_list_view_name = f"Automation by Mani {random.randint(1000, 9999)}"
     print(f"    Created List View Name: {new_list_view_name}")
 
-    name_input = WebDriverWait(driver, 10).until(
+    name_input = WebDriverWait(driver, 30).until(
         EC.visibility_of_element_located((By.XPATH, "//input[@name='enter-list-view-name']"))
     )
     name_input.clear()
     name_input.send_keys(new_list_view_name)
 
-    save_btn = WebDriverWait(driver, 10).until(
+    save_btn = WebDriverWait(driver, 30).until(
         EC.element_to_be_clickable((By.XPATH, "(//button[normalize-space(.)='Save'])[2]"))
     )
     driver.execute_script("arguments[0].click();", save_btn)
     time.sleep(6)
 
+
+    marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
+    print("Waiting for 'Dakota Marketplace' row to be clickable...")
+    WebDriverWait(driver, 60).until(
+        EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
+    )
+    print("'Dakota Marketplace' row is clickable.")
     saved_header = WebDriverWait(driver, 12).until(
         EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']"))
     ).text.strip()
@@ -316,6 +330,13 @@ def test_investment_firm_accounts_tab_fields_display_functionality(driver, base_
     )
     driver.execute_script("arguments[0].click();", confirm_delete_btn)
     time.sleep(12)
+
+    marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
+    print("Waiting for 'Dakota Marketplace' row to be clickable...")
+    WebDriverWait(driver, 60).until(
+        EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
+    )
+    print("'Dakota Marketplace' row is clickable.")
     wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
 
     select_list_view_btn = WebDriverWait(driver, 10).until(
