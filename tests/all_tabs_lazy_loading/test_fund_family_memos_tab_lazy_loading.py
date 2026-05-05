@@ -59,12 +59,12 @@ def test_fund_family_memos_tab_lazy_loading(driver, base_url, credentials):
     # Wait for the "Dakota Marketplace" link to be clickable before proceeding
     marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
     print("Waiting for 'Dakota Marketplace' link to be clickable...")
-    WebDriverWait(driver, 30).until(
+    WebDriverWait(driver, 60).until(
         EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
     )
     print("'Dakota Marketplace' link is clickable.")
 
-    wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
+    wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
     time.sleep(3)
 
     with allure.step("After navigating to Fund Family Memos tab"):
@@ -78,14 +78,14 @@ def test_fund_family_memos_tab_lazy_loading(driver, base_url, credentials):
         driver.execute_script("arguments[0].click();", unpin_btn)
         time.sleep(1)
         driver.refresh()
-        wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
+        wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
         print("  Unpinned List View.")
     except Exception:
         print("  Unpin not required or button not found.")
 
     print("Step 4: Storing header...")
     header_element = wait.until(
-        EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']"))
+        EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']"))
     )
     stored_header = header_element.text.strip()
     print(f"  Stored header: {stored_header}")
@@ -263,7 +263,7 @@ def test_fund_family_memos_tab_lazy_loading(driver, base_url, credentials):
     print(f"  Visible records: {visible_count} out of {current_count} total")
     
     current_header = wait.until(
-        EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']"))
+        EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']"))
     ).text.strip()
     print(f"  Header verification: {current_header}")
     

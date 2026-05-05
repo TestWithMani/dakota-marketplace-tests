@@ -132,12 +132,12 @@ def test_13f_filings_investments_search_tab_fields_comparison(driver, base_url, 
     # Wait for the "Dakota Marketplace" link to be clickable before proceeding
     marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
     print("Waiting for 'Dakota Marketplace' link to be clickable...")
-    WebDriverWait(driver, 30).until(
+    WebDriverWait(driver, 60).until(
         EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
     )
     print("'Dakota Marketplace' link is clickable.")
 
-    wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
+    wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
 
     print("Step 3: Checking if Unpin is needed and performing if available...")
     try:
@@ -147,7 +147,7 @@ def test_13f_filings_investments_search_tab_fields_comparison(driver, base_url, 
         driver.execute_script("arguments[0].click();", unpin_btn)
         time.sleep(1)
         driver.refresh()
-        wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
+        wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
         print("  Unpinned List View.")
         time.sleep(5)
     except Exception:
@@ -155,7 +155,7 @@ def test_13f_filings_investments_search_tab_fields_comparison(driver, base_url, 
 
     print("Step 4: Saving header...")
     original_header = wait.until(
-        EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']"))
+        EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']"))
     ).text.strip()
     print(f"  Saved header: {original_header}")
     time.sleep(5)

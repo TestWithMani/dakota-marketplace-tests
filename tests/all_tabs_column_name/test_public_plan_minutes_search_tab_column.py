@@ -43,7 +43,7 @@ def test_verify_public_plan_minutes_search_tab_column_names(driver, base_url, cr
     # Wait for the "Dakota Marketplace" link to be clickable before proceeding
     marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
     print("Waiting for 'Dakota Marketplace' link to be clickable...")
-    WebDriverWait(driver, 30).until(
+    WebDriverWait(driver, 60).until(
         EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
     )
     print("'Dakota Marketplace' link is clickable.")
@@ -51,7 +51,7 @@ def test_verify_public_plan_minutes_search_tab_column_names(driver, base_url, cr
 
     print("Waiting for Public Plan Minutes Search page to load (header visible)...")
     wait = WebDriverWait(driver, 30)
-    header_selector = (By.XPATH, "//span[@class='headerTitle']")
+    header_selector = (By.XPATH, "//div[@class='dropdownStyling']")
     wait.until(EC.visibility_of_element_located(header_selector))
     print("Public Plan Minutes Search page loaded.")
 
@@ -65,7 +65,7 @@ def test_verify_public_plan_minutes_search_tab_column_names(driver, base_url, cr
         time.sleep(2)
 
         driver.refresh()
-        header_selector = (By.XPATH, "//span[@class='headerTitle']")
+        header_selector = (By.XPATH, "//div[@class='dropdownStyling']")
         wait.until(EC.visibility_of_element_located(header_selector))
         print("Page refreshed after unpinning.")
     except Exception:

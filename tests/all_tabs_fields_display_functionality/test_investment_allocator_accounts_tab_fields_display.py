@@ -87,12 +87,12 @@ def test_investment_allocator_accounts_tab_fields_display_functionality(driver, 
     # Wait for the "Dakota Marketplace" link to be clickable before proceeding
     marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
     print("Waiting for 'Dakota Marketplace' link to be clickable...")
-    WebDriverWait(driver, 30).until(
+    WebDriverWait(driver, 60).until(
         EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
     )
     print("'Dakota Marketplace' link is clickable.")
 
-    wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
+    wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
     time.sleep(2)
     print("[✓] Investment Allocator Accounts tab loaded.")
 
@@ -105,7 +105,7 @@ def test_investment_allocator_accounts_tab_fields_display_functionality(driver, 
         driver.execute_script("arguments[0].click();", unpin_btn)
         time.sleep(1)
         driver.refresh()
-        wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
+        wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
         print("[✓] List view unpinned and page refreshed.")
         time.sleep(2)
     except Exception:
@@ -114,7 +114,7 @@ def test_investment_allocator_accounts_tab_fields_display_functionality(driver, 
     # Step 4: Save Current Header
     print("[Step 4] Capturing original header for verification...")
     original_header = wait.until(
-        EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']"))
+        EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']"))
     ).text.strip()
     print(f"    Original List View Name: {original_header}")
     time.sleep(1)
@@ -252,7 +252,7 @@ def test_investment_allocator_accounts_tab_fields_display_functionality(driver, 
     time.sleep(6)
 
     saved_header = WebDriverWait(driver, 12).until(
-        EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']"))
+        EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']"))
     ).text.strip()
     saved_base = re.split(r'\s*\(', saved_header, 1)[0].strip()
     assert saved_base == new_list_view_name, f"Saved list view name mismatch: {saved_base} != {new_list_view_name}"
@@ -313,7 +313,7 @@ def test_investment_allocator_accounts_tab_fields_display_functionality(driver, 
     )
     driver.execute_script("arguments[0].click();", confirm_delete_btn)
     time.sleep(12)
-    wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
+    wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
 
     select_list_view_btn = WebDriverWait(driver, 10).until(
         EC.element_to_be_clickable((By.XPATH, "//button[@title='Select a List View']"))

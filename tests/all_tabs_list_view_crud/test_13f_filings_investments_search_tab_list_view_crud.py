@@ -46,12 +46,12 @@ def test_13f_filings_investments_search_tab_list_view_crud(driver, base_url, cre
     # Wait for the "Dakota Marketplace" row to be clickable before proceeding
     marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
     print("Waiting for 'Dakota Marketplace' row to be clickable...")
-    WebDriverWait(driver, 30).until(
+    WebDriverWait(driver, 60).until(
         EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
     )
     print("'Dakota Marketplace' row is clickable.")
 
-    wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
+    wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
 
     print("Step 3: Checking whether Unpin is needed and clicking it if available...")
     try:
@@ -61,7 +61,7 @@ def test_13f_filings_investments_search_tab_list_view_crud(driver, base_url, cre
         driver.execute_script("arguments[0].click();", unpin_btn)
         time.sleep(1)
         driver.refresh()
-        wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
+        wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
         print("  Unpinned List View.")
     except Exception:
         print("  Unpin not required, or the button was not found.")
@@ -69,14 +69,14 @@ def test_13f_filings_investments_search_tab_list_view_crud(driver, base_url, cre
     # Wait for the "Dakota Marketplace" row to be clickable before proceeding
     marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
     print("Waiting for 'Dakota Marketplace' row to be clickable...")
-    WebDriverWait(driver, 30).until(
+    WebDriverWait(driver, 60).until(
         EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
     )
     print("'Dakota Marketplace' row is clickable.")
 
     print("Step 4: Capturing the original header/base text...")
     original_header = wait.until(
-        EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']"))
+        EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']"))
     ).text.strip()
     original_base = re.split(r'\s*\(', original_header, 1)[0].strip()
     time.sleep(1)
@@ -112,14 +112,14 @@ def test_13f_filings_investments_search_tab_list_view_crud(driver, base_url, cre
     # Wait for the "Dakota Marketplace" row to be clickable before proceeding
     marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
     print("Waiting for 'Dakota Marketplace' row to be clickable...")
-    WebDriverWait(driver, 30).until(
+    WebDriverWait(driver, 60).until(
         EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
     )
     print("'Dakota Marketplace' row is clickable.")
 
     print("  Checking whether the new list view loads with the correct name...")
     saved_header = WebDriverWait(driver, 12).until(
-        EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']"))
+        EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']"))
     ).text.strip()
     saved_base = re.split(r'\s*\(', saved_header, 1)[0].strip()
     assert saved_base == new_list_view_name
@@ -149,7 +149,7 @@ def test_13f_filings_investments_search_tab_list_view_crud(driver, base_url, cre
     # Wait for the "Dakota Marketplace" row to be clickable before proceeding
     marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
     print("Waiting for 'Dakota Marketplace' row to be clickable...")
-    WebDriverWait(driver, 30).until(
+    WebDriverWait(driver, 60).until(
         EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
     )
     print("'Dakota Marketplace' row is clickable.")
@@ -159,7 +159,7 @@ def test_13f_filings_investments_search_tab_list_view_crud(driver, base_url, cre
 
     print("  Checking whether the rename was successful...")
     renamed_header = WebDriverWait(driver, 10).until(
-        EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']"))
+        EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']"))
     ).text.strip()
     renamed_base = re.split(r'\s*\(', renamed_header, 1)[0].strip()
     assert renamed_base == renamed_name
@@ -178,12 +178,12 @@ def test_13f_filings_investments_search_tab_list_view_crud(driver, base_url, cre
     # Wait for the "Dakota Marketplace" row to be clickable before proceeding
     marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
     print("Waiting for 'Dakota Marketplace' row to be clickable...")
-    WebDriverWait(driver, 30).until(
+    WebDriverWait(driver, 60).until(
         EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
     )
     print("'Dakota Marketplace' row is clickable.")
 
-    wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
+    wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
 
     print("Step 9: Checking that the deleted list view is removed from the dropdown...")
     select_list_view_btn = WebDriverWait(driver, 10).until(

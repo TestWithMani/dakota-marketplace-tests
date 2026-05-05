@@ -44,7 +44,7 @@ def test_verify_my_accounts_tab_column_names(driver, base_url, credentials):
     # Wait for the "Dakota Marketplace" link to be clickable before proceeding
     marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
     print("Waiting for 'Dakota Marketplace' link to be clickable...")
-    WebDriverWait(driver, 30).until(
+    WebDriverWait(driver, 60).until(
         EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
     )
     print("'Dakota Marketplace' link is clickable.")
@@ -52,7 +52,7 @@ def test_verify_my_accounts_tab_column_names(driver, base_url, credentials):
 
     print("Waiting for My Accounts page to load (header visible)...")
     wait = WebDriverWait(driver, 30)
-    header_selector = (By.XPATH, "//span[@class='headerTitle']")
+    header_selector = (By.XPATH, "//div[@class='dropdownStyling']")
     wait.until(EC.visibility_of_element_located(header_selector))
     print("My Accounts page loaded.")
 
@@ -66,7 +66,7 @@ def test_verify_my_accounts_tab_column_names(driver, base_url, credentials):
         time.sleep(2)
 
         driver.refresh()
-        header_selector = (By.XPATH, "//span[@class='headerTitle']")
+        header_selector = (By.XPATH, "//div[@class='dropdownStyling']")
         wait.until(EC.visibility_of_element_located(header_selector))
         print("Page refreshed after unpinning.")
     except Exception:

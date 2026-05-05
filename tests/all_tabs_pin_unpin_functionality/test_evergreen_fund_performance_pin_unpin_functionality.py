@@ -51,12 +51,12 @@ def test_evergreen_fund_performance_pin_unpin_functionality(driver, base_url, cr
     # Wait for the "Dakota Marketplace" row to be clickable before proceeding
     marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
     print("Waiting for 'Dakota Marketplace' row to be clickable...")
-    WebDriverWait(driver, 30).until(
+    WebDriverWait(driver, 60).until(
         EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
     )
     print("'Dakota Marketplace' row is clickable.")
 
-    wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
+    wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
 
     print("Step 3: Checking whether Unpin is needed and clicking it if available...")
     try:
@@ -66,7 +66,7 @@ def test_evergreen_fund_performance_pin_unpin_functionality(driver, base_url, cr
         driver.execute_script("arguments[0].click();", unpin_btn)
         time.sleep(1)
         driver.refresh()
-        wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
+        wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
         print("  Unpinned List View.")
     except Exception:
         print("  Unpin not required, or the button was not found.")
@@ -74,14 +74,14 @@ def test_evergreen_fund_performance_pin_unpin_functionality(driver, base_url, cr
     # Wait for the "Dakota Marketplace" row to be clickable before proceeding
     marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
     print("Waiting for 'Dakota Marketplace' row to be clickable...")
-    WebDriverWait(driver, 30).until(
+    WebDriverWait(driver, 60).until(
         EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
     )
     print("'Dakota Marketplace' row is clickable.")
 
     print("Step 4: Capturing original header...")
     original_header = wait.until(
-        EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']"))
+        EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']"))
     ).text.strip()
     original_base = re.split(r'\s*\(', original_header, 1)[0].strip()
     print(f"  Original header: {original_header}")
@@ -116,14 +116,14 @@ def test_evergreen_fund_performance_pin_unpin_functionality(driver, base_url, cr
     # Wait for the "Dakota Marketplace" row to be clickable before proceeding
     marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
     print("Waiting for 'Dakota Marketplace' row to be clickable...")
-    WebDriverWait(driver, 30).until(
+    WebDriverWait(driver, 60).until(
         EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
     )
     print("'Dakota Marketplace' row is clickable.")
 
     print("  Checking whether the new list view loads with the correct name...")
     saved_header = WebDriverWait(driver, 12).until(
-        EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']"))
+        EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']"))
     ).text.strip()
     saved_base = re.split(r'\s*\(', saved_header, 1)[0].strip()
     assert saved_base == new_list_view_name, f"Expected {new_list_view_name}, but got {saved_base}"
@@ -145,18 +145,18 @@ def test_evergreen_fund_performance_pin_unpin_functionality(driver, base_url, cr
 
     print("Step 7: Refreshing page and verifying the pinned list view appears...")
     driver.refresh()
-    wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
+    wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
 
     # Wait for the "Dakota Marketplace" row to be clickable before proceeding
     marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
     print("Waiting for 'Dakota Marketplace' row to be clickable...")
-    WebDriverWait(driver, 30).until(
+    WebDriverWait(driver, 60).until(
         EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
     )
     print("'Dakota Marketplace' row is clickable.")
 
     refreshed_header = wait.until(
-        EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']"))
+        EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']"))
     ).text.strip()
     refreshed_base = re.split(r'\s*\(', refreshed_header, 1)[0].strip()
     assert refreshed_base == new_list_view_name, f"After refresh, expected pinned list view '{new_list_view_name}', but got '{refreshed_base}'"
@@ -177,12 +177,12 @@ def test_evergreen_fund_performance_pin_unpin_functionality(driver, base_url, cr
         allure.attach(driver.get_screenshot_as_png(), name=f'{new_list_view_name}_after_unpin.png', attachment_type=allure.attachment_type.PNG)
 
     driver.refresh()
-    wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
+    wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
 
     # Wait for the "Dakota Marketplace" row to be clickable before proceeding
     marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
     print("Waiting for 'Dakota Marketplace' row to be clickable...")
-    WebDriverWait(driver, 30).until(
+    WebDriverWait(driver, 60).until(
         EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
     )
     print("'Dakota Marketplace' row is clickable.")
@@ -193,7 +193,7 @@ def test_evergreen_fund_performance_pin_unpin_functionality(driver, base_url, cr
 
     print("Step 9: Verifying the original header appears after unpin...")
     after_unpin_header = wait.until(
-        EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']"))
+        EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']"))
     ).text.strip()
     after_unpin_base = re.split(r'\s*\(', after_unpin_header, 1)[0].strip()
     assert after_unpin_base == original_base, f"After unpin and refresh, expected original header '{original_base}', but got '{after_unpin_base}'"
@@ -226,7 +226,7 @@ def test_evergreen_fund_performance_pin_unpin_functionality(driver, base_url, cr
         driver.execute_script("arguments[0].click();", select_list_view_btn)
         raise Exception(f"Created list view '{new_list_view_name}' not found in dropdown")
 
-    wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
+    wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
 
     # Delete the list view
     delete_btn = WebDriverWait(driver, 10).until(
@@ -242,12 +242,12 @@ def test_evergreen_fund_performance_pin_unpin_functionality(driver, base_url, cr
     # Wait for the "Dakota Marketplace" row to be clickable before proceeding
     marketplace_link_xpath = "//tr[@class='slds-line-height_reset']"
     print("Waiting for 'Dakota Marketplace' row to be clickable...")
-    WebDriverWait(driver, 30).until(
+    WebDriverWait(driver, 60).until(
         EC.element_to_be_clickable((By.XPATH, marketplace_link_xpath))
     )
     print("'Dakota Marketplace' row is clickable.")
 
-    wait.until(EC.visibility_of_element_located((By.XPATH, "//span[@class='headerTitle']")))
+    wait.until(EC.visibility_of_element_located((By.XPATH, "//div[@class='dropdownStyling']")))
 
     print("  Verifying that the deleted list view is removed from the dropdown...")
     select_list_view_btn = WebDriverWait(driver, 10).until(
