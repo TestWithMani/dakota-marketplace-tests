@@ -40,6 +40,21 @@ pipeline {
             choices: ['chrome', 'edge', 'firefox'],
             description: 'Browser used for Selenium execution.'
         )
+        booleanParam(
+            name: 'HEADLESS',
+            defaultValue: true,
+            description: 'Run browser in headless mode.'
+        )
+        string(
+            name: 'BROWSER_WIDTH',
+            defaultValue: '1920',
+            description: 'Browser viewport width in pixels.'
+        )
+        string(
+            name: 'BROWSER_HEIGHT',
+            defaultValue: '1080',
+            description: 'Browser viewport height in pixels.'
+        )
         string(
             name: 'PARALLEL_WORKERS',
             defaultValue: '1',
@@ -254,7 +269,9 @@ pipeline {
                         params.TEST_SUITE as String,
                         params.BROWSER as String,
                         params.PARALLEL_WORKERS as String,
-                        params.NON_ASSERTION_RETRY_COUNT as String
+                        params.NON_ASSERTION_RETRY_COUNT as String,
+                        params.BROWSER_WIDTH as String,
+                        params.BROWSER_HEIGHT as String
                     )
                     def selectedPaths = resolveSelectedTestPaths(params.TEST_SUITE as String)
                     def markerExpr = resolveTabsExpression(params)
@@ -289,7 +306,13 @@ pipeline {
                     )
                     echo "Pytest command: pytest ${runCmd}"
 
-                    withEnv(["ENV=${env.ENV}", "BROWSER=${(params.BROWSER ?: 'chrome').trim().toLowerCase()}"]) {
+                    withEnv([
+                        "ENV=${env.ENV}",
+                        "BROWSER=${(params.BROWSER ?: 'chrome').trim().toLowerCase()}",
+                        "HEADLESS=${params.HEADLESS as boolean}",
+                        "BROWSER_WIDTH=${(params.BROWSER_WIDTH ?: '1920').trim()}",
+                        "BROWSER_HEIGHT=${(params.BROWSER_HEIGHT ?: '1080').trim()}"
+                    ]) {
                         catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
                             runPytest(runCmd)
                         }
@@ -384,7 +407,7 @@ pipeline {
     }
 }
 
-def validateRuntimeParameters(String testSuite, String browser, String parallelWorkers, String nonAssertionRetryCount) {
+def validateRuntimeParameters(String testSuite, String browser, String parallelWorkers, String nonAssertionRetryCount, String browserWidth, String browserHeight) {
     if (testSuite && !testSuite.trim()) {
         error("Invalid TEST_SUITE value.")
     }
@@ -407,6 +430,19 @@ def validateRuntimeParameters(String testSuite, String browser, String parallelW
     def retryCount = (nonAssertionRetryCount ?: '1').trim()
     if (!(retryCount ==~ /^\d+$/)) {
         error("Invalid NON_ASSERTION_RETRY_COUNT value '${nonAssertionRetryCount}'. Use integer >= 0.")
+    }
+
+    validateViewportDimension('BROWSER_WIDTH', browserWidth)
+    validateViewportDimension('BROWSER_HEIGHT', browserHeight)
+}
+
+def validateViewportDimension(String name, String value) {
+    def normalized = (value ?: '').trim()
+    if (!(normalized ==~ /^\d+$/)) {
+        error("Invalid ${name} value '${value}'. Use integer > 0.")
+    }
+    if ((normalized as int) <= 0) {
+        error("${name} must be > 0, got '${value}'.")
     }
 }
 

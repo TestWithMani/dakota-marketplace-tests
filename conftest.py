@@ -16,6 +16,38 @@ import shutil
 from pathlib import Path
 from config.settings import resolve_runtime_config
 
+DEFAULT_BROWSER_WIDTH = 1920
+DEFAULT_BROWSER_HEIGHT = 1080
+
+
+def _env_flag(name: str, default: bool = False) -> bool:
+    raw = os.environ.get(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _resolve_viewport_size() -> tuple[int, int]:
+    width_raw = os.environ.get("BROWSER_WIDTH", str(DEFAULT_BROWSER_WIDTH)).strip()
+    height_raw = os.environ.get("BROWSER_HEIGHT", str(DEFAULT_BROWSER_HEIGHT)).strip()
+    try:
+        width = int(width_raw)
+        height = int(height_raw)
+    except ValueError as exc:
+        raise ValueError(
+            "BROWSER_WIDTH and BROWSER_HEIGHT must be valid integers."
+        ) from exc
+    if width <= 0 or height <= 0:
+        raise ValueError("BROWSER_WIDTH and BROWSER_HEIGHT must be greater than zero.")
+    return width, height
+
+
+def _is_headless_mode() -> bool:
+    # Default to headless on Jenkins unless explicitly overridden.
+    default_headless = bool(os.environ.get("JENKINS_URL"))
+    return _env_flag("HEADLESS", default=default_headless)
+
+
 def pytest_addoption(parser):
     parser.addoption(
         "--browser",
@@ -136,10 +168,15 @@ def _apply_browser_binary_option(browser_name, options):
 @pytest.fixture(scope="function")
 def driver(browser_name):
     browser_driver = None
+    viewport_width, viewport_height = _resolve_viewport_size()
+    is_headless = _is_headless_mode()
 
     if browser_name == "chrome":
         options = ChromeOptions()
         _build_common_browser_args(options)
+        options.add_argument(f"--window-size={viewport_width},{viewport_height}")
+        if is_headless:
+            options.add_argument("--headless=new")
         options.add_argument("--remote-allow-origins=*")  # Chrome 111+ fix
         _apply_browser_binary_option("chrome", options)
         try:
@@ -154,6 +191,9 @@ def driver(browser_name):
     elif browser_name == "edge":
         options = EdgeOptions()
         _build_common_browser_args(options)
+        options.add_argument(f"--window-size={viewport_width},{viewport_height}")
+        if is_headless:
+            options.add_argument("--headless=new")
         _apply_browser_binary_option("edge", options)
         try:
             service = EdgeService(EdgeChromiumDriverManager().install())
@@ -166,9 +206,10 @@ def driver(browser_name):
 
     elif browser_name == "firefox":
         options = FirefoxOptions()
-        # Firefox supports a subset of Chromium flags; keep minimal stable options.
-        options.add_argument("--width=1920")
-        options.add_argument("--height=1080")
+        options.add_argument(f"--width={viewport_width}")
+        options.add_argument(f"--height={viewport_height}")
+        if is_headless:
+            options.add_argument("-headless")
         _apply_browser_binary_option("firefox", options)
         try:
             service = FirefoxService(GeckoDriverManager().install())
@@ -181,6 +222,9 @@ def driver(browser_name):
 
     if browser_driver is None:
         raise ValueError(f"Driver setup failed for browser '{browser_name}'")
+
+    # Enforce viewport after session starts for consistent rendering/click targets.
+    browser_driver.set_window_size(viewport_width, viewport_height)
 
     yield browser_driver
     browser_driver.quit()
