@@ -5,7 +5,7 @@ pipeline {
         timestamps()
         disableConcurrentBuilds()
         buildDiscarder(logRotator(numToKeepStr: '30', artifactNumToKeepStr: '30'))
-        timeout(time: 1080, unit: 'MINUTES')
+        timeout(time: 360, unit: 'MINUTES')
     }
 
     parameters {
