@@ -760,7 +760,7 @@ def sendEmailNotification(String buildStatus) {
     def allureUrl = "${jobUrl}allure"
     def body = """
 <html>
-  <body style="margin:0;padding:0;background:#eef2f7;font-family:'Segoe UI',Arial,sans-serif;">
+  <body style="margin:0;padding:0;background:linear-gradient(135deg,#e0f2fe 0%,#ede9fe 35%,#fef3c7 70%,#dcfce7 100%);font-family:'Segoe UI',Arial,sans-serif;">
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr>
         <td align="center" style="padding:22px;">
@@ -800,7 +800,6 @@ def sendEmailNotification(String buildStatus) {
                   </tr>
                   <tr>
                     <td style="padding:0 14px 14px;">
-                      <a href="${jobUrl}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:9px 14px;margin-right:8px;font-size:13px;font-weight:700;">Open Build</a>
                       <a href="${allureUrl}" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:9px 14px;font-size:13px;font-weight:700;">Open Allure Report</a>
                     </td>
                   </tr>
