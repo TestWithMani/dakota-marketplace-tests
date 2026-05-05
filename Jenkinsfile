@@ -71,9 +71,9 @@ pipeline {
             description: 'Generate and publish Allure report in Jenkins.'
         )
         booleanParam(
-            name: 'RESET_BUILD_AND_ALLURE_HISTORY',
+            name: 'RESET_WORKSPACE_AND_ALLURE_HISTORY',
             defaultValue: false,
-            description: 'If true, deletes previous Jenkins build history and clears any local Allure history before running tests.'
+            description: 'If true, clears workspace report folders and local Allure results before running tests.'
         )
         booleanParam(
             name: 'SEND_EMAIL',
@@ -95,6 +95,7 @@ pipeline {
             defaultValue: 'Select one or more TAB_* checkboxes below to filter tests by tabs.\nIf none are selected, no tab marker filter is applied.',
             description: 'Read-only help text for tab selection.'
         )
+        booleanParam(name: 'TAB_ALL_MARKETPLACE_ACCESS', defaultValue: false, description: 'All Marketplace Access')
         booleanParam(name: 'TAB_ACCOUNTS', defaultValue: false, description: 'Accounts Tab')
         booleanParam(name: 'TAB_CONTACT', defaultValue: false, description: 'Contact Tab')
         booleanParam(name: 'TAB_ALL_DOCUMENTS', defaultValue: false, description: 'All Documents')
@@ -151,48 +152,19 @@ pipeline {
             }
         }
 
-        stage('Reset History (Optional)') {
+        stage('Reset Workspace Reports (Optional)') {
             when {
-                expression { return params.RESET_BUILD_AND_ALLURE_HISTORY as boolean }
+                expression { return params.RESET_WORKSPACE_AND_ALLURE_HISTORY as boolean }
             }
             steps {
                 script {
-                    echo "RESET_BUILD_AND_ALLURE_HISTORY=true -> purging historical Jenkins builds and local Allure history."
+                    echo "RESET_WORKSPACE_AND_ALLURE_HISTORY=true -> clearing workspace reports and local Allure results."
 
                     // Clean workspace-level report directories/files so Allure starts from fresh results only.
-                    runShell(
-                        """
-                            rm -rf reports ${env.ALLURE_DIR} allure-report || true
-                            mkdir -p reports ${env.ALLURE_DIR}
-                        """,
-                        """
-                            if exist reports rmdir /s /q reports
-                            if exist %ALLURE_DIR% rmdir /s /q %ALLURE_DIR%
-                            if exist allure-report rmdir /s /q allure-report
-                            mkdir reports
-                            mkdir %ALLURE_DIR%
-                        """
-                    )
+                    clearReportDirectories()
 
-                    // Try to remove previous Jenkins builds.
-                    // In sandboxed Jenkins this may be blocked by Script Security; do not fail the build for that.
-                    try {
-                        def job = currentBuild.rawBuild.parent
-                        def currentBuildNumber = currentBuild.number as int
-                        def deletedCount = 0
-                        job.builds.findAll { build -> (build.number as int) < currentBuildNumber }.each { build ->
-                            try {
-                                build.delete()
-                                deletedCount++
-                            } catch (Exception ex) {
-                                echo "Could not delete build #${build.number}: ${ex.getMessage()}"
-                            }
-                        }
-                        echo "Deleted ${deletedCount} previous build(s)."
-                    } catch (Exception ex) {
-                        echo "Build history deletion skipped due to Jenkins Script Security: ${ex.getMessage()}"
-                        echo "If you want automatic build-history purge, ask Jenkins admin to approve the required script signature."
-                    }
+                    // Build history deletion is intentionally skipped to avoid Jenkins Script Security failures.
+                    echo "Skipping Jenkins build history deletion in pipeline script. Use a trusted admin-maintained cleanup job if needed."
                 }
             }
         }
@@ -202,7 +174,6 @@ pipeline {
                 script {
                     def portalMap = [
                         'All Marketplace Access': '',
-                        'Default': '',
                         'Dakota Ria Portal': 'dakota_ria_portal',
                         'Dakota Transactions & CEOs Access': 'dakota_transactions_ceos_access',
                         'FA Data Set': 'fa_data_set',
@@ -213,11 +184,11 @@ pipeline {
                         'Dakota private wealth portal': 'dakota_private_wealth_portal',
                         'Dakota International portal': 'dakota_international_portal'
                     ]
-                    def envName = params.ENVIRONMENT ?: 'uat'
+                    def envName = (params.ENVIRONMENT ?: 'UAT').toLowerCase()
                     def portalName = params.PORTAL ?: 'All Marketplace Access'
                     def portalKey = portalMap[portalName] ?: ''
-                    env.ENV = portalKey ? "${envName}_${portalKey}" : envName
-                    echo "Environment configured: ${env.ENV}"
+                    env.TEST_ENV = portalKey ? "${envName}_${portalKey}" : envName
+                    echo "Environment configured: ${env.TEST_ENV}"
                 }
             }
         }
@@ -227,13 +198,15 @@ pipeline {
                 script {
                     runShell(
                         """
-                            python3 -m venv ${env.VENV_DIR}
+                            if [ ! -x "${env.VENV_DIR}/bin/python" ]; then
+                                python3 -m venv ${env.VENV_DIR}
+                            fi
                             ${env.VENV_DIR}/bin/python -m pip install --upgrade pip
                             ${env.VENV_DIR}/bin/python -m pip install -r requirements.txt
                             ${env.VENV_DIR}/bin/python -m pip install pytest-html pytest-json-report allure-pytest pytest-xdist pytest-rerunfailures
                         """,
                         """
-                            py -m venv %VENV_DIR%
+                            if not exist %VENV_DIR%\\Scripts\\python py -m venv %VENV_DIR%
                             %VENV_DIR%\\Scripts\\python -m pip install --upgrade pip
                             %VENV_DIR%\\Scripts\\python -m pip install -r requirements.txt
                             %VENV_DIR%\\Scripts\\python -m pip install pytest-html pytest-json-report allure-pytest pytest-xdist pytest-rerunfailures
@@ -246,18 +219,7 @@ pipeline {
         stage('Prepare Report Directories') {
             steps {
                 script {
-                    runShell(
-                        """
-                            rm -rf reports ${env.ALLURE_DIR} || true
-                            mkdir -p reports ${env.ALLURE_DIR}
-                        """,
-                        """
-                            if exist reports rmdir /s /q reports
-                            if exist %ALLURE_DIR% rmdir /s /q %ALLURE_DIR%
-                            mkdir reports
-                            mkdir %ALLURE_DIR%
-                        """
-                    )
+                    clearReportDirectories()
                 }
             }
         }
@@ -275,6 +237,7 @@ pipeline {
                     )
                     def selectedPaths = resolveSelectedTestPaths(params.TEST_SUITE as String)
                     def markerExpr = resolveTabsExpression(params)
+                    echo "Selected marker expression: ${markerExpr ?: 'none'}"
                     def collectCmd = buildPytestCommand(
                         selectedPaths,
                         markerExpr,
@@ -295,6 +258,7 @@ pipeline {
                 script {
                     def selectedPaths = resolveSelectedTestPaths(params.TEST_SUITE as String)
                     def markerExpr = resolveTabsExpression(params)
+                    echo "Selected marker expression: ${markerExpr ?: 'none'}"
                     def runCmd = buildPytestCommand(
                         selectedPaths,
                         markerExpr,
@@ -307,7 +271,8 @@ pipeline {
                     echo "Pytest command: pytest ${runCmd}"
 
                     withEnv([
-                        "ENV=${env.ENV}",
+                        "ENV=${env.TEST_ENV}",
+                        "TEST_ENV=${env.TEST_ENV}",
                         "BROWSER=${(params.BROWSER ?: 'chrome').trim().toLowerCase()}",
                         "HEADLESS=${params.HEADLESS as boolean}",
                         "BROWSER_WIDTH=${(params.BROWSER_WIDTH ?: '1920').trim()}",
@@ -463,6 +428,7 @@ def resolveTabsExpression(def paramsObj) {
     if (markerFromCheckboxes.isEmpty()) {
         return null
     }
+    echo "Tab marker expression (OR logic): ${markerFromCheckboxes.join(' or ')}"
     return markerFromCheckboxes.join(' or ')
 }
 
@@ -532,9 +498,6 @@ def buildPytestCommand(List testPaths, String markerExpression, boolean runAllur
             parts << '--only-rerun=(selenium\\.common\\.exceptions\\.)?StaleElementReferenceException'
             parts << '--only-rerun=(selenium\\.common\\.exceptions\\.)?ElementClickInterceptedException'
             parts << '--only-rerun=(selenium\\.common\\.exceptions\\.)?WebDriverException'
-            parts << '--only-rerun=disconnected:\\s+not\\s+connected\\s+to\\s+DevTools'
-            parts << '--only-rerun=chrome\\s+not\\s+reachable'
-            parts << '--only-rerun=ERR_CONNECTION_RESET'
         }
         parts << "--junitxml=${env.PYTEST_JUNIT}"
         parts << "--html=${env.PYTEST_HTML}"
@@ -546,19 +509,25 @@ def buildPytestCommand(List testPaths, String markerExpression, boolean runAllur
         }
     }
     parts.addAll(testPaths)
-    if (markerExpression) {
+    if (markerExpression?.trim()) {
         parts << '-m'
-        parts << "\"${markerExpression}\""
+        parts << "\"${formatMarkerExpression(markerExpression)}\""
     }
-    parts << "--browser=${selectedBrowser}"
+    if (!collectOnly) {
+        parts << "--browser=${selectedBrowser}"
+    }
     return parts.join(' ')
 }
 
 def runPytest(String args) {
     runShell(
-        "${env.VENV_DIR}/bin/python -m pytest ${args}",
-        "%VENV_DIR%\\Scripts\\python -m pytest ${args}"
+        "${resolveVenvPythonCommand(true)} -m pytest ${args}",
+        "${resolveVenvPythonCommand(false)} -m pytest ${args}"
     )
+}
+
+def resolveVenvPythonCommand(boolean unixStyle) {
+    return unixStyle ? "${env.VENV_DIR}/bin/python" : "%VENV_DIR%\\Scripts\\python"
 }
 
 def parseRetryCount(String retryCount) {
@@ -575,6 +544,50 @@ def runShell(String unixCommand, String windowsCommand) {
     } else {
         bat(windowsCommand)
     }
+}
+
+def formatMarkerExpression(String markerExpression) {
+    def normalized = (markerExpression ?: '').trim()
+    if (!normalized) {
+        return ''
+    }
+    if (normalized.startsWith('(') && normalized.endsWith(')') && normalized.length() > 2) {
+        normalized = normalized.substring(1, normalized.length() - 1).trim()
+    }
+    return "(${normalized})"
+}
+
+def clearReportDirectories() {
+    cleanDirs(['reports', env.ALLURE_DIR])
+    setupReports()
+}
+
+def cleanDirs(List dirs) {
+    def normalizedDirs = dirs.findAll { it?.trim() }
+    runShell(
+        """
+            for path in ${normalizedDirs.collect { "'${it}'" }.join(' ')}; do
+                if [ -e "$path" ]; then
+                    rm -rf "$path"
+                fi
+            done
+        """,
+        """
+            ${normalizedDirs.collect { d -> "if exist \"${d}\" rmdir /s /q \"${d}\"" }.join('\n            ')}
+        """
+    )
+}
+
+def setupReports() {
+    runShell(
+        """
+            mkdir -p reports ${env.ALLURE_DIR}
+        """,
+        """
+            if not exist "reports" mkdir "reports"
+            if not exist "${env.ALLURE_DIR}" mkdir "${env.ALLURE_DIR}"
+        """
+    )
 }
 
 def parseTestSelection(separator = ' | ') {
@@ -692,31 +705,40 @@ def getTestStatistics() {
         return stats
     }
     try {
-        def jsonText = readFile(jsonFile)
-        def passed = extractJsonSummaryInt(jsonText, 'passed')
-        def failed = extractJsonSummaryInt(jsonText, 'failed')
-        def errored = extractJsonSummaryInt(jsonText, 'error')
-        def skipped = extractJsonSummaryInt(jsonText, 'skipped')
-        def xfailed = extractJsonSummaryInt(jsonText, 'xfailed')
-        def xpassed = extractJsonSummaryInt(jsonText, 'xpassed')
+        def report = readJSON file: jsonFile
+        def summary = (report?.summary instanceof Map) ? report.summary : [:]
+        def passed = parseSummaryValue(summary, 'passed')
+        def failed = parseSummaryValue(summary, 'failed')
+        def errored = parseSummaryValue(summary, 'error')
+        def skipped = parseSummaryValue(summary, 'skipped')
+        def xfailed = parseSummaryValue(summary, 'xfailed')
+        def xpassed = parseSummaryValue(summary, 'xpassed')
 
         stats.passed = passed
         stats.failed = failed + errored
         stats.skipped = skipped + xfailed + xpassed
         stats.total = stats.passed + stats.failed + stats.skipped
+        echo "pytest stats parsed: ${stats}"
+    } catch (MissingMethodException e) {
+        echo "Pipeline Utility Steps readJSON is not available: ${e.getMessage()}"
+        echo "Install/enable Pipeline Utility Steps plugin to improve report parsing reliability."
     } catch (Exception e) {
         echo "Error parsing pytest JSON report: ${e.getMessage()}"
     }
     return stats
 }
 
-def extractJsonSummaryInt(String jsonText, String key) {
-    if (!jsonText?.trim()) {
+def parseSummaryValue(Map summary, String key) {
+    def raw = summary?."${key}"
+    if (raw == null) {
         return 0
     }
-    def matcher = (jsonText =~ /"summary"\s*:\s*\{(?s).*?"${java.util.regex.Pattern.quote(key)}"\s*:\s*(\d+)/)
-    if (matcher.find()) {
-        return (matcher.group(1) ?: '0') as int
+    if (raw instanceof Number) {
+        return (raw as Number).intValue()
+    }
+    def normalized = raw.toString().trim()
+    if (normalized ==~ /^\d+$/) {
+        return normalized as int
     }
     return 0
 }
@@ -742,8 +764,9 @@ def collectRecipientEmails(String defaultEmail, String additionalEmails) {
 
 def sendEmailNotification(String buildStatus) {
     def testStats = getTestStatistics()
-    def actualStatus = buildStatus
-    if (testStats.total > 0) {
+    def currentStatus = (buildStatus ?: currentBuild.currentResult ?: 'UNKNOWN').toUpperCase()
+    def actualStatus = currentStatus
+    if (testStats.total > 0 && (currentStatus in ['SUCCESS', 'FAILURE', 'UNKNOWN'])) {
         actualStatus = testStats.failed > 0 ? 'FAILURE' : 'SUCCESS'
     }
     def recipients = collectRecipientEmails(params.DEFAULT_EMAIL as String, params.ADDITIONAL_EMAILS as String)
