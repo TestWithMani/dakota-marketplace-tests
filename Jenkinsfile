@@ -759,49 +759,55 @@ def sendEmailNotification(String buildStatus) {
     def allureUrl = "${jobUrl}allure"
     def body = """
 <html>
-  <body style="margin:0;padding:0;background:linear-gradient(140deg,#e0ecff 0%,#efe7ff 45%,#fff6e5 100%);font-family:'Segoe UI',Roboto,Arial,sans-serif;">
+  <body style="margin:0;padding:0;background:#eef2f7;font-family:'Segoe UI',Arial,sans-serif;">
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr>
-        <td align="center" style="padding:24px;">
-          <table width="760" cellpadding="0" cellspacing="0" style="background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #dbe3ee;box-shadow:0 14px 32px rgba(30,64,175,0.14);">
+        <td align="center" style="padding:22px;">
+          <table width="760" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #d6deea;">
             <tr>
-              <td style="padding:22px 30px;background:linear-gradient(135deg,#0f172a 0%,#1e40af 52%,#7c3aed 100%);color:#ffffff;">
-                <h2 style="margin:0;font-size:30px;letter-spacing:0.2px;">Dakota Marketplace Smoke</h2>
+              <td style="padding:20px 26px;background:#1f3a8a;color:#ffffff;">
+                <h2 style="margin:0;font-size:28px;line-height:1.2;">Dakota Marketplace Smoke</h2>
               </td>
             </tr>
             <tr>
-              <td style="padding:20px 30px 10px;">
-                <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#1e293b;border:1px solid #bfdbfe;border-radius:12px;overflow:hidden;background:linear-gradient(180deg,#f8fbff 0%,#ffffff 100%);margin-bottom:12px;">
-                  <tr><td width="32%" style="padding:10px 12px;background:#dbeafe;"><strong>Build</strong></td><td style="padding:10px 12px;">#${env.BUILD_NUMBER}</td></tr>
-                  <tr><td style="padding:10px 12px;background:#dbeafe;"><strong>Status</strong></td><td style="padding:10px 12px;color:${statusColor};font-weight:700;">${actualStatus}</td></tr>
-                  <tr><td style="padding:10px 12px;background:#dbeafe;"><strong>Environment</strong></td><td style="padding:10px 12px;">${(params.ENVIRONMENT ?: 'uat').toUpperCase()}</td></tr>
-                  <tr><td style="padding:10px 12px;background:#dbeafe;"><strong>Portal</strong></td><td style="padding:10px 12px;">${params.PORTAL ?: 'All Marketplace Access'}</td></tr>
-                  <tr><td style="padding:10px 12px;background:#dbeafe;"><strong>Selection</strong></td><td style="padding:10px 12px;">${parseTestSelection(' | ')}</td></tr>
-                  <tr><td style="padding:10px 12px;background:#dbeafe;"><strong>Duration</strong></td><td style="padding:10px 12px;">${durationString}</td></tr>
-                  <tr><td style="padding:10px 12px;background:#dbeafe;"><strong>Pass Percentage</strong></td><td style="padding:10px 12px;color:#0f766e;font-weight:700;">${passRate}%</td></tr>
-                </table>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:0 30px 18px;">
-                <table width="100%" cellpadding="8" cellspacing="8" style="font-size:13px;">
+              <td style="padding:18px 22px 6px;">
+                <table width="100%" cellpadding="6" cellspacing="6" style="font-size:13px;">
                   <tr align="center">
-                    <td style="background:linear-gradient(180deg,#ccfbf1 0%,#99f6e4 100%);color:#134e4a;border-radius:12px;"><div style="font-size:11px;">TOTAL</div><div style="font-size:24px;font-weight:800;">${testStats.total}</div></td>
-                    <td style="background:linear-gradient(180deg,#dcfce7 0%,#86efac 100%);color:#14532d;border-radius:12px;"><div style="font-size:11px;">PASSED</div><div style="font-size:24px;font-weight:800;">${testStats.passed}</div></td>
-                    <td style="background:linear-gradient(180deg,#fee2e2 0%,#fca5a5 100%);color:#7f1d1d;border-radius:12px;"><div style="font-size:11px;">FAILED</div><div style="font-size:24px;font-weight:800;">${testStats.failed}</div></td>
-                    <td style="background:linear-gradient(180deg,#ede9fe 0%,#c4b5fd 100%);color:#4c1d95;border-radius:12px;"><div style="font-size:11px;">SKIPPED</div><div style="font-size:24px;font-weight:800;">${testStats.skipped}</div></td>
+                    <td style="background:#e0f2fe;color:#0f172a;border:1px solid #93c5fd;"><div style="font-size:11px;">TOTAL</div><div style="font-size:24px;font-weight:800;line-height:1.2;">${testStats.total}</div></td>
+                    <td style="background:#dcfce7;color:#14532d;border:1px solid #86efac;"><div style="font-size:11px;">PASSED</div><div style="font-size:24px;font-weight:800;line-height:1.2;">${testStats.passed}</div></td>
+                    <td style="background:#fee2e2;color:#7f1d1d;border:1px solid #fca5a5;"><div style="font-size:11px;">FAILED</div><div style="font-size:24px;font-weight:800;line-height:1.2;">${testStats.failed}</div></td>
+                    <td style="background:#ede9fe;color:#4c1d95;border:1px solid #c4b5fd;"><div style="font-size:11px;">SKIPPED</div><div style="font-size:24px;font-weight:800;line-height:1.2;">${testStats.skipped}</div></td>
                   </tr>
                 </table>
               </td>
             </tr>
             <tr>
-              <td style="padding:0 30px 24px;">
-                <a href="${jobUrl}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:8px 12px;border-radius:6px;margin-right:8px;">Open Build</a>
-                <a href="${allureUrl}" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:8px 12px;border-radius:6px;">Open Allure</a>
+              <td style="padding:2px 22px 14px;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#0f172a;border:1px solid #dbe3ee;">
+                  <tr><td width="38%" style="padding:11px 12px;background:#f1f5f9;"><strong>Environment</strong></td><td style="padding:11px 12px;font-weight:600;">${(params.ENVIRONMENT ?: 'uat').toUpperCase()}</td></tr>
+                  <tr><td style="padding:11px 12px;background:#f1f5f9;"><strong>Portal</strong></td><td style="padding:11px 12px;font-weight:600;">${params.PORTAL ?: 'All Marketplace Access'}</td></tr>
+                  <tr><td style="padding:11px 12px;background:#f1f5f9;"><strong>Duration</strong></td><td style="padding:11px 12px;font-weight:600;">${durationString}</td></tr>
+                  <tr><td style="padding:11px 12px;background:#f1f5f9;"><strong>Pass Percentage</strong></td><td style="padding:11px 12px;color:${statusColor};font-weight:800;">${passRate}%</td></tr>
+                </table>
               </td>
             </tr>
             <tr>
-              <td style="padding:13px 30px;background:#0f172a;color:#cbd5e1;font-size:12px;">
+              <td style="padding:0 22px 18px;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #dbe3ee;">
+                  <tr>
+                    <td style="padding:14px 14px 8px;font-size:12px;color:#334155;font-weight:700;">REPORT LINKS</td>
+                  </tr>
+                  <tr>
+                    <td style="padding:0 14px 14px;">
+                      <a href="${jobUrl}" style="display:inline-block;background:#2563eb;color:#ffffff;text-decoration:none;padding:9px 14px;margin-right:8px;font-size:13px;font-weight:700;">Open Build</a>
+                      <a href="${allureUrl}" style="display:inline-block;background:#7c3aed;color:#ffffff;text-decoration:none;padding:9px 14px;font-size:13px;font-weight:700;">Open Allure Report</a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:12px 22px;background:#111827;color:#d1d5db;font-size:12px;">
                 Jenkins CI/CD - Dakota Smoke Automation
               </td>
             </tr>
@@ -816,9 +822,7 @@ def sendEmailNotification(String buildStatus) {
         subject: subject,
         body: body,
         mimeType: 'text/html',
-        to: recipients.join(', '),
-        attachLog: true,
-        compressLog: true
+        to: recipients.join(', ')
     )
 }
 
