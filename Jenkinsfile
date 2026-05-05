@@ -755,6 +755,7 @@ def sendEmailNotification(String buildStatus) {
     def statusColor = actualStatus == 'SUCCESS' ? '#16a34a' : (actualStatus == 'FAILURE' ? '#dc2626' : '#f59e0b')
     def durationString = (currentBuild.durationString ?: 'N/A').replace(' and counting', '')
     def passRate = testStats.total > 0 ? ((testStats.passed * 100) / testStats.total) as int : 0
+    def environmentLabel = ((params.ENVIRONMENT ?: 'UAT').toUpperCase() == 'PROD') ? 'Production' : 'UAT'
     def jobUrl = env.BUILD_URL ?: ''
     def allureUrl = "${jobUrl}allure"
     def body = """
@@ -784,7 +785,7 @@ def sendEmailNotification(String buildStatus) {
             <tr>
               <td style="padding:2px 22px 14px;">
                 <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#0f172a;border:1px solid #dbe3ee;">
-                  <tr><td width="38%" style="padding:11px 12px;background:#f1f5f9;"><strong>Environment</strong></td><td style="padding:11px 12px;font-weight:600;">${(params.ENVIRONMENT ?: 'uat').toUpperCase()}</td></tr>
+                  <tr><td width="38%" style="padding:11px 12px;background:#f1f5f9;"><strong>Environment</strong></td><td style="padding:11px 12px;font-weight:600;">${environmentLabel}</td></tr>
                   <tr><td style="padding:11px 12px;background:#f1f5f9;"><strong>Portal</strong></td><td style="padding:11px 12px;font-weight:600;">${params.PORTAL ?: 'All Marketplace Access'}</td></tr>
                   <tr><td style="padding:11px 12px;background:#f1f5f9;"><strong>Duration</strong></td><td style="padding:11px 12px;font-weight:600;">${durationString}</td></tr>
                   <tr><td style="padding:11px 12px;background:#f1f5f9;"><strong>Pass Percentage</strong></td><td style="padding:11px 12px;color:${statusColor};font-weight:800;">${passRate}%</td></tr>
