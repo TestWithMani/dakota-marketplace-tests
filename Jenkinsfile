@@ -791,31 +791,12 @@ def sendEmailNotification(String buildStatus) {
             </tr>
             <tr>
               <td style="padding:4px 22px 14px;">
-                <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#0f172a;border:1px solid #dbe3ee;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,#f0f9ff 0%,#eef2ff 45%,#f5f3ff 100%);">
-                  <tr><td width="38%" style="padding:11px 12px;background:#e0f2fe;color:#0c4a6e;"><strong>Environment</strong></td><td style="padding:11px 12px;font-weight:600;background:#f8fbff;">${environmentLabel}</td></tr>
-                  <tr><td style="padding:11px 12px;background:#ede9fe;color:#4c1d95;"><strong>Portal</strong></td><td style="padding:11px 12px;font-weight:600;background:#fcfaff;">${params.PORTAL ?: 'All Marketplace Access'}</td></tr>
-                  <tr><td style="padding:11px 12px;background:#dcfce7;color:#14532d;"><strong>Duration</strong></td><td style="padding:11px 12px;font-weight:600;background:#f7fff9;">${durationString}</td></tr>
-                  <tr><td style="padding:11px 12px;background:#fef3c7;color:#92400e;"><strong>Pass Percentage</strong></td><td style="padding:11px 12px;color:${passRateColor};font-weight:800;background:#fffdf5;">${passRate}%</td></tr>
-                </table>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:0 22px 18px;">
-                <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#f8fafc 0%,#eef2ff 100%);border:1px solid #dbe3ee;border-radius:10px;">
-                  <tr>
-                    <td style="padding:14px;">
-                      <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #d7ddf5;border-radius:8px;background:#ffffff;">
-                        <tr>
-                          <td style="padding:10px 12px;font-size:12px;font-weight:700;letter-spacing:0.5px;color:#475569;background:#f8fafc;border-bottom:1px solid #e2e8f0;">REPORT ACCESS</td>
-                        </tr>
-                        <tr>
-                          <td align="center" style="padding:14px;">
-                            ${allureAvailable ? "<a href=\"${allureUrl}\" style=\"display:inline-block;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#ffffff;text-decoration:none;padding:11px 18px;font-size:13px;font-weight:700;border-radius:8px;box-shadow:0 4px 12px rgba(124,58,237,0.28);\">Open Allure Report</a>" : "<span style=\"display:inline-block;background:#e2e8f0;color:#475569;padding:11px 18px;font-size:13px;font-weight:700;border-radius:8px;\">Allure Report Not Available</span>"}
-                          </td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
+                <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#0f172a;border:1px solid #d6deea;border-radius:10px;overflow:hidden;background:#f8fafc;">
+                  <tr><td width="38%" style="padding:11px 12px;background:#e2e8f0;color:#334155;"><strong>Environment</strong></td><td style="padding:11px 12px;font-weight:600;background:#ffffff;">${environmentLabel}</td></tr>
+                  <tr><td style="padding:11px 12px;background:#e2e8f0;color:#334155;"><strong>Portal</strong></td><td style="padding:11px 12px;font-weight:600;background:#f8fafc;">${params.PORTAL ?: 'All Marketplace Access'}</td></tr>
+                  <tr><td style="padding:11px 12px;background:#e2e8f0;color:#334155;"><strong>Duration</strong></td><td style="padding:11px 12px;font-weight:600;background:#ffffff;">${durationString}</td></tr>
+                  <tr><td style="padding:11px 12px;background:#e2e8f0;color:#334155;"><strong>Pass Percentage</strong></td><td style="padding:11px 12px;color:${passRateColor};font-weight:800;background:#f8fafc;">${passRate}%</td></tr>
+                  <tr><td style="padding:11px 12px;background:#e2e8f0;color:#334155;"><strong>Allure Report</strong></td><td style="padding:11px 12px;background:#ffffff;">${allureAvailable ? "<a href=\"${allureUrl}\" style=\"display:inline-block;background:#4f46e5;color:#ffffff;text-decoration:none;padding:8px 12px;font-size:12px;font-weight:700;border-radius:6px;\">Open Allure Report</a>" : "<span style=\"display:inline-block;background:#e2e8f0;color:#64748b;padding:8px 12px;font-size:12px;font-weight:700;border-radius:6px;\">Not Available</span>"}</td></tr>
                 </table>
               </td>
             </tr>
