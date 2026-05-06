@@ -791,11 +791,11 @@ def sendEmailNotification(String buildStatus) {
             </tr>
             <tr>
               <td style="padding:4px 22px 14px;">
-                <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#0f172a;border:1px solid #dbe3ee;border-radius:10px;overflow:hidden;">
-                  <tr><td width="38%" style="padding:11px 12px;background:#f8fafc;"><strong>Environment</strong></td><td style="padding:11px 12px;font-weight:600;">${environmentLabel}</td></tr>
-                  <tr><td style="padding:11px 12px;background:#f8fafc;"><strong>Portal</strong></td><td style="padding:11px 12px;font-weight:600;">${params.PORTAL ?: 'All Marketplace Access'}</td></tr>
-                  <tr><td style="padding:11px 12px;background:#f8fafc;"><strong>Duration</strong></td><td style="padding:11px 12px;font-weight:600;">${durationString}</td></tr>
-                  <tr><td style="padding:11px 12px;background:#f8fafc;"><strong>Pass Percentage</strong></td><td style="padding:11px 12px;color:${passRateColor};font-weight:800;">${passRate}%</td></tr>
+                <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#0f172a;border:1px solid #dbe3ee;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,#f0f9ff 0%,#eef2ff 45%,#f5f3ff 100%);">
+                  <tr><td width="38%" style="padding:11px 12px;background:#e0f2fe;color:#0c4a6e;"><strong>Environment</strong></td><td style="padding:11px 12px;font-weight:600;background:#f8fbff;">${environmentLabel}</td></tr>
+                  <tr><td style="padding:11px 12px;background:#ede9fe;color:#4c1d95;"><strong>Portal</strong></td><td style="padding:11px 12px;font-weight:600;background:#fcfaff;">${params.PORTAL ?: 'All Marketplace Access'}</td></tr>
+                  <tr><td style="padding:11px 12px;background:#dcfce7;color:#14532d;"><strong>Duration</strong></td><td style="padding:11px 12px;font-weight:600;background:#f7fff9;">${durationString}</td></tr>
+                  <tr><td style="padding:11px 12px;background:#fef3c7;color:#92400e;"><strong>Pass Percentage</strong></td><td style="padding:11px 12px;color:${passRateColor};font-weight:800;background:#fffdf5;">${passRate}%</td></tr>
                 </table>
               </td>
             </tr>
