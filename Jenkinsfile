@@ -781,31 +781,31 @@ def sendEmailNotification(String buildStatus) {
               <td style="padding:18px 22px 8px;">
                 <table width="100%" cellpadding="6" cellspacing="6" style="font-size:13px;">
                   <tr align="center">
-                    <td style="background:#eff6ff;color:#0f172a;border:1px solid #bfdbfe;border-radius:10px;"><div style="font-size:11px;letter-spacing:0.4px;">TOTAL</div><div style="font-size:26px;font-weight:800;line-height:1.2;">${testStats.total}</div></td>
-                    <td style="background:#ecfdf3;color:#14532d;border:1px solid #86efac;border-radius:10px;"><div style="font-size:11px;letter-spacing:0.4px;">PASSED</div><div style="font-size:26px;font-weight:800;line-height:1.2;">${testStats.passed}</div></td>
-                    <td style="background:#fef2f2;color:#7f1d1d;border:1px solid #fca5a5;border-radius:10px;"><div style="font-size:11px;letter-spacing:0.4px;">FAILED</div><div style="font-size:26px;font-weight:800;line-height:1.2;">${testStats.failed}</div></td>
-                    <td style="background:#f5f3ff;color:#4c1d95;border:1px solid #c4b5fd;border-radius:10px;"><div style="font-size:11px;letter-spacing:0.4px;">SKIPPED</div><div style="font-size:26px;font-weight:800;line-height:1.2;">${testStats.skipped}</div></td>
+                    <td style="background:#f8fafc;color:#0f172a;border:1px solid #cbd5e1;border-radius:10px;"><div style="font-size:11px;letter-spacing:0.5px;color:#475569;">TOTAL</div><div style="font-size:26px;font-weight:800;line-height:1.2;">${testStats.total}</div></td>
+                    <td style="background:#f8fafc;color:#0f172a;border:1px solid #cbd5e1;border-radius:10px;"><div style="font-size:11px;letter-spacing:0.5px;color:#475569;">PASSED</div><div style="font-size:26px;font-weight:800;line-height:1.2;color:#15803d;">${testStats.passed}</div></td>
+                    <td style="background:#f8fafc;color:#0f172a;border:1px solid #cbd5e1;border-radius:10px;"><div style="font-size:11px;letter-spacing:0.5px;color:#475569;">FAILED</div><div style="font-size:26px;font-weight:800;line-height:1.2;color:#b91c1c;">${testStats.failed}</div></td>
+                    <td style="background:#f8fafc;color:#0f172a;border:1px solid #cbd5e1;border-radius:10px;"><div style="font-size:11px;letter-spacing:0.5px;color:#475569;">SKIPPED</div><div style="font-size:26px;font-weight:800;line-height:1.2;color:#6d28d9;">${testStats.skipped}</div></td>
                   </tr>
                 </table>
               </td>
             </tr>
             <tr>
               <td style="padding:4px 22px 14px;">
-                <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#0f172a;border:1px solid #d6deea;border-radius:10px;overflow:hidden;background:#f8fafc;">
-                  <tr><td width="38%" style="padding:11px 12px;background:#e2e8f0;color:#334155;"><strong>Environment</strong></td><td style="padding:11px 12px;font-weight:600;background:#ffffff;">${environmentLabel}</td></tr>
-                  <tr><td style="padding:11px 12px;background:#e2e8f0;color:#334155;"><strong>Portal</strong></td><td style="padding:11px 12px;font-weight:600;background:#f8fafc;">${params.PORTAL ?: 'All Marketplace Access'}</td></tr>
-                  <tr><td style="padding:11px 12px;background:#e2e8f0;color:#334155;"><strong>Duration</strong></td><td style="padding:11px 12px;font-weight:600;background:#ffffff;">${durationString}</td></tr>
-                  <tr><td style="padding:11px 12px;background:#e2e8f0;color:#334155;"><strong>Pass Percentage</strong></td><td style="padding:11px 12px;color:${passRateColor};font-weight:800;background:#f8fafc;">${passRate}%</td></tr>
+                <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#0f172a;border:1px solid #cbd5e1;border-radius:10px;overflow:hidden;background:#f8fafc;">
+                  <tr><td width="38%" style="padding:11px 12px;background:#f1f5f9;color:#334155;"><strong>Environment</strong></td><td style="padding:11px 12px;font-weight:600;background:#ffffff;">${environmentLabel}</td></tr>
+                  <tr><td style="padding:11px 12px;background:#f1f5f9;color:#334155;"><strong>Portal</strong></td><td style="padding:11px 12px;font-weight:600;background:#f8fafc;">${params.PORTAL ?: 'All Marketplace Access'}</td></tr>
+                  <tr><td style="padding:11px 12px;background:#f1f5f9;color:#334155;"><strong>Duration</strong></td><td style="padding:11px 12px;font-weight:600;background:#ffffff;">${durationString}</td></tr>
+                  <tr><td style="padding:11px 12px;background:#f1f5f9;color:#334155;"><strong>Pass Percentage</strong></td><td style="padding:11px 12px;color:${passRateColor};font-weight:800;background:#f8fafc;">${passRate}%</td></tr>
                   <tr>
-                    <td style="padding:11px 12px;background:#e2e8f0;color:#334155;"><strong>Allure Report</strong></td>
+                    <td style="padding:11px 12px;background:#f1f5f9;color:#334155;"><strong>Allure Report</strong></td>
                     <td style="padding:10px 12px;background:#ffffff;">
-                      <table cellpadding="0" cellspacing="0" style="width:100%;border:1px solid #cbd5e1;border-radius:10px;overflow:hidden;background:#0f172a;">
+                      <table cellpadding="0" cellspacing="0" style="width:100%;border:1px solid #cbd5e1;border-radius:10px;overflow:hidden;background:#f8fafc;">
                         <tr>
-                          <td style="padding:9px 12px;font-size:11px;color:#cbd5e1;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid #334155;">ALLURE REPORT</td>
+                          <td style="padding:9px 12px;font-size:11px;color:#475569;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid #e2e8f0;">ALLURE REPORT</td>
                         </tr>
                         <tr>
                           <td align="center" style="padding:14px 10px;">
-                            ${allureAvailable ? "<a href=\"${allureUrl}\" style=\"display:inline-block;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#ffffff;text-decoration:none;padding:10px 18px;font-size:12px;font-weight:800;border-radius:999px;letter-spacing:0.3px;\">OPEN ALLURE DASHBOARD</a>" : "<span style=\"display:inline-block;background:#334155;color:#cbd5e1;padding:9px 16px;font-size:12px;font-weight:700;border-radius:999px;\">REPORT NOT AVAILABLE</span>"}
+                            ${allureAvailable ? "<a href=\"${allureUrl}\" style=\"display:inline-block;background:linear-gradient(135deg,#1d4ed8,#2563eb);color:#ffffff;text-decoration:none;padding:10px 18px;font-size:12px;font-weight:800;border-radius:999px;letter-spacing:0.3px;\">OPEN ALLURE DASHBOARD</a>" : "<span style=\"display:inline-block;background:#e2e8f0;color:#64748b;padding:9px 16px;font-size:12px;font-weight:700;border-radius:999px;\">REPORT NOT AVAILABLE</span>"}
                           </td>
                         </tr>
                       </table>
