@@ -801,10 +801,19 @@ def sendEmailNotification(String buildStatus) {
             </tr>
             <tr>
               <td style="padding:0 22px 18px;">
-                <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #dbe3ee;border-radius:10px;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#f8fafc 0%,#eef2ff 100%);border:1px solid #dbe3ee;border-radius:10px;">
                   <tr>
-                    <td style="padding:0 14px 14px;">
-                      ${allureAvailable ? "<a href=\"${allureUrl}\" style=\"display:inline-block;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#ffffff;text-decoration:none;padding:10px 14px;font-size:13px;font-weight:700;border-radius:8px;margin-top:2px;\">Open Allure Report</a>" : "<span style=\"display:inline-block;background:#e2e8f0;color:#475569;padding:10px 14px;font-size:13px;font-weight:700;border-radius:8px;margin-top:2px;\">Allure Report Not Available</span>"}
+                    <td style="padding:14px;">
+                      <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #d7ddf5;border-radius:8px;background:#ffffff;">
+                        <tr>
+                          <td style="padding:10px 12px;font-size:12px;font-weight:700;letter-spacing:0.5px;color:#475569;background:#f8fafc;border-bottom:1px solid #e2e8f0;">REPORT ACCESS</td>
+                        </tr>
+                        <tr>
+                          <td align="center" style="padding:14px;">
+                            ${allureAvailable ? "<a href=\"${allureUrl}\" style=\"display:inline-block;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#ffffff;text-decoration:none;padding:11px 18px;font-size:13px;font-weight:700;border-radius:8px;box-shadow:0 4px 12px rgba(124,58,237,0.28);\">Open Allure Report</a>" : "<span style=\"display:inline-block;background:#e2e8f0;color:#475569;padding:11px 18px;font-size:13px;font-weight:700;border-radius:8px;\">Allure Report Not Available</span>"}
+                          </td>
+                        </tr>
+                      </table>
                     </td>
                   </tr>
                 </table>
