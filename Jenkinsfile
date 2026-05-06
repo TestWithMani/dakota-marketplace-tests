@@ -799,13 +799,13 @@ def sendEmailNotification(String buildStatus) {
                   <tr>
                     <td style="padding:11px 12px;background:#e2e8f0;color:#334155;"><strong>Allure Report</strong></td>
                     <td style="padding:10px 12px;background:#ffffff;">
-                      <table cellpadding="0" cellspacing="0" style="width:100%;border:1px solid #dbe3f4;border-radius:8px;background:linear-gradient(135deg,#f8faff 0%,#eef2ff 100%);">
+                      <table cellpadding="0" cellspacing="0" style="width:100%;border:1px solid #cbd5e1;border-radius:10px;overflow:hidden;background:#0f172a;">
                         <tr>
-                          <td style="padding:8px 10px;font-size:11px;color:#475569;font-weight:700;letter-spacing:0.4px;border-bottom:1px solid #dbe3f4;">REPORT ACCESS</td>
+                          <td style="padding:9px 12px;font-size:11px;color:#cbd5e1;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid #334155;">ALLURE REPORT</td>
                         </tr>
                         <tr>
-                          <td style="padding:10px;">
-                            ${allureAvailable ? "<a href=\"${allureUrl}\" style=\"display:inline-block;background:linear-gradient(135deg,#4338ca,#4f46e5);color:#ffffff;text-decoration:none;padding:9px 13px;font-size:12px;font-weight:700;border-radius:7px;\">View Allure Dashboard</a><span style=\"display:inline-block;margin-left:8px;font-size:11px;color:#64748b;vertical-align:middle;\">Detailed test trends and attachments</span>" : "<span style=\"display:inline-block;background:#e2e8f0;color:#64748b;padding:8px 12px;font-size:12px;font-weight:700;border-radius:6px;\">Report Not Available</span><span style=\"display:inline-block;margin-left:8px;font-size:11px;color:#64748b;vertical-align:middle;\">Enable RUN_ALLURE to publish this link</span>"}
+                          <td align="center" style="padding:14px 10px;">
+                            ${allureAvailable ? "<a href=\"${allureUrl}\" style=\"display:inline-block;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#ffffff;text-decoration:none;padding:10px 18px;font-size:12px;font-weight:800;border-radius:999px;letter-spacing:0.3px;\">OPEN ALLURE DASHBOARD</a>" : "<span style=\"display:inline-block;background:#334155;color:#cbd5e1;padding:9px 16px;font-size:12px;font-weight:700;border-radius:999px;\">REPORT NOT AVAILABLE</span>"}
                           </td>
                         </tr>
                       </table>
