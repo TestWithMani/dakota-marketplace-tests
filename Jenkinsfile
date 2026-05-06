@@ -738,11 +738,6 @@ def collectRecipientEmails(String defaultEmail, String additionalEmails) {
 
 def sendEmailNotification(String buildStatus) {
     def testStats = getTestStatistics()
-    def currentStatus = (buildStatus ?: currentBuild.currentResult ?: 'UNKNOWN').toUpperCase()
-    def actualStatus = currentStatus
-    if (testStats.total > 0 && (currentStatus in ['SUCCESS', 'FAILURE', 'UNKNOWN'])) {
-        actualStatus = testStats.failed > 0 ? 'FAILURE' : 'SUCCESS'
-    }
     def recipients = collectRecipientEmails(params.DEFAULT_EMAIL as String, params.ADDITIONAL_EMAILS as String)
     if (recipients.isEmpty() && env.EMAIL_RECIPIENT?.trim()) {
         recipients = [env.EMAIL_RECIPIENT]
@@ -751,15 +746,12 @@ def sendEmailNotification(String buildStatus) {
         echo "No recipients configured, skipping email."
         return
     }
-    def subject = "[${actualStatus}] Dakota Marketplace Smoke - ${(params.ENVIRONMENT ?: 'UAT').toUpperCase()} - ${new Date().format('yyyy-MM-dd')}"
-    def statusColor = actualStatus == 'SUCCESS' ? '#16a34a' : (actualStatus == 'FAILURE' ? '#dc2626' : '#f59e0b')
-    def statusBg = actualStatus == 'SUCCESS' ? '#dcfce7' : (actualStatus == 'FAILURE' ? '#fee2e2' : '#fef3c7')
+    def subject = "Dakota Marketplace Smoke Report - ${new Date().format('yyyy-MM-dd')}"
     def durationString = (currentBuild.durationString ?: 'N/A').replace(' and counting', '')
     def passRate = testStats.total > 0 ? ((testStats.passed * 100.0) / testStats.total).round(1) : 0
+    def passRateColor = passRate >= 90 ? '#16a34a' : (passRate >= 70 ? '#f59e0b' : '#dc2626')
     def environmentLabel = ((params.ENVIRONMENT ?: 'UAT').toUpperCase() == 'PROD') ? 'Production' : 'UAT'
     def jobUrl = env.BUILD_URL ?: ''
-    def buildNumber = env.BUILD_NUMBER ?: 'N/A'
-    def branchName = env.BRANCH_NAME ?: 'N/A'
     def allureUrl = "${jobUrl}allure"
     def allureAvailable = params.RUN_ALLURE && fileExists(env.ALLURE_DIR)
     def body = """
@@ -776,11 +768,6 @@ def sendEmailNotification(String buildStatus) {
                     <td>
                       <h2 style="margin:0;font-size:27px;line-height:1.2;">Dakota Marketplace Smoke</h2>
                       <div style="margin-top:4px;font-size:13px;opacity:0.9;">Automation Execution Summary</div>
-                    </td>
-                    <td align="right" style="vertical-align:top;">
-                      <span style="display:inline-block;padding:7px 12px;border-radius:999px;background:${statusBg};color:${statusColor};font-weight:800;font-size:12px;border:1px solid rgba(255,255,255,0.18);">
-                        ${actualStatus}
-                      </span>
                     </td>
                   </tr>
                 </table>
@@ -803,9 +790,8 @@ def sendEmailNotification(String buildStatus) {
                 <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#0f172a;border:1px solid #dbe3ee;border-radius:10px;overflow:hidden;">
                   <tr><td width="38%" style="padding:11px 12px;background:#f8fafc;"><strong>Environment</strong></td><td style="padding:11px 12px;font-weight:600;">${environmentLabel}</td></tr>
                   <tr><td style="padding:11px 12px;background:#f8fafc;"><strong>Portal</strong></td><td style="padding:11px 12px;font-weight:600;">${params.PORTAL ?: 'All Marketplace Access'}</td></tr>
-                  <tr><td style="padding:11px 12px;background:#f8fafc;"><strong>Build</strong></td><td style="padding:11px 12px;font-weight:600;">#${buildNumber} (${branchName})</td></tr>
                   <tr><td style="padding:11px 12px;background:#f8fafc;"><strong>Duration</strong></td><td style="padding:11px 12px;font-weight:600;">${durationString}</td></tr>
-                  <tr><td style="padding:11px 12px;background:#f8fafc;"><strong>Pass Percentage</strong></td><td style="padding:11px 12px;color:${statusColor};font-weight:800;">${passRate}%</td></tr>
+                  <tr><td style="padding:11px 12px;background:#f8fafc;"><strong>Pass Percentage</strong></td><td style="padding:11px 12px;color:${passRateColor};font-weight:800;">${passRate}%</td></tr>
                 </table>
               </td>
             </tr>
@@ -813,12 +799,19 @@ def sendEmailNotification(String buildStatus) {
               <td style="padding:0 22px 18px;">
                 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #dbe3ee;border-radius:10px;">
                   <tr>
-                    <td style="padding:14px 14px 8px;font-size:12px;color:#334155;font-weight:700;letter-spacing:0.6px;">REPORT LINKS</td>
+                    <td style="padding:14px 14px 8px;font-size:12px;color:#334155;font-weight:700;letter-spacing:0.6px;">COLOR LEGEND</td>
                   </tr>
                   <tr>
                     <td style="padding:0 14px 14px;">
-                      <a href="${jobUrl}" style="display:inline-block;background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#ffffff;text-decoration:none;padding:10px 14px;font-size:13px;font-weight:700;border-radius:8px;margin:0 8px 8px 0;">Open Jenkins Build</a>
-                      ${allureAvailable ? "<a href=\"${allureUrl}\" style=\"display:inline-block;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#ffffff;text-decoration:none;padding:10px 14px;font-size:13px;font-weight:700;border-radius:8px;margin:0 8px 8px 0;\">Open Allure Report</a>" : "<span style=\"display:inline-block;background:#e2e8f0;color:#475569;padding:10px 14px;font-size:13px;font-weight:700;border-radius:8px;margin:0 8px 8px 0;\">Allure Report Not Available</span>"}
+                      <table cellpadding="0" cellspacing="0" style="font-size:12px;color:#334155;">
+                        <tr>
+                          <td style="padding:0 14px 10px 0;"><span style="display:inline-block;width:12px;height:12px;background:#ecfdf3;border:1px solid #86efac;border-radius:2px;margin-right:6px;vertical-align:middle;"></span>Passed</td>
+                          <td style="padding:0 14px 10px 0;"><span style="display:inline-block;width:12px;height:12px;background:#fef2f2;border:1px solid #fca5a5;border-radius:2px;margin-right:6px;vertical-align:middle;"></span>Failed</td>
+                          <td style="padding:0 14px 10px 0;"><span style="display:inline-block;width:12px;height:12px;background:#f5f3ff;border:1px solid #c4b5fd;border-radius:2px;margin-right:6px;vertical-align:middle;"></span>Skipped</td>
+                          <td style="padding:0 0 10px 0;"><span style="display:inline-block;width:12px;height:12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:2px;margin-right:6px;vertical-align:middle;"></span>Total</td>
+                        </tr>
+                      </table>
+                      ${allureAvailable ? "<a href=\"${allureUrl}\" style=\"display:inline-block;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#ffffff;text-decoration:none;padding:10px 14px;font-size:13px;font-weight:700;border-radius:8px;margin-top:2px;\">Open Allure Report</a>" : "<span style=\"display:inline-block;background:#e2e8f0;color:#475569;padding:10px 14px;font-size:13px;font-weight:700;border-radius:8px;margin-top:2px;\">Allure Report Not Available</span>"}
                     </td>
                   </tr>
                 </table>
