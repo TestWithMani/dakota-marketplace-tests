@@ -772,7 +772,6 @@ def sendEmailNotification(String buildStatus) {
                   <tr>
                     <td>
                       <h2 style="margin:0;font-size:27px;line-height:1.2;">Dakota Marketplace Smoke</h2>
-                      <div style="margin-top:4px;font-size:13px;opacity:0.9;">Automation Execution Summary</div>
                     </td>
                   </tr>
                 </table>
@@ -804,18 +803,7 @@ def sendEmailNotification(String buildStatus) {
               <td style="padding:0 22px 18px;">
                 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;border:1px solid #dbe3ee;border-radius:10px;">
                   <tr>
-                    <td style="padding:14px 14px 8px;font-size:12px;color:#334155;font-weight:700;letter-spacing:0.6px;">COLOR LEGEND</td>
-                  </tr>
-                  <tr>
                     <td style="padding:0 14px 14px;">
-                      <table cellpadding="0" cellspacing="0" style="font-size:12px;color:#334155;">
-                        <tr>
-                          <td style="padding:0 14px 10px 0;"><span style="display:inline-block;width:12px;height:12px;background:#ecfdf3;border:1px solid #86efac;border-radius:2px;margin-right:6px;vertical-align:middle;"></span>Passed</td>
-                          <td style="padding:0 14px 10px 0;"><span style="display:inline-block;width:12px;height:12px;background:#fef2f2;border:1px solid #fca5a5;border-radius:2px;margin-right:6px;vertical-align:middle;"></span>Failed</td>
-                          <td style="padding:0 14px 10px 0;"><span style="display:inline-block;width:12px;height:12px;background:#f5f3ff;border:1px solid #c4b5fd;border-radius:2px;margin-right:6px;vertical-align:middle;"></span>Skipped</td>
-                          <td style="padding:0 0 10px 0;"><span style="display:inline-block;width:12px;height:12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:2px;margin-right:6px;vertical-align:middle;"></span>Total</td>
-                        </tr>
-                      </table>
                       ${allureAvailable ? "<a href=\"${allureUrl}\" style=\"display:inline-block;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#ffffff;text-decoration:none;padding:10px 14px;font-size:13px;font-weight:700;border-radius:8px;margin-top:2px;\">Open Allure Report</a>" : "<span style=\"display:inline-block;background:#e2e8f0;color:#475569;padding:10px 14px;font-size:13px;font-weight:700;border-radius:8px;margin-top:2px;\">Allure Report Not Available</span>"}
                     </td>
                   </tr>
