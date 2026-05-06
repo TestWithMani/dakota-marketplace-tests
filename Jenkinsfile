@@ -805,7 +805,7 @@ def sendEmailNotification(String buildStatus) {
                         </tr>
                         <tr>
                           <td align="center" style="padding:14px 10px;">
-                            ${allureAvailable ? "<a href=\"${allureUrl}\" style=\"display:inline-block;background:#000000;color:#ffffff;text-decoration:none;padding:10px 18px;font-size:12px;font-weight:800;border-radius:999px;letter-spacing:0.3px;\">OPEN ALLURE DASHBOARD</a>" : "<span style=\"display:inline-block;background:#e2e8f0;color:#64748b;padding:9px 16px;font-size:12px;font-weight:700;border-radius:999px;\">REPORT NOT AVAILABLE</span>"}
+                            ${allureAvailable ? "<a href=\"${allureUrl}\" style=\"display:inline-block;background:#000000;color:#ffffff;text-decoration:none;padding:10px 18px;font-size:12px;font-weight:800;border-radius:999px;letter-spacing:0.3px;\">OPEN ALLURE REPORT</a>" : "<span style=\"display:inline-block;background:#e2e8f0;color:#64748b;padding:9px 16px;font-size:12px;font-weight:700;border-radius:999px;\">REPORT NOT AVAILABLE</span>"}
                           </td>
                         </tr>
                       </table>
