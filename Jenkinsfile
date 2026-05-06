@@ -748,8 +748,12 @@ def sendEmailNotification(String buildStatus) {
     }
     def subject = "Dakota Marketplace Smoke Report - ${new Date().format('yyyy-MM-dd')}"
     def durationString = (currentBuild.durationString ?: 'N/A').replace(' and counting', '')
-    // Jenkins Groovy sandbox can reject BigDecimal.round(scale); use Math.round for 1-decimal precision.
-    def passRate = testStats.total > 0 ? (Math.round((testStats.passed * 1000.0) / testStats.total) / 10.0) : 0.0
+    // Force double math for Jenkins sandbox compatibility, then round to 1 decimal.
+    def passRate = 0.0
+    if (testStats.total > 0) {
+        double passRateRaw = ((testStats.passed as double) * 1000.0d) / (testStats.total as double)
+        passRate = (Math.round(passRateRaw) as long) / 10.0d
+    }
     def passRateColor = passRate >= 90 ? '#16a34a' : (passRate >= 70 ? '#f59e0b' : '#dc2626')
     def environmentLabel = ((params.ENVIRONMENT ?: 'UAT').toUpperCase() == 'PROD') ? 'Production' : 'UAT'
     def jobUrl = env.BUILD_URL ?: ''
