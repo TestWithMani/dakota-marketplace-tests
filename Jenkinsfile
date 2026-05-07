@@ -792,12 +792,9 @@ def sendEmailNotification(String buildStatus) {
 
                 <table width="100%" cellpadding="0" cellspacing="0">
                   <tr>
-
-                    <!-- LEFT -->
-                    <td width="62%" style="padding:50px 44px;">
-
+                    <td style="padding:50px 44px;">
                       <h1 style="
-                        margin:22px 0 0;
+                        margin:8px 0 0;
                         color:#ffffff;
                         font-size:44px;
                         line-height:1.2;
@@ -805,14 +802,7 @@ def sendEmailNotification(String buildStatus) {
                       ">
                         Smoke Test <br> Execution Report
                       </h1>
-
                     </td>
-
-                    <!-- RIGHT SIDE -->
-                    <td width="38%" align="center" valign="middle" style="padding:30px;">
-
-                    </td>
-
                   </tr>
                 </table>
 
@@ -832,19 +822,6 @@ def sendEmailNotification(String buildStatus) {
                       border-radius:24px;
                       padding:28px 20px;
                     ">
-
-                      <div style="
-                        width:52px;
-                        height:52px;
-                        border-radius:16px;
-                        background:#e2e8f0;
-                        text-align:center;
-                        line-height:52px;
-                        font-size:22px;
-                        margin-bottom:18px;
-                      ">
-                        
-                      </div>
 
                       <div style="
                         font-size:13px;
@@ -874,19 +851,6 @@ def sendEmailNotification(String buildStatus) {
                     ">
 
                       <div style="
-                        width:52px;
-                        height:52px;
-                        border-radius:16px;
-                        background:#bbf7d0;
-                        text-align:center;
-                        line-height:52px;
-                        font-size:22px;
-                        margin-bottom:18px;
-                      ">
-                        
-                      </div>
-
-                      <div style="
                         font-size:13px;
                         color:#15803d;
                         font-weight:800;
@@ -914,19 +878,6 @@ def sendEmailNotification(String buildStatus) {
                     ">
 
                       <div style="
-                        width:52px;
-                        height:52px;
-                        border-radius:16px;
-                        background:#fecaca;
-                        text-align:center;
-                        line-height:52px;
-                        font-size:22px;
-                        margin-bottom:18px;
-                      ">
-                        
-                      </div>
-
-                      <div style="
                         font-size:13px;
                         color:#b91c1c;
                         font-weight:800;
@@ -952,19 +903,6 @@ def sendEmailNotification(String buildStatus) {
                       border-radius:24px;
                       padding:28px 20px;
                     ">
-
-                      <div style="
-                        width:52px;
-                        height:52px;
-                        border-radius:16px;
-                        background:#e9d5ff;
-                        text-align:center;
-                        line-height:52px;
-                        font-size:22px;
-                        margin-bottom:18px;
-                      ">
-                        
-                      </div>
 
                       <div style="
                         font-size:13px;
