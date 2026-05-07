@@ -767,31 +767,29 @@ def sendEmailNotification(String buildStatus) {
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dakota Marketplace Smoke — Test Report</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap');
-  body { margin: 0; padding: 0; background: #eef2ff; font-family: 'Space Grotesk', Arial, sans-serif; }
+  /* Email-safe typography (many clients block external font imports). */
+  body { margin: 0; padding: 0; background: #eef2ff; font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; }
   * { box-sizing: border-box; }
-  .wrapper { background: #eef2ff; padding: 32px 16px; }
-  .card { max-width: 660px; margin: 0 auto; background: #ffffff; border: 1px solid #dbe3ee; border-radius: 16px; overflow: hidden; box-shadow: 0 12px 40px rgba(6,13,31,0.13); }
+  .wrapper { background: linear-gradient(135deg,#eef2ff 0%,#f8fafc 55%,#eef2ff 100%); padding: 32px 16px; }
+  .card { max-width: 680px; margin: 0 auto; background: #ffffff; border: 1px solid #dbe3ee; border-radius: 18px; overflow: hidden; box-shadow: 0 16px 55px rgba(6,13,31,0.16); }
 
   /* HEADER */
   .hd { background: #060d1f; padding: 0; }
-  .hd-stripe { height: 4px; background: #1d4ed8; width: 100%; }
+  .hd-stripe { height: 4px; background: linear-gradient(90deg,#60a5fa,#1d4ed8,#7c3aed); width: 100%; }
   .hd-inner { padding: 26px 30px 22px; }
   .hd-eyebrow { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-  .hd-badge { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #3b82f6; background: #0f2044; border: 1px solid #1d4ed8; padding: 3px 10px; border-radius: 999px; }
+  .hd-badge { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #bfdbfe; background: rgba(29,78,216,0.18); border: 1px solid rgba(96,165,250,0.65); padding: 4px 10px; border-radius: 999px; }
   .hd-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; display: inline-block; }
-  .hd-live { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #4ade80; letter-spacing: 1px; }
-  .hd-title { font-size: 22px; font-weight: 700; color: #f0f8ff; letter-spacing: -0.5px; line-height: 1.2; margin: 0 0 6px; }
-  .hd-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #334e7a; }
-  .hd-meta span { color: #3b82f6; }
+  .hd-live { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 9px; color: #86efac; letter-spacing: 1px; }
+  .hd-title { font-size: 24px; font-weight: 800; color: #f8fafc; letter-spacing: -0.6px; line-height: 1.15; margin: 0; }
 
   /* STATS */
   .stats { display: table; width: 100%; border-collapse: collapse; border-top: 1px solid #0f1e3d; border-bottom: 1px solid #e2e8f0; }
-  .sc { display: table-cell; width: 25%; padding: 20px 8px 18px; text-align: center; border-right: 1px solid #e2e8f0; background: #ffffff; vertical-align: top; }
+  .sc { display: table-cell; width: 25%; padding: 18px 8px 16px; text-align: center; border-right: 1px solid #e2e8f0; background: #ffffff; vertical-align: top; }
   .sc:last-child { border-right: none; }
   .sc-icon { font-size: 18px; display: block; margin-bottom: 6px; }
-  .sc-lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: #64748b; margin-bottom: 5px; display: block; }
-  .sc-num { font-family: 'JetBrains Mono', monospace; font-size: 30px; font-weight: 700; line-height: 1; display: block; }
+  .sc-lbl { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 9px; letter-spacing: 1.8px; text-transform: uppercase; color: #64748b; margin-bottom: 5px; display: block; }
+  .sc-num { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 30px; font-weight: 800; line-height: 1; display: block; }
   .sc-num.total  { color: #0f172a; }
   .sc-num.passed { color: #16a34a; }
   .sc-num.failed { color: #dc2626; }
@@ -801,36 +799,36 @@ def sendEmailNotification(String buildStatus) {
   /* BODY */
   .body { padding: 24px 28px; background: #ffffff; }
   .section-row { margin-bottom: 14px; }
-  .section-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #94a3b8; }
+  .section-label { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #94a3b8; }
   .section-divider { border: none; border-top: 1px solid #e2e8f0; margin: 0; flex: 1; }
 
   /* INFO GRID */
   .info-table { width: 100%; border-collapse: separate; border-spacing: 10px; margin: 0 -10px 10px; }
-  .ic { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; vertical-align: top; width: 50%; }
-  .ic-lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: #94a3b8; display: block; margin-bottom: 4px; }
-  .ic-val { font-size: 13px; font-weight: 500; color: #0f172a; display: block; }
+  .ic { background: linear-gradient(135deg,#f8fafc 0%,#ffffff 100%); border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; vertical-align: top; width: 50%; }
+  .ic-lbl { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 9px; letter-spacing: 1.2px; text-transform: uppercase; color: #94a3b8; display: block; margin-bottom: 4px; }
+  .ic-val { font-size: 13px; font-weight: 600; color: #0f172a; display: block; }
 
   /* ALLURE */
-  .allure { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px 18px; }
+  .allure { background: linear-gradient(135deg,#f8fafc 0%,#eef2ff 100%); border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 18px; }
   .allure-inner { display: table; width: 100%; }
   .allure-left  { display: table-cell; vertical-align: middle; }
   .allure-right { display: table-cell; vertical-align: middle; text-align: right; }
-  .allure-icon  { display: inline-block; width: 40px; height: 40px; border-radius: 8px; background: #ffffff; border: 1px solid #e2e8f0; text-align: center; line-height: 40px; font-size: 20px; vertical-align: middle; margin-right: 12px; }
+  .allure-icon  { display: inline-block; width: 42px; height: 42px; border-radius: 10px; background: #ffffff; border: 1px solid #e2e8f0; text-align: center; line-height: 42px; font-size: 20px; vertical-align: middle; margin-right: 12px; }
   .allure-text  { display: inline-block; vertical-align: middle; }
-  .allure-name  { font-size: 13px; font-weight: 500; color: #0f172a; display: block; margin-bottom: 2px; }
-  .allure-url   { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #94a3b8; display: block; word-break: break-all; }
-  .allure-btn   { display: inline-block; padding: 9px 20px; background: #000000; color: #ffffff; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; border-radius: 999px; text-decoration: none; letter-spacing: 0.5px; border: 1px solid #000000; white-space: nowrap; }
-  .allure-btn-unavail { display: inline-block; padding: 9px 20px; background: #f1f5f9; color: #94a3b8; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; border-radius: 999px; text-decoration: none; letter-spacing: 0.5px; border: 1px solid #e2e8f0; white-space: nowrap; }
+  .allure-name  { font-size: 13px; font-weight: 700; color: #0f172a; display: block; margin-bottom: 2px; }
+  .allure-url   { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 10px; color: #94a3b8; display: block; word-break: break-all; }
+  .allure-btn   { display: inline-block; padding: 10px 18px; background: #000000; color: #ffffff; font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 12px; font-weight: 800; border-radius: 999px; text-decoration: none; letter-spacing: 0.6px; border: 1px solid #000000; white-space: nowrap; }
+  .allure-btn-unavail { display: inline-block; padding: 10px 18px; background: #f1f5f9; color: #94a3b8; font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 12px; font-weight: 800; border-radius: 999px; text-decoration: none; letter-spacing: 0.6px; border: 1px solid #e2e8f0; white-space: nowrap; }
 
   /* FOOTER */
   .footer { background: #060d1f; padding: 14px 28px; border-top: 1px solid #0f1e3d; }
   .footer-inner { display: table; width: 100%; }
   .footer-left  { display: table-cell; vertical-align: middle; }
   .footer-right { display: table-cell; vertical-align: middle; text-align: right; }
-  .footer-logo  { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; color: #1d4ed8; letter-spacing: 1px; }
+  .footer-logo  { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 10px; font-weight: 800; color: #60a5fa; letter-spacing: 1px; }
   .footer-pipe  { color: #1d3a6e; font-size: 12px; margin: 0 6px; }
-  .footer-text  { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #1d4069; }
-  .footer-ts    { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #1d4069; }
+  .footer-text  { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 10px; color: #1d4069; }
+  .footer-ts    { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 10px; color: #1d4069; }
 </style>
 </head>
 <body>
@@ -862,19 +860,19 @@ def sendEmailNotification(String buildStatus) {
       <span class="sc-icon" style="color:#16a34a;">&#10003;</span>
       <span class="sc-lbl">Passed</span>
       <span class="sc-num passed">${testStats.passed}</span>
-      <span class="sc-sub">all green</span>
+      <span class="sc-sub">passed checks</span>
     </div>
     <div class="sc">
       <span class="sc-icon" style="color:#dc2626;">&#10005;</span>
       <span class="sc-lbl">Failed</span>
       <span class="sc-num failed">${testStats.failed}</span>
-      <span class="sc-sub">needs fix</span>
+      <span class="sc-sub">action required</span>
     </div>
     <div class="sc">
       <span class="sc-icon" style="color:#7c3aed;">&#9193;</span>
       <span class="sc-lbl">Skipped</span>
       <span class="sc-num skipped">${testStats.skipped}</span>
-      <span class="sc-sub">deferred</span>
+      <span class="sc-sub">not executed</span>
     </div>
   </div>
 
