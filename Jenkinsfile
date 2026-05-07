@@ -800,7 +800,7 @@ def sendEmailNotification(String buildStatus) {
                       <h1 class="hero-title" style="
                         margin:0;
                         color:#ffffff;
-                        font-size:42px;
+                        font-size:34px;
                         line-height:1.2;
                         font-weight:900;
                       ">
@@ -829,7 +829,7 @@ def sendEmailNotification(String buildStatus) {
                     ">
 
                       <div style="
-                        font-size:11px;
+                        font-size:10px;
                         color:#64748b;
                         font-weight:800;
                         letter-spacing:0.8px;
@@ -839,7 +839,7 @@ def sendEmailNotification(String buildStatus) {
 
                       <div style="
                         margin-top:8px;
-                        font-size:36px;
+                        font-size:30px;
                         font-weight:900;
                         color:#0f172a;
                       ">
@@ -857,7 +857,7 @@ def sendEmailNotification(String buildStatus) {
                     ">
 
                       <div style="
-                        font-size:11px;
+                        font-size:10px;
                         color:#15803d;
                         font-weight:800;
                         letter-spacing:1px;
@@ -867,7 +867,7 @@ def sendEmailNotification(String buildStatus) {
 
                       <div style="
                         margin-top:8px;
-                        font-size:36px;
+                        font-size:30px;
                         font-weight:900;
                         color:#15803d;
                       ">
@@ -885,7 +885,7 @@ def sendEmailNotification(String buildStatus) {
                     ">
 
                       <div style="
-                        font-size:11px;
+                        font-size:10px;
                         color:#b91c1c;
                         font-weight:800;
                         letter-spacing:1px;
@@ -895,7 +895,7 @@ def sendEmailNotification(String buildStatus) {
 
                       <div style="
                         margin-top:8px;
-                        font-size:36px;
+                        font-size:30px;
                         font-weight:900;
                         color:#b91c1c;
                       ">
@@ -913,7 +913,7 @@ def sendEmailNotification(String buildStatus) {
                     ">
 
                       <div style="
-                        font-size:11px;
+                        font-size:10px;
                         color:#7c3aed;
                         font-weight:800;
                         letter-spacing:1px;
@@ -923,7 +923,7 @@ def sendEmailNotification(String buildStatus) {
 
                       <div style="
                         margin-top:8px;
-                        font-size:36px;
+                        font-size:30px;
                         font-weight:900;
                         color:#7c3aed;
                       ">
@@ -964,7 +964,7 @@ def sendEmailNotification(String buildStatus) {
                           ">
 
                             <div style="
-                              font-size:18px;
+                              font-size:16px;
                               font-weight:900;
                             ">
                               Execution Details
@@ -980,11 +980,11 @@ def sendEmailNotification(String buildStatus) {
                             <!-- ENV -->
                             <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:1px dashed #cbd5e1;background:#f8fbff;">
                               <tr>
-                                <td style="padding:14px 18px;font-size:12px;font-weight:800;color:#1d4ed8;">
+                                <td style="padding:14px 18px;font-size:11px;font-weight:800;color:#1d4ed8;">
                                   Environment
                                 </td>
 
-                                <td align="right" style="padding:14px 18px;font-size:13px;font-weight:800;color:#0f172a;">
+                                <td align="right" style="padding:14px 18px;font-size:12px;font-weight:800;color:#0f172a;">
                                   ${environmentLabel}
                                 </td>
                               </tr>
@@ -993,11 +993,11 @@ def sendEmailNotification(String buildStatus) {
                             <!-- PORTAL -->
                             <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:1px dashed #cbd5e1;background:#f5f3ff;">
                               <tr>
-                                <td style="padding:14px 18px;font-size:12px;font-weight:800;color:#7c3aed;">
+                                <td style="padding:14px 18px;font-size:11px;font-weight:800;color:#7c3aed;">
                                   Portal
                                 </td>
 
-                                <td align="right" style="padding:14px 18px;font-size:13px;font-weight:800;color:#0f172a;">
+                                <td align="right" style="padding:14px 18px;font-size:12px;font-weight:800;color:#0f172a;">
                                   ${params.PORTAL ?: 'All Marketplace Access'}
                                 </td>
                               </tr>
@@ -1006,11 +1006,11 @@ def sendEmailNotification(String buildStatus) {
                             <!-- DURATION -->
                             <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:1px dashed #cbd5e1;background:#ecfdf5;">
                               <tr>
-                                <td style="padding:14px 18px;font-size:12px;font-weight:800;color:#15803d;">
+                                <td style="padding:14px 18px;font-size:11px;font-weight:800;color:#15803d;">
                                   Duration
                                 </td>
 
-                                <td align="right" style="padding:14px 18px;font-size:13px;font-weight:800;color:#0f172a;">
+                                <td align="right" style="padding:14px 18px;font-size:12px;font-weight:800;color:#0f172a;">
                                   ${durationString}
                                 </td>
                               </tr>
@@ -1019,11 +1019,11 @@ def sendEmailNotification(String buildStatus) {
                             <!-- PASS PERCENTAGE -->
                             <table width="100%" cellpadding="0" cellspacing="0" style="background:#fffbeb;">
                               <tr>
-                                <td style="padding:14px 18px;font-size:12px;font-weight:800;color:#b45309;">
+                                <td style="padding:14px 18px;font-size:11px;font-weight:800;color:#b45309;">
                                   Pass Percentage
                                 </td>
 
-                                <td align="right" style="padding:14px 18px;font-size:13px;font-weight:900;color:${passRateColor};">
+                                <td align="right" style="padding:14px 18px;font-size:12px;font-weight:900;color:${passRateColor};">
                                   ${passRate}%
                                 </td>
                               </tr>
@@ -1052,7 +1052,7 @@ def sendEmailNotification(String buildStatus) {
                             <div class="allure-title" style="
                               margin-top:0;
                               color:#ffffff;
-                              font-size:36px;
+                              font-size:28px;
                               line-height:1.3;
                               font-weight:900;
                             ">
@@ -1062,7 +1062,7 @@ def sendEmailNotification(String buildStatus) {
                             <div class="allure-copy" style="
                               margin-top:8px;
                               color:#dbeafe;
-                              font-size:14px;
+                              font-size:12px;
                               line-height:1.6;
                             ">
                               Access complete execution analytics, screenshots,
@@ -1073,8 +1073,8 @@ def sendEmailNotification(String buildStatus) {
                             <div style="margin-top:24px;">
 
                               ${allureAvailable
-                                ? "<a href=\"${allureUrl}\" style=\"display:inline-block;background:#ffffff;color:#0f172a;text-decoration:none;padding:14px 22px;border-radius:14px;font-size:13px;font-weight:900;letter-spacing:0.8px;box-shadow:0 10px 20px rgba(0,0,0,0.2);\">OPEN REPORT</a>"
-                                : "<span style=\"display:inline-block;background:rgba(255,255,255,0.16);color:#ffffff;padding:14px 22px;border-radius:14px;font-size:12px;font-weight:800;\">REPORT NOT AVAILABLE</span>"
+                                ? "<a href=\"${allureUrl}\" style=\"display:inline-block;background:#ffffff;color:#0f172a;text-decoration:none;padding:12px 20px;border-radius:14px;font-size:12px;font-weight:900;letter-spacing:0.7px;box-shadow:0 10px 20px rgba(0,0,0,0.2);\">OPEN REPORT</a>"
+                                : "<span style=\"display:inline-block;background:rgba(255,255,255,0.16);color:#ffffff;padding:12px 20px;border-radius:14px;font-size:11px;font-weight:800;\">REPORT NOT AVAILABLE</span>"
                               }
 
                             </div>
@@ -1105,7 +1105,7 @@ def sendEmailNotification(String buildStatus) {
 
                     <td style="
                       color:#ffffff;
-                      font-size:13px;
+                      font-size:12px;
                       font-weight:800;
                     ">
                       Dakota Marketplace Automation
