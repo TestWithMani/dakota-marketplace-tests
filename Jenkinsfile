@@ -767,6 +767,36 @@ def sendEmailNotification(String buildStatus) {
     def allureAvailable = params.RUN_ALLURE && fileExists(env.ALLURE_DIR)
     def body = """
 <html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      @media only screen and (max-width: 700px) {
+        .email-card { border-radius: 18px !important; }
+        .hero-pad { padding: 28px 20px !important; }
+        .hero-title { font-size: 30px !important; line-height: 1.25 !important; }
+        .stats-wrap { padding: 16px 14px 6px !important; }
+        .kpi-cell {
+          display: block !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
+          margin-bottom: 8px !important;
+        }
+        .details-wrap { padding: 12px 14px 22px !important; }
+        .stack-col {
+          display: block !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
+          padding-left: 0 !important;
+        }
+        .detail-card { border-radius: 16px !important; }
+        .allure-card { border-radius: 16px !important; margin-top: 12px !important; }
+        .allure-pad { padding: 18px 16px !important; }
+        .allure-title { font-size: 28px !important; }
+        .allure-copy { font-size: 13px !important; line-height: 1.5 !important; }
+        .footer-pad { padding: 14px 16px !important; }
+      }
+    </style>
+  </head>
   <body style="margin:0;padding:0;background:#eef2f7;font-family:'Trebuchet MS','Segoe UI',Arial,sans-serif;">
 
     <!-- Main Wrapper -->
@@ -775,7 +805,7 @@ def sendEmailNotification(String buildStatus) {
         <td align="center">
 
           <!-- Main Email Card -->
-          <table width="100%" cellpadding="0" cellspacing="0" style="
+          <table width="100%" cellpadding="0" cellspacing="0" class="email-card" style="
             max-width:860px;
             background:#ffffff;
             border-radius:26px;
@@ -793,8 +823,8 @@ def sendEmailNotification(String buildStatus) {
 
                 <table width="100%" cellpadding="0" cellspacing="0">
                   <tr>
-                    <td style="padding:42px 34px;">
-                      <h1 style="
+                    <td class="hero-pad" style="padding:42px 34px;">
+                      <h1 class="hero-title" style="
                         margin:0;
                         color:#ffffff;
                         font-size:42px;
@@ -812,13 +842,13 @@ def sendEmailNotification(String buildStatus) {
 
             <!-- STATS SECTION -->
             <tr>
-              <td style="padding:24px 24px 8px;">
+              <td class="stats-wrap" style="padding:24px 24px 8px;">
 
                 <table width="100%" cellpadding="8" cellspacing="8">
                   <tr>
 
                     <!-- TOTAL -->
-                    <td width="25%" style="
+                    <td class="kpi-cell" width="25%" style="
                       background:#f4f7fb;
                       border:1px solid #dbe3ef;
                       border-radius:18px;
@@ -846,7 +876,7 @@ def sendEmailNotification(String buildStatus) {
                     </td>
 
                     <!-- PASSED -->
-                    <td width="25%" style="
+                    <td class="kpi-cell" width="25%" style="
                       background:#ecfaf3;
                       border:1px solid #c9efdc;
                       border-radius:18px;
@@ -874,7 +904,7 @@ def sendEmailNotification(String buildStatus) {
                     </td>
 
                     <!-- FAILED -->
-                    <td width="25%" style="
+                    <td class="kpi-cell" width="25%" style="
                       background:#fef2f2;
                       border:1px solid #f6cdd2;
                       border-radius:18px;
@@ -902,7 +932,7 @@ def sendEmailNotification(String buildStatus) {
                     </td>
 
                     <!-- SKIPPED -->
-                    <td width="25%" style="
+                    <td class="kpi-cell" width="25%" style="
                       background:#f5f1ff;
                       border:1px solid #dfd3ff;
                       border-radius:18px;
@@ -937,15 +967,15 @@ def sendEmailNotification(String buildStatus) {
 
             <!-- DETAILS + REPORT -->
             <tr>
-              <td style="padding:14px 24px 28px;">
+              <td class="details-wrap" style="padding:14px 24px 28px;">
 
                 <table width="100%" cellpadding="0" cellspacing="0">
                   <tr>
 
                     <!-- LEFT DETAILS -->
-                    <td width="54%" valign="top">
+                    <td class="stack-col" width="54%" valign="top">
 
-                      <table width="100%" cellpadding="0" cellspacing="0" style="
+                      <table width="100%" cellpadding="0" cellspacing="0" class="detail-card" style="
                         background:#ffffff;
                         border:1px solid #e2e8f0;
                         border-radius:20px;
@@ -1034,9 +1064,9 @@ def sendEmailNotification(String buildStatus) {
                     </td>
 
                     <!-- RIGHT REPORT -->
-                    <td width="46%" valign="top" style="padding-left:12px;">
+                    <td class="stack-col" width="46%" valign="top" style="padding-left:12px;">
 
-                      <table width="100%" cellpadding="0" cellspacing="0" style="
+                      <table width="100%" cellpadding="0" cellspacing="0" class="allure-card" style="
                         background:
                         linear-gradient(135deg,#020617 0%,#0f172a 45%,#1d4ed8 100%);
                         border-radius:20px;
@@ -1044,9 +1074,9 @@ def sendEmailNotification(String buildStatus) {
                       ">
 
                         <tr>
-                          <td style="padding:24px 22px;">
+                          <td class="allure-pad" style="padding:24px 22px;">
 
-                            <div style="
+                            <div class="allure-title" style="
                               margin-top:0;
                               color:#ffffff;
                               font-size:36px;
@@ -1056,7 +1086,7 @@ def sendEmailNotification(String buildStatus) {
                               Allure Report
                             </div>
 
-                            <div style="
+                            <div class="allure-copy" style="
                               margin-top:8px;
                               color:#dbeafe;
                               font-size:14px;
@@ -1091,7 +1121,7 @@ def sendEmailNotification(String buildStatus) {
 
             <!-- FOOTER -->
             <tr>
-              <td style="
+              <td class="footer-pad" style="
                 background:#000000;
                 border-top:1px solid #111827;
                 padding:16px 24px;
