@@ -760,70 +760,196 @@ def sendEmailNotification(String buildStatus) {
     def allureUrl = "${jobUrl}allure"
     def allureAvailable = params.RUN_ALLURE && fileExists(env.ALLURE_DIR)
     def body = """
-<html>
-  <body style="margin:0;padding:0;background:#eef2ff;font-family:'Segoe UI',Arial,sans-serif;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:radial-gradient(circle at top left,#dbeafe 0%,#eef2ff 45%,#f8fafc 100%);">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dakota Marketplace Smoke — Test Report</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@400;700&display=swap');
+  body { margin: 0; padding: 0; background: #eef2ff; font-family: 'Space Grotesk', Arial, sans-serif; }
+  * { box-sizing: border-box; }
+  .wrapper { background: #eef2ff; padding: 32px 16px; }
+  .card { max-width: 660px; margin: 0 auto; background: #ffffff; border: 1px solid #dbe3ee; border-radius: 16px; overflow: hidden; box-shadow: 0 12px 40px rgba(6,13,31,0.13); }
+
+  /* HEADER */
+  .hd { background: #060d1f; padding: 0; }
+  .hd-stripe { height: 4px; background: #1d4ed8; width: 100%; }
+  .hd-inner { padding: 26px 30px 22px; }
+  .hd-eyebrow { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .hd-badge { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #3b82f6; background: #0f2044; border: 1px solid #1d4ed8; padding: 3px 10px; border-radius: 999px; }
+  .hd-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; display: inline-block; }
+  .hd-live { font-family: 'JetBrains Mono', monospace; font-size: 9px; color: #4ade80; letter-spacing: 1px; }
+  .hd-title { font-size: 22px; font-weight: 700; color: #f0f8ff; letter-spacing: -0.5px; line-height: 1.2; margin: 0 0 6px; }
+  .hd-meta { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #334e7a; }
+  .hd-meta span { color: #3b82f6; }
+
+  /* STATS */
+  .stats { display: table; width: 100%; border-collapse: collapse; border-top: 1px solid #0f1e3d; border-bottom: 1px solid #e2e8f0; }
+  .sc { display: table-cell; width: 25%; padding: 20px 8px 18px; text-align: center; border-right: 1px solid #e2e8f0; background: #ffffff; vertical-align: top; }
+  .sc:last-child { border-right: none; }
+  .sc-icon { font-size: 18px; display: block; margin-bottom: 6px; }
+  .sc-lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: #64748b; margin-bottom: 5px; display: block; }
+  .sc-num { font-family: 'JetBrains Mono', monospace; font-size: 30px; font-weight: 700; line-height: 1; display: block; }
+  .sc-num.total  { color: #0f172a; }
+  .sc-num.passed { color: #16a34a; }
+  .sc-num.failed { color: #dc2626; }
+  .sc-num.skipped{ color: #7c3aed; }
+  .sc-sub { font-size: 10px; color: #94a3b8; margin-top: 4px; display: block; }
+
+  /* BODY */
+  .body { padding: 24px 28px; background: #ffffff; }
+  .section-row { margin-bottom: 14px; }
+  .section-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #94a3b8; }
+  .section-divider { border: none; border-top: 1px solid #e2e8f0; margin: 0; flex: 1; }
+
+  /* INFO GRID */
+  .info-table { width: 100%; border-collapse: separate; border-spacing: 10px; margin: 0 -10px 10px; }
+  .ic { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; vertical-align: top; width: 50%; }
+  .ic-lbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: #94a3b8; display: block; margin-bottom: 4px; }
+  .ic-val { font-size: 13px; font-weight: 500; color: #0f172a; display: block; }
+
+  /* ALLURE */
+  .allure { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px 18px; }
+  .allure-inner { display: table; width: 100%; }
+  .allure-left  { display: table-cell; vertical-align: middle; }
+  .allure-right { display: table-cell; vertical-align: middle; text-align: right; }
+  .allure-icon  { display: inline-block; width: 40px; height: 40px; border-radius: 8px; background: #ffffff; border: 1px solid #e2e8f0; text-align: center; line-height: 40px; font-size: 20px; vertical-align: middle; margin-right: 12px; }
+  .allure-text  { display: inline-block; vertical-align: middle; }
+  .allure-name  { font-size: 13px; font-weight: 500; color: #0f172a; display: block; margin-bottom: 2px; }
+  .allure-url   { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #94a3b8; display: block; word-break: break-all; }
+  .allure-btn   { display: inline-block; padding: 9px 20px; background: #000000; color: #ffffff; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; border-radius: 999px; text-decoration: none; letter-spacing: 0.5px; border: 1px solid #000000; white-space: nowrap; }
+  .allure-btn-unavail { display: inline-block; padding: 9px 20px; background: #f1f5f9; color: #94a3b8; font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 700; border-radius: 999px; text-decoration: none; letter-spacing: 0.5px; border: 1px solid #e2e8f0; white-space: nowrap; }
+
+  /* FOOTER */
+  .footer { background: #060d1f; padding: 14px 28px; border-top: 1px solid #0f1e3d; }
+  .footer-inner { display: table; width: 100%; }
+  .footer-left  { display: table-cell; vertical-align: middle; }
+  .footer-right { display: table-cell; vertical-align: middle; text-align: right; }
+  .footer-logo  { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; color: #1d4ed8; letter-spacing: 1px; }
+  .footer-pipe  { color: #1d3a6e; font-size: 12px; margin: 0 6px; }
+  .footer-text  { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #1d4069; }
+  .footer-ts    { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #1d4069; }
+</style>
+</head>
+<body>
+<div class="wrapper">
+<div class="card">
+
+  <!-- HEADER -->
+  <div class="hd">
+    <div class="hd-stripe"></div>
+    <div class="hd-inner">
+      <div class="hd-eyebrow">
+        <span class="hd-badge">Smoke &middot; Automated</span>
+        <span class="hd-dot"></span>
+        <span class="hd-live">Build complete</span>
+      </div>
+      <h1 class="hd-title">Dakota Marketplace Smoke</h1>
+    </div>
+  </div>
+
+  <!-- STATS ROW -->
+  <div class="stats">
+    <div class="sc">
+      <span class="sc-icon" style="color:#64748b;">&#9776;</span>
+      <span class="sc-lbl">Total</span>
+      <span class="sc-num total">${testStats.total}</span>
+      <span class="sc-sub">test cases</span>
+    </div>
+    <div class="sc">
+      <span class="sc-icon" style="color:#16a34a;">&#10003;</span>
+      <span class="sc-lbl">Passed</span>
+      <span class="sc-num passed">${testStats.passed}</span>
+      <span class="sc-sub">all green</span>
+    </div>
+    <div class="sc">
+      <span class="sc-icon" style="color:#dc2626;">&#10005;</span>
+      <span class="sc-lbl">Failed</span>
+      <span class="sc-num failed">${testStats.failed}</span>
+      <span class="sc-sub">needs fix</span>
+    </div>
+    <div class="sc">
+      <span class="sc-icon" style="color:#7c3aed;">&#9193;</span>
+      <span class="sc-lbl">Skipped</span>
+      <span class="sc-num skipped">${testStats.skipped}</span>
+      <span class="sc-sub">deferred</span>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="body">
+
+    <!-- Run Details -->
+    <div class="section-row">
+      <span class="section-label">Run details</span>
+      <hr class="section-divider" style="display:inline-block;width:80%;margin-left:10px;vertical-align:middle;">
+    </div>
+
+    <table class="info-table">
       <tr>
-        <td align="center" style="padding:24px 16px;">
-          <table width="780" cellpadding="0" cellspacing="0" style="background:#ffffff;border:1px solid #dbe3ee;border-radius:14px;overflow:hidden;box-shadow:0 14px 35px rgba(15,23,42,0.12);">
-            <tr>
-              <td style="padding:22px 26px;background:linear-gradient(135deg,#0f172a 0%,#1e293b 40%,#2563eb 100%);color:#ffffff;">
-                <table width="100%" cellpadding="0" cellspacing="0">
-                  <tr>
-                    <td>
-                      <h2 style="margin:0;font-size:27px;line-height:1.2;">Dakota Marketplace Smoke</h2>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:18px 22px 8px;">
-                <table width="100%" cellpadding="6" cellspacing="6" style="font-size:13px;">
-                  <tr align="center">
-                    <td style="background:#f8fafc;color:#0f172a;border:1px solid #cbd5e1;border-radius:10px;"><div style="font-size:11px;letter-spacing:0.5px;color:#475569;">TOTAL</div><div style="font-size:26px;font-weight:800;line-height:1.2;">${testStats.total}</div></td>
-                    <td style="background:#f8fafc;color:#0f172a;border:1px solid #cbd5e1;border-radius:10px;"><div style="font-size:11px;letter-spacing:0.5px;color:#475569;">PASSED</div><div style="font-size:26px;font-weight:800;line-height:1.2;color:#15803d;">${testStats.passed}</div></td>
-                    <td style="background:#f8fafc;color:#0f172a;border:1px solid #cbd5e1;border-radius:10px;"><div style="font-size:11px;letter-spacing:0.5px;color:#475569;">FAILED</div><div style="font-size:26px;font-weight:800;line-height:1.2;color:#b91c1c;">${testStats.failed}</div></td>
-                    <td style="background:#f8fafc;color:#0f172a;border:1px solid #cbd5e1;border-radius:10px;"><div style="font-size:11px;letter-spacing:0.5px;color:#475569;">SKIPPED</div><div style="font-size:26px;font-weight:800;line-height:1.2;color:#6d28d9;">${testStats.skipped}</div></td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:4px 22px 14px;">
-                <table width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;color:#0f172a;border:1px solid #cbd5e1;border-radius:10px;overflow:hidden;background:#f8fafc;">
-                  <tr><td width="38%" style="padding:11px 12px;background:#f1f5f9;color:#334155;"><strong>Environment</strong></td><td style="padding:11px 12px;font-weight:600;background:#ffffff;">${environmentLabel}</td></tr>
-                  <tr><td style="padding:11px 12px;background:#f1f5f9;color:#334155;"><strong>Portal</strong></td><td style="padding:11px 12px;font-weight:600;background:#f8fafc;">${params.PORTAL ?: 'All Marketplace Access'}</td></tr>
-                  <tr><td style="padding:11px 12px;background:#f1f5f9;color:#334155;"><strong>Duration</strong></td><td style="padding:11px 12px;font-weight:600;background:#ffffff;">${durationString}</td></tr>
-                  <tr><td style="padding:11px 12px;background:#f1f5f9;color:#334155;"><strong>Pass Percentage</strong></td><td style="padding:11px 12px;color:${passRateColor};font-weight:800;background:#f8fafc;">${passRate}%</td></tr>
-                  <tr>
-                    <td style="padding:11px 12px;background:#f1f5f9;color:#334155;"><strong>Allure Report</strong></td>
-                    <td style="padding:10px 12px;background:#ffffff;">
-                      <table cellpadding="0" cellspacing="0" style="width:100%;border:1px solid #cbd5e1;border-radius:10px;overflow:hidden;background:#f8fafc;">
-                        <tr>
-                          <td style="padding:9px 12px;font-size:11px;color:#475569;font-weight:700;letter-spacing:0.5px;border-bottom:1px solid #e2e8f0;">ALLURE REPORT</td>
-                        </tr>
-                        <tr>
-                          <td align="center" style="padding:14px 10px;">
-                            ${allureAvailable ? "<a href=\"${allureUrl}\" style=\"display:inline-block;background:#000000;color:#ffffff;text-decoration:none;padding:10px 18px;font-size:12px;font-weight:800;border-radius:999px;letter-spacing:0.3px;\">OPEN ALLURE REPORT</a>" : "<span style=\"display:inline-block;background:#e2e8f0;color:#64748b;padding:9px 16px;font-size:12px;font-weight:700;border-radius:999px;\">REPORT NOT AVAILABLE</span>"}
-                          </td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:12px 22px;background:#0f172a;color:#cbd5e1;font-size:12px;">
-                Jenkins CI/CD - Dakota Smoke Automation | Generated at ${new Date().format('yyyy-MM-dd HH:mm:ss')}
-              </td>
-            </tr>
-          </table>
+        <td class="ic">
+          <span class="ic-lbl">Environment</span>
+          <span class="ic-val">${environmentLabel}</span>
+        </td>
+        <td class="ic">
+          <span class="ic-lbl">Portal</span>
+          <span class="ic-val">${params.PORTAL ?: 'All Marketplace Access'}</span>
+        </td>
+      </tr>
+      <tr>
+        <td class="ic">
+          <span class="ic-lbl">Duration</span>
+          <span class="ic-val">${durationString}</span>
+        </td>
+        <td class="ic">
+          <span class="ic-lbl">Pass Percentage</span>
+          <span class="ic-val" style="color:${passRateColor};font-weight:700;">${passRate}%</span>
         </td>
       </tr>
     </table>
-  </body>
+
+    <!-- Allure Report -->
+    <div class="section-row" style="margin-top:20px;">
+      <span class="section-label">Allure report</span>
+      <hr class="section-divider" style="display:inline-block;width:73%;margin-left:10px;vertical-align:middle;">
+    </div>
+
+    <div class="allure">
+      <div class="allure-inner">
+        <div class="allure-left">
+          <span class="allure-icon">&#128202;</span>
+          <span class="allure-text">
+            <span class="allure-name">Allure Test Report</span>
+            <span class="allure-url">${allureAvailable ? allureUrl : 'Report not available for this build'}</span>
+          </span>
+        </div>
+        <div class="allure-right">
+          ${allureAvailable ? "<a href=\"${allureUrl}\" class=\"allure-btn\">Open report &rarr;</a>" : "<span class=\"allure-btn-unavail\">Not available</span>"}
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-inner">
+      <div class="footer-left">
+        <span class="footer-logo">JENKINS</span>
+        <span class="footer-pipe">|</span>
+        <span class="footer-text">Dakota Smoke Automation</span>
+      </div>
+      <div class="footer-right">
+        <span class="footer-ts">Generated ${new Date().format('yyyy-MM-dd HH:mm:ss')} UTC</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+</body>
 </html>
 """
     emailext(
