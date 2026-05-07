@@ -1212,29 +1212,9 @@ def sendEmailNotification(String buildStatus) {
                             <!-- BUTTON -->
                             <div style="margin-top:34px;">
 
-                              ${allureAvailable ?
-                                "<a href=\"${allureUrl}\" style=\"
-                                  display:inline-block;
-                                  background:#ffffff;
-                                  color:#2563eb;
-                                  text-decoration:none;
-                                  padding:18px 28px;
-                                  border-radius:18px;
-                                  font-size:14px;
-                                  font-weight:900;
-                                  letter-spacing:1px;
-                                  box-shadow:0 12px 28px rgba(0,0,0,0.18);
-                                \">OPEN REPORT</a>"
-                                :
-                                "<span style=\"
-                                  display:inline-block;
-                                  background:rgba(255,255,255,0.14);
-                                  color:#ffffff;
-                                  padding:18px 28px;
-                                  border-radius:18px;
-                                  font-size:13px;
-                                  font-weight:800;
-                                \">REPORT NOT AVAILABLE</span>"
+                              ${allureAvailable
+                                ? "<a href=\"${allureUrl}\" style=\"display:inline-block;background:#ffffff;color:#2563eb;text-decoration:none;padding:18px 28px;border-radius:18px;font-size:14px;font-weight:900;letter-spacing:1px;box-shadow:0 12px 28px rgba(0,0,0,0.18);\">OPEN REPORT</a>"
+                                : "<span style=\"display:inline-block;background:rgba(255,255,255,0.14);color:#ffffff;padding:18px 28px;border-radius:18px;font-size:13px;font-weight:800;\">REPORT NOT AVAILABLE</span>"
                               }
 
                             </div>
