@@ -811,56 +811,6 @@ def sendEmailNotification(String buildStatus) {
                     <!-- RIGHT SIDE -->
                     <td width="38%" align="center" valign="middle" style="padding:30px;">
 
-                      <!-- Floating Card -->
-                      <table cellpadding="0" cellspacing="0" style="
-                        background:rgba(255,255,255,0.14);
-                        backdrop-filter:blur(8px);
-                        border:1px solid rgba(255,255,255,0.18);
-                        border-radius:28px;
-                        padding:26px 30px;
-                      ">
-
-                        <tr>
-                          <td align="center">
-
-                            <div style="
-                              font-size:13px;
-                              color:#dbeafe;
-                              font-weight:800;
-                              letter-spacing:1px;
-                            ">
-                              PASS RATE
-                            </div>
-
-                            <div style="
-                              margin-top:10px;
-                              font-size:58px;
-                              color:#ffffff;
-                              font-weight:900;
-                              line-height:1;
-                            ">
-                              ${passRate}%
-                            </div>
-
-                            <div style="
-                              margin-top:12px;
-                              display:inline-block;
-                              padding:10px 18px;
-                              border-radius:999px;
-                              background:${testStats.failed > 0 ? '#ef4444' : '#22c55e'};
-                              color:#ffffff;
-                              font-size:12px;
-                              font-weight:900;
-                              letter-spacing:1px;
-                            ">
-                              ${testStats.failed > 0 ? 'FAILED' : 'SUCCESS'}
-                            </div>
-
-                          </td>
-                        </tr>
-
-                      </table>
-
                     </td>
 
                   </tr>
@@ -893,7 +843,7 @@ def sendEmailNotification(String buildStatus) {
                         font-size:22px;
                         margin-bottom:18px;
                       ">
-                        T
+                        
                       </div>
 
                       <div style="
@@ -933,7 +883,7 @@ def sendEmailNotification(String buildStatus) {
                         font-size:22px;
                         margin-bottom:18px;
                       ">
-                        P
+                        
                       </div>
 
                       <div style="
@@ -973,7 +923,7 @@ def sendEmailNotification(String buildStatus) {
                         font-size:22px;
                         margin-bottom:18px;
                       ">
-                        F
+                        
                       </div>
 
                       <div style="
@@ -1013,7 +963,7 @@ def sendEmailNotification(String buildStatus) {
                         font-size:22px;
                         margin-bottom:18px;
                       ">
-                        S
+                        
                       </div>
 
                       <div style="
@@ -1162,7 +1112,7 @@ def sendEmailNotification(String buildStatus) {
                               line-height:74px;
                               font-size:34px;
                             ">
-                              R
+                              
                             </div>
 
                             <div style="
