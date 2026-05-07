@@ -953,6 +953,7 @@ def sendEmailNotification(String buildStatus) {
                         border:1px solid #e2e8f0;
                         border-radius:16px;
                         overflow:hidden;
+                        height:260px;
                       ">
 
                         <!-- HEADER -->
@@ -1044,6 +1045,7 @@ def sendEmailNotification(String buildStatus) {
                         linear-gradient(135deg,#020617 0%,#0f172a 45%,#1d4ed8 100%);
                         border-radius:16px;
                         overflow:hidden;
+                        height:260px;
                       ">
 
                         <tr>
