@@ -766,209 +766,532 @@ def sendEmailNotification(String buildStatus) {
     def allureUrl = "${jobUrl}allure"
     def allureAvailable = params.RUN_ALLURE && fileExists(env.ALLURE_DIR)
     def body = """
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dakota Marketplace Smoke — Test Report</title>
-<style>
-  /* Email-safe typography (many clients block external font imports). */
-  body { margin: 0; padding: 0; background: #eef2ff; font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; }
-  * { box-sizing: border-box; }
-  .wrapper { background: radial-gradient(circle at top,#dbeafe 0%,#eef2ff 35%,#f8fafc 100%); padding: 38px 16px; }
-  .card { max-width: 680px; margin: 0 auto; background: #ffffff; border: 1px solid #dbe3ee; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 70px rgba(6,13,31,0.18); }
+<html>
+  <body style="margin:0;padding:0;background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;">
 
-  /* HEADER */
-  .hd { background: #060d1f; padding: 0; }
-  .hd-stripe { height: 4px; background: linear-gradient(90deg,#60a5fa,#1d4ed8,#7c3aed); width: 100%; }
-  .hd-inner { padding: 28px 32px 24px; }
-  .hd-eyebrow { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
-  .hd-badge { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #bfdbfe; background: rgba(29,78,216,0.18); border: 1px solid rgba(96,165,250,0.65); padding: 4px 10px; border-radius: 999px; }
-  .hd-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; display: inline-block; }
-  .hd-live { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 9px; color: #86efac; letter-spacing: 1px; }
-  .hd-title { font-size: 24px; font-weight: 800; color: #f8fafc; letter-spacing: -0.6px; line-height: 1.15; margin: 0 0 4px; }
-  .hd-subtitle { font-size: 12px; color: #93c5fd; letter-spacing: 0.2px; }
-
-  /* STATS */
-  .stats { display: table; width: 100%; border-collapse: collapse; border-top: 1px solid #0f1e3d; border-bottom: 1px solid #e2e8f0; }
-  .sc { display: table-cell; width: 25%; padding: 20px 10px 18px; text-align: center; border-right: 1px solid #e2e8f0; background: #ffffff; vertical-align: top; }
-  .sc:last-child { border-right: none; }
-  .sc-icon { font-size: 18px; display: block; margin-bottom: 6px; }
-  .sc-lbl { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 9px; letter-spacing: 1.8px; text-transform: uppercase; color: #64748b; margin-bottom: 5px; display: block; }
-  .sc-num { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 30px; font-weight: 800; line-height: 1; display: block; }
-  .sc-num.total  { color: #0f172a; }
-  .sc-num.passed { color: #16a34a; }
-  .sc-num.failed { color: #dc2626; }
-  .sc-num.skipped{ color: #7c3aed; }
-  .sc-sub { font-size: 10px; color: #94a3b8; margin-top: 4px; display: block; }
-  .sc-meter { height: 5px; background: #e2e8f0; border-radius: 999px; margin: 8px 8px 0; overflow: hidden; }
-  .sc-fill { height: 5px; border-radius: 999px; }
-  .sc-fill.total { width: 100%; background: #64748b; }
-  .sc-fill.passed { background: #16a34a; }
-  .sc-fill.failed { background: #dc2626; }
-  .sc-fill.skipped { background: #7c3aed; }
-
-  /* BODY */
-  .body { padding: 26px 30px; background: #ffffff; }
-  .section-row { margin-bottom: 14px; }
-  .section-label { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #64748b; background:#f8fafc; border:1px solid #e2e8f0; border-radius:999px; padding:4px 10px; }
-  .health-chip { display:inline-block; margin-left:10px; font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color:#0f172a; background:${healthBg}; border:1px solid ${healthBorder}; border-radius:999px; padding:4px 10px; }
-  .section-divider { border: none; border-top: 1px solid #e2e8f0; margin: 0; flex: 1; }
-
-  /* INFO GRID */
-  .info-table { width: 100%; border-collapse: separate; border-spacing: 10px; margin: 0 -10px 10px; }
-  .ic { background: linear-gradient(145deg,#f8fafc 0%,#ffffff 100%); border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; vertical-align: top; width: 50%; box-shadow: 0 8px 20px rgba(15,23,42,0.07); }
-  .ic-lbl { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 9px; letter-spacing: 1.2px; text-transform: uppercase; color: #94a3b8; display: block; margin-bottom: 4px; }
-  .ic-val { font-size: 13px; font-weight: 700; color: #0f172a; display: block; }
-  .ic-val-strong { font-size: 15px; font-weight: 800; letter-spacing: -0.2px; }
-
-  /* ALLURE */
-  .allure { background: linear-gradient(135deg,#f8fafc 0%,#eef2ff 100%); border: 1px solid #dbe3ee; border-radius: 14px; padding: 16px 18px; box-shadow: inset 0 1px 0 #ffffff; }
-  .allure-inner { display: table; width: 100%; }
-  .allure-left  { display: table-cell; vertical-align: middle; }
-  .allure-right { display: table-cell; vertical-align: middle; text-align: right; }
-  .allure-icon  { display: inline-block; width: 42px; height: 42px; border-radius: 10px; background: #ffffff; border: 1px solid #e2e8f0; text-align: center; line-height: 42px; font-size: 20px; vertical-align: middle; margin-right: 12px; }
-  .allure-text  { display: inline-block; vertical-align: middle; }
-  .allure-name  { font-size: 13px; font-weight: 700; color: #0f172a; display: block; margin-bottom: 2px; }
-  .allure-url   { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 10px; color: #94a3b8; display: block; word-break: break-all; }
-  .allure-btn   { display: inline-block; padding: 11px 18px; background: linear-gradient(180deg,#111111,#000000); color: #ffffff; font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 12px; font-weight: 900; border-radius: 999px; text-decoration: none; letter-spacing: 0.7px; border: 1px solid #000000; white-space: nowrap; box-shadow: 0 12px 24px rgba(0,0,0,0.2); }
-  .allure-btn-unavail { display: inline-block; padding: 11px 18px; background: #f1f5f9; color: #94a3b8; font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 12px; font-weight: 900; border-radius: 999px; text-decoration: none; letter-spacing: 0.7px; border: 1px solid #e2e8f0; white-space: nowrap; }
-
-  /* FOOTER */
-  .footer { background: #060d1f; padding: 16px 30px; border-top: 1px solid #0f1e3d; }
-  .footer-inner { display: table; width: 100%; }
-  .footer-left  { display: table-cell; vertical-align: middle; }
-  .footer-right { display: table-cell; vertical-align: middle; text-align: right; }
-  .footer-logo  { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 10px; font-weight: 800; color: #60a5fa; letter-spacing: 1px; }
-  .footer-pipe  { color: #1d3a6e; font-size: 12px; margin: 0 6px; }
-  .footer-text  { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 10px; color: #1d4069; }
-  .footer-ts    { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 10px; color: #1d4069; }
-</style>
-</head>
-<body>
-<div class="wrapper">
-<div class="card">
-
-  <!-- HEADER -->
-  <div class="hd">
-    <div class="hd-stripe"></div>
-    <div class="hd-inner">
-      <div class="hd-eyebrow">
-        <span class="hd-badge">Smoke &middot; Automated</span>
-        <span class="hd-dot"></span>
-        <span class="hd-live">Build complete</span>
-      </div>
-      <h1 class="hd-title">Dakota Marketplace Smoke</h1>
-      <div class="hd-subtitle">Automation quality summary</div>
-    </div>
-  </div>
-
-  <!-- STATS ROW -->
-  <div class="stats">
-    <div class="sc">
-      <span class="sc-icon" style="color:#64748b;">&#9776;</span>
-      <span class="sc-lbl">Total</span>
-      <span class="sc-num total">${testStats.total}</span>
-      <span class="sc-sub">test cases</span>
-      <div class="sc-meter"><span class="sc-fill total"></span></div>
-    </div>
-    <div class="sc">
-      <span class="sc-icon" style="color:#16a34a;">&#10003;</span>
-      <span class="sc-lbl">Passed</span>
-      <span class="sc-num passed">${testStats.passed}</span>
-      <span class="sc-sub">passed checks</span>
-      <div class="sc-meter"><span class="sc-fill passed" style="width:${passedPercent}%;"></span></div>
-    </div>
-    <div class="sc">
-      <span class="sc-icon" style="color:#dc2626;">&#10005;</span>
-      <span class="sc-lbl">Failed</span>
-      <span class="sc-num failed">${testStats.failed}</span>
-      <span class="sc-sub">action required</span>
-      <div class="sc-meter"><span class="sc-fill failed" style="width:${failedPercent}%;"></span></div>
-    </div>
-    <div class="sc">
-      <span class="sc-icon" style="color:#7c3aed;">&#9193;</span>
-      <span class="sc-lbl">Skipped</span>
-      <span class="sc-num skipped">${testStats.skipped}</span>
-      <span class="sc-sub">not executed</span>
-      <div class="sc-meter"><span class="sc-fill skipped" style="width:${skippedPercent}%;"></span></div>
-    </div>
-  </div>
-
-  <!-- BODY -->
-  <div class="body">
-
-    <!-- Run Details -->
-    <div class="section-row">
-      <span class="section-label">Run details</span>
-      <span class="health-chip">&#9679; ${healthLabel}</span>
-      <hr class="section-divider" style="display:inline-block;width:80%;margin-left:10px;vertical-align:middle;">
-    </div>
-
-    <table class="info-table">
+    <!-- Main Wrapper -->
+    <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 14px;background:#f1f5f9;">
       <tr>
-        <td class="ic">
-          <span class="ic-lbl">Environment</span>
-          <span class="ic-val ic-val-strong">${environmentLabel}</span>
-        </td>
-        <td class="ic">
-          <span class="ic-lbl">Portal</span>
-          <span class="ic-val">${params.PORTAL ?: 'All Marketplace Access'}</span>
-        </td>
-      </tr>
-      <tr>
-        <td class="ic">
-          <span class="ic-lbl">Duration</span>
-          <span class="ic-val">${durationString}</span>
-        </td>
-        <td class="ic">
-          <span class="ic-lbl">Pass Percentage</span>
-          <span class="ic-val ic-val-strong" style="color:${passRateColor};">${passRate}%</span>
+        <td align="center">
+
+          <!-- Main Email Card -->
+          <table width="860" cellpadding="0" cellspacing="0" style="
+            background:#ffffff;
+            border-radius:32px;
+            overflow:hidden;
+            box-shadow:0 30px 80px rgba(15,23,42,0.12);
+          ">
+
+            <!-- TOP HERO -->
+            <tr>
+              <td style="
+                padding:0;
+                background:
+                linear-gradient(135deg,#7c3aed 0%,#2563eb 50%,#06b6d4 100%);
+              ">
+
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+
+                    <!-- LEFT -->
+                    <td width="62%" style="padding:50px 44px;">
+
+                      <div style="
+                        display:inline-block;
+                        background:rgba(255,255,255,0.16);
+                        color:#ffffff;
+                        padding:8px 16px;
+                        border-radius:999px;
+                        font-size:11px;
+                        font-weight:800;
+                        letter-spacing:1px;
+                        text-transform:uppercase;
+                      ">
+                        Dakota Automation Pipeline
+                      </div>
+
+                      <h1 style="
+                        margin:22px 0 12px;
+                        color:#ffffff;
+                        font-size:44px;
+                        line-height:1.2;
+                        font-weight:900;
+                      ">
+                        Smoke Test <br> Execution Report
+                      </h1>
+
+                      <div style="
+                        color:rgba(255,255,255,0.92);
+                        font-size:15px;
+                        line-height:1.9;
+                        max-width:500px;
+                      ">
+                        Complete automation execution summary with modern reporting,
+                        test analytics, pipeline statistics, and Allure dashboard access.
+                      </div>
+
+                    </td>
+
+                    <!-- RIGHT SIDE -->
+                    <td width="38%" align="center" valign="middle" style="padding:30px;">
+
+                      <!-- Floating Card -->
+                      <table cellpadding="0" cellspacing="0" style="
+                        background:rgba(255,255,255,0.14);
+                        backdrop-filter:blur(8px);
+                        border:1px solid rgba(255,255,255,0.18);
+                        border-radius:28px;
+                        padding:26px 30px;
+                      ">
+
+                        <tr>
+                          <td align="center">
+
+                            <div style="
+                              font-size:13px;
+                              color:#dbeafe;
+                              font-weight:800;
+                              letter-spacing:1px;
+                            ">
+                              PASS RATE
+                            </div>
+
+                            <div style="
+                              margin-top:10px;
+                              font-size:58px;
+                              color:#ffffff;
+                              font-weight:900;
+                              line-height:1;
+                            ">
+                              ${passRate}%
+                            </div>
+
+                            <div style="
+                              margin-top:12px;
+                              display:inline-block;
+                              padding:10px 18px;
+                              border-radius:999px;
+                              background:${testStats.failed > 0 ? '#ef4444' : '#22c55e'};
+                              color:#ffffff;
+                              font-size:12px;
+                              font-weight:900;
+                              letter-spacing:1px;
+                            ">
+                              ${testStats.failed > 0 ? 'FAILED' : 'PASSED'}
+                            </div>
+
+                          </td>
+                        </tr>
+
+                      </table>
+
+                    </td>
+
+                  </tr>
+                </table>
+
+              </td>
+            </tr>
+
+            <!-- STATS SECTION -->
+            <tr>
+              <td style="padding:34px 36px 10px;">
+
+                <table width="100%" cellpadding="10" cellspacing="10">
+                  <tr>
+
+                    <!-- TOTAL -->
+                    <td width="25%" style="
+                      background:#f8fafc;
+                      border-radius:24px;
+                      padding:28px 20px;
+                    ">
+
+                      <div style="
+                        width:52px;
+                        height:52px;
+                        border-radius:16px;
+                        background:#e2e8f0;
+                        text-align:center;
+                        line-height:52px;
+                        font-size:22px;
+                        margin-bottom:18px;
+                      ">
+                        📊
+                      </div>
+
+                      <div style="
+                        font-size:13px;
+                        color:#64748b;
+                        font-weight:800;
+                        letter-spacing:1px;
+                      ">
+                        TOTAL TESTS
+                      </div>
+
+                      <div style="
+                        margin-top:10px;
+                        font-size:38px;
+                        font-weight:900;
+                        color:#0f172a;
+                      ">
+                        ${testStats.total}
+                      </div>
+
+                    </td>
+
+                    <!-- PASSED -->
+                    <td width="25%" style="
+                      background:#ecfdf5;
+                      border-radius:24px;
+                      padding:28px 20px;
+                    ">
+
+                      <div style="
+                        width:52px;
+                        height:52px;
+                        border-radius:16px;
+                        background:#bbf7d0;
+                        text-align:center;
+                        line-height:52px;
+                        font-size:22px;
+                        margin-bottom:18px;
+                      ">
+                        ✅
+                      </div>
+
+                      <div style="
+                        font-size:13px;
+                        color:#15803d;
+                        font-weight:800;
+                        letter-spacing:1px;
+                      ">
+                        PASSED
+                      </div>
+
+                      <div style="
+                        margin-top:10px;
+                        font-size:38px;
+                        font-weight:900;
+                        color:#15803d;
+                      ">
+                        ${testStats.passed}
+                      </div>
+
+                    </td>
+
+                    <!-- FAILED -->
+                    <td width="25%" style="
+                      background:#fef2f2;
+                      border-radius:24px;
+                      padding:28px 20px;
+                    ">
+
+                      <div style="
+                        width:52px;
+                        height:52px;
+                        border-radius:16px;
+                        background:#fecaca;
+                        text-align:center;
+                        line-height:52px;
+                        font-size:22px;
+                        margin-bottom:18px;
+                      ">
+                        ❌
+                      </div>
+
+                      <div style="
+                        font-size:13px;
+                        color:#b91c1c;
+                        font-weight:800;
+                        letter-spacing:1px;
+                      ">
+                        FAILED
+                      </div>
+
+                      <div style="
+                        margin-top:10px;
+                        font-size:38px;
+                        font-weight:900;
+                        color:#b91c1c;
+                      ">
+                        ${testStats.failed}
+                      </div>
+
+                    </td>
+
+                    <!-- SKIPPED -->
+                    <td width="25%" style="
+                      background:#faf5ff;
+                      border-radius:24px;
+                      padding:28px 20px;
+                    ">
+
+                      <div style="
+                        width:52px;
+                        height:52px;
+                        border-radius:16px;
+                        background:#e9d5ff;
+                        text-align:center;
+                        line-height:52px;
+                        font-size:22px;
+                        margin-bottom:18px;
+                      ">
+                        ⏭️
+                      </div>
+
+                      <div style="
+                        font-size:13px;
+                        color:#7c3aed;
+                        font-weight:800;
+                        letter-spacing:1px;
+                      ">
+                        SKIPPED
+                      </div>
+
+                      <div style="
+                        margin-top:10px;
+                        font-size:38px;
+                        font-weight:900;
+                        color:#7c3aed;
+                      ">
+                        ${testStats.skipped}
+                      </div>
+
+                    </td>
+
+                  </tr>
+                </table>
+
+              </td>
+            </tr>
+
+            <!-- DETAILS + REPORT -->
+            <tr>
+              <td style="padding:18px 36px 40px;">
+
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+
+                    <!-- LEFT DETAILS -->
+                    <td width="54%" valign="top">
+
+                      <table width="100%" cellpadding="0" cellspacing="0" style="
+                        background:#ffffff;
+                        border:1px solid #e2e8f0;
+                        border-radius:28px;
+                        overflow:hidden;
+                      ">
+
+                        <!-- HEADER -->
+                        <tr>
+                          <td style="
+                            padding:24px 26px;
+                            background:#0f172a;
+                            color:#ffffff;
+                          ">
+
+                            <div style="
+                              font-size:22px;
+                              font-weight:900;
+                            ">
+                              Execution Details
+                            </div>
+
+                          </td>
+                        </tr>
+
+                        <!-- ITEMS -->
+                        <tr>
+                          <td style="padding:0 26px;">
+
+                            <!-- ENV -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:1px dashed #cbd5e1;">
+                              <tr>
+                                <td style="padding:18px 0;font-size:13px;font-weight:800;color:#64748b;">
+                                  Environment
+                                </td>
+
+                                <td align="right" style="padding:18px 0;font-size:14px;font-weight:800;color:#0f172a;">
+                                  ${environmentLabel}
+                                </td>
+                              </tr>
+                            </table>
+
+                            <!-- PORTAL -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:1px dashed #cbd5e1;">
+                              <tr>
+                                <td style="padding:18px 0;font-size:13px;font-weight:800;color:#64748b;">
+                                  Portal
+                                </td>
+
+                                <td align="right" style="padding:18px 0;font-size:14px;font-weight:800;color:#0f172a;">
+                                  ${params.PORTAL ?: 'All Marketplace Access'}
+                                </td>
+                              </tr>
+                            </table>
+
+                            <!-- DURATION -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:1px dashed #cbd5e1;">
+                              <tr>
+                                <td style="padding:18px 0;font-size:13px;font-weight:800;color:#64748b;">
+                                  Duration
+                                </td>
+
+                                <td align="right" style="padding:18px 0;font-size:14px;font-weight:800;color:#0f172a;">
+                                  ${durationString}
+                                </td>
+                              </tr>
+                            </table>
+
+                            <!-- PASS PERCENTAGE -->
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                              <tr>
+                                <td style="padding:18px 0;font-size:13px;font-weight:800;color:#64748b;">
+                                  Pass Percentage
+                                </td>
+
+                                <td align="right" style="padding:18px 0;font-size:14px;font-weight:900;color:${passRateColor};">
+                                  ${passRate}%
+                                </td>
+                              </tr>
+                            </table>
+
+                          </td>
+                        </tr>
+
+                      </table>
+
+                    </td>
+
+                    <!-- RIGHT REPORT -->
+                    <td width="46%" valign="top" style="padding-left:18px;">
+
+                      <table width="100%" cellpadding="0" cellspacing="0" style="
+                        background:
+                        linear-gradient(135deg,#0f172a 0%,#1e293b 45%,#2563eb 100%);
+                        border-radius:28px;
+                        overflow:hidden;
+                      ">
+
+                        <tr>
+                          <td style="padding:34px 30px;">
+
+                            <div style="
+                              width:74px;
+                              height:74px;
+                              border-radius:22px;
+                              background:rgba(255,255,255,0.12);
+                              text-align:center;
+                              line-height:74px;
+                              font-size:34px;
+                            ">
+                              🚀
+                            </div>
+
+                            <div style="
+                              margin-top:24px;
+                              color:#ffffff;
+                              font-size:30px;
+                              line-height:1.3;
+                              font-weight:900;
+                            ">
+                              Allure Report
+                            </div>
+
+                            <div style="
+                              margin-top:12px;
+                              color:#dbeafe;
+                              font-size:15px;
+                              line-height:1.8;
+                            ">
+                              Access complete execution analytics, screenshots,
+                              logs, failed validations, and test evidence.
+                            </div>
+
+                            <!-- BUTTON -->
+                            <div style="margin-top:34px;">
+
+                              ${allureAvailable ?
+                                "<a href=\"${allureUrl}\" style=\"
+                                  display:inline-block;
+                                  background:#ffffff;
+                                  color:#2563eb;
+                                  text-decoration:none;
+                                  padding:18px 28px;
+                                  border-radius:18px;
+                                  font-size:14px;
+                                  font-weight:900;
+                                  letter-spacing:1px;
+                                  box-shadow:0 12px 28px rgba(0,0,0,0.18);
+                                \">OPEN REPORT</a>"
+                                :
+                                "<span style=\"
+                                  display:inline-block;
+                                  background:rgba(255,255,255,0.14);
+                                  color:#ffffff;
+                                  padding:18px 28px;
+                                  border-radius:18px;
+                                  font-size:13px;
+                                  font-weight:800;
+                                \">REPORT NOT AVAILABLE</span>"
+                              }
+
+                            </div>
+
+                          </td>
+                        </tr>
+
+                      </table>
+
+                    </td>
+
+                  </tr>
+                </table>
+
+              </td>
+            </tr>
+
+            <!-- FOOTER -->
+            <tr>
+              <td style="
+                background:#ffffff;
+                border-top:1px solid #e2e8f0;
+                padding:24px 36px;
+              ">
+
+                <table width="100%" cellpadding="0" cellspacing="0">
+                  <tr>
+
+                    <td style="
+                      color:#0f172a;
+                      font-size:14px;
+                      font-weight:800;
+                    ">
+                      Dakota Marketplace Automation
+                    </td>
+
+                    <td align="right" style="
+                      color:#64748b;
+                      font-size:12px;
+                      font-weight:700;
+                    ">
+                      Powered by Jenkins • Selenium • Pytest • Allure
+                    </td>
+
+                  </tr>
+                </table>
+
+              </td>
+            </tr>
+
+          </table>
+
         </td>
       </tr>
     </table>
 
-    <!-- Allure Report -->
-    <div class="section-row" style="margin-top:20px;">
-      <span class="section-label">Allure report</span>
-      <hr class="section-divider" style="display:inline-block;width:73%;margin-left:10px;vertical-align:middle;">
-    </div>
-
-    <div class="allure">
-      <div class="allure-inner">
-        <div class="allure-left">
-          <span class="allure-icon">&#128202;</span>
-          <span class="allure-text">
-            <span class="allure-name">Allure Test Report</span>
-            <span class="allure-url">${allureAvailable ? allureUrl : 'Report not available for this build'}</span>
-          </span>
-        </div>
-        <div class="allure-right">
-          ${allureAvailable ? "<a href=\"${allureUrl}\" class=\"allure-btn\">Open report &rarr;</a>" : "<span class=\"allure-btn-unavail\">Not available</span>"}
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- FOOTER -->
-  <div class="footer">
-    <div class="footer-inner">
-      <div class="footer-left">
-        <span class="footer-logo">JENKINS</span>
-        <span class="footer-pipe">|</span>
-        <span class="footer-text">Dakota Smoke Automation</span>
-      </div>
-      <div class="footer-right">
-        <span class="footer-ts">Generated ${new Date().format('yyyy-MM-dd HH:mm:ss')} UTC</span>
-      </div>
-    </div>
-  </div>
-
-</div>
-</div>
-</body>
+  </body>
 </html>
 """
     emailext(
