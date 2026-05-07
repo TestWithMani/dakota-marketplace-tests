@@ -746,7 +746,7 @@ def sendEmailNotification(String buildStatus) {
         echo "No recipients configured, skipping email."
         return
     }
-    def subject = "Dakota Marketplace Smoke Test Report | ${new Date().format('MMM dd, yyyy')}"
+    def subject = "Dakota Smoke Test Report | ${new Date().format('MMM dd, yyyy')}"
     def durationString = (currentBuild.durationString ?: 'N/A').replace(' and counting', '')
     // Force double math for Jenkins sandbox compatibility, then round to 1 decimal.
     def passRate = 0.0
