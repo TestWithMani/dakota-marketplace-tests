@@ -972,16 +972,16 @@ def sendEmailNotification(String buildStatus) {
 
                         <!-- ITEMS -->
                         <tr>
-                          <td style="padding:0 18px;">
+                          <td style="padding:0;">
 
                             <!-- ENV -->
                             <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:1px dashed #cbd5e1;background:#f8fbff;">
                               <tr>
-                                <td style="padding:14px 0;font-size:12px;font-weight:800;color:#1d4ed8;">
+                                <td style="padding:14px 18px;font-size:12px;font-weight:800;color:#1d4ed8;">
                                   Environment
                                 </td>
 
-                                <td align="right" style="padding:14px 0;font-size:13px;font-weight:800;color:#0f172a;">
+                                <td align="right" style="padding:14px 18px;font-size:13px;font-weight:800;color:#0f172a;">
                                   ${environmentLabel}
                                 </td>
                               </tr>
@@ -990,11 +990,11 @@ def sendEmailNotification(String buildStatus) {
                             <!-- PORTAL -->
                             <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:1px dashed #cbd5e1;background:#f5f3ff;">
                               <tr>
-                                <td style="padding:14px 0;font-size:12px;font-weight:800;color:#7c3aed;">
+                                <td style="padding:14px 18px;font-size:12px;font-weight:800;color:#7c3aed;">
                                   Portal
                                 </td>
 
-                                <td align="right" style="padding:14px 0;font-size:13px;font-weight:800;color:#0f172a;">
+                                <td align="right" style="padding:14px 18px;font-size:13px;font-weight:800;color:#0f172a;">
                                   ${params.PORTAL ?: 'All Marketplace Access'}
                                 </td>
                               </tr>
@@ -1003,11 +1003,11 @@ def sendEmailNotification(String buildStatus) {
                             <!-- DURATION -->
                             <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:1px dashed #cbd5e1;background:#ecfdf5;">
                               <tr>
-                                <td style="padding:14px 0;font-size:12px;font-weight:800;color:#15803d;">
+                                <td style="padding:14px 18px;font-size:12px;font-weight:800;color:#15803d;">
                                   Duration
                                 </td>
 
-                                <td align="right" style="padding:14px 0;font-size:13px;font-weight:800;color:#0f172a;">
+                                <td align="right" style="padding:14px 18px;font-size:13px;font-weight:800;color:#0f172a;">
                                   ${durationString}
                                 </td>
                               </tr>
@@ -1016,11 +1016,11 @@ def sendEmailNotification(String buildStatus) {
                             <!-- PASS PERCENTAGE -->
                             <table width="100%" cellpadding="0" cellspacing="0" style="background:#fffbeb;">
                               <tr>
-                                <td style="padding:14px 0;font-size:12px;font-weight:800;color:#b45309;">
+                                <td style="padding:14px 18px;font-size:12px;font-weight:800;color:#b45309;">
                                   Pass Percentage
                                 </td>
 
-                                <td align="right" style="padding:14px 0;font-size:13px;font-weight:900;color:${passRateColor};">
+                                <td align="right" style="padding:14px 18px;font-size:13px;font-weight:900;color:${passRateColor};">
                                   ${passRate}%
                                 </td>
                               </tr>
