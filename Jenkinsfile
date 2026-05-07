@@ -767,10 +767,10 @@ def sendEmailNotification(String buildStatus) {
     def allureAvailable = params.RUN_ALLURE && fileExists(env.ALLURE_DIR)
     def body = """
 <html>
-  <body style="margin:0;padding:0;background:#f1f5f9;font-family:'Segoe UI',Arial,sans-serif;">
+  <body style="margin:0;padding:0;background:#e9eef8;font-family:'Trebuchet MS','Segoe UI',Arial,sans-serif;">
 
     <!-- Main Wrapper -->
-    <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 14px;background:#f1f5f9;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="padding:42px 14px;background:linear-gradient(135deg,#e9eef8 0%,#f5f7fb 100%);">
       <tr>
         <td align="center">
 
@@ -779,7 +779,7 @@ def sendEmailNotification(String buildStatus) {
             background:#ffffff;
             border-radius:32px;
             overflow:hidden;
-            box-shadow:0 30px 80px rgba(15,23,42,0.12);
+            box-shadow:0 30px 80px rgba(15,23,42,0.16);
           ">
 
             <!-- TOP HERO -->
@@ -787,7 +787,7 @@ def sendEmailNotification(String buildStatus) {
               <td style="
                 padding:0;
                 background:
-                linear-gradient(135deg,#7c3aed 0%,#2563eb 50%,#06b6d4 100%);
+                linear-gradient(135deg,#0f172a 0%,#1e3a8a 45%,#0ea5e9 100%);
               ">
 
                 <table width="100%" cellpadding="0" cellspacing="0">
@@ -818,7 +818,7 @@ def sendEmailNotification(String buildStatus) {
 
                     <!-- TOTAL -->
                     <td width="25%" style="
-                      background:#f8fafc;
+                      background:#eef2f7;
                       border-radius:24px;
                       padding:28px 20px;
                     ">
@@ -845,7 +845,7 @@ def sendEmailNotification(String buildStatus) {
 
                     <!-- PASSED -->
                     <td width="25%" style="
-                      background:#ecfdf5;
+                      background:#e9f9f1;
                       border-radius:24px;
                       padding:28px 20px;
                     ">
@@ -872,7 +872,7 @@ def sendEmailNotification(String buildStatus) {
 
                     <!-- FAILED -->
                     <td width="25%" style="
-                      background:#fef2f2;
+                      background:#fceff1;
                       border-radius:24px;
                       padding:28px 20px;
                     ">
@@ -899,7 +899,7 @@ def sendEmailNotification(String buildStatus) {
 
                     <!-- SKIPPED -->
                     <td width="25%" style="
-                      background:#faf5ff;
+                      background:#f3efff;
                       border-radius:24px;
                       padding:28px 20px;
                     ">
@@ -951,7 +951,7 @@ def sendEmailNotification(String buildStatus) {
                         <tr>
                           <td style="
                             padding:24px 26px;
-                            background:#0f172a;
+                        background:#020617;
                             color:#ffffff;
                           ">
 
@@ -1033,7 +1033,7 @@ def sendEmailNotification(String buildStatus) {
 
                       <table width="100%" cellpadding="0" cellspacing="0" style="
                         background:
-                        linear-gradient(135deg,#0f172a 0%,#1e293b 45%,#2563eb 100%);
+                        linear-gradient(135deg,#020617 0%,#0f172a 45%,#1d4ed8 100%);
                         border-radius:28px;
                         overflow:hidden;
                       ">
@@ -1077,7 +1077,7 @@ def sendEmailNotification(String buildStatus) {
                             <div style="margin-top:34px;">
 
                               ${allureAvailable
-                                ? "<a href=\"${allureUrl}\" style=\"display:inline-block;background:#ffffff;color:#2563eb;text-decoration:none;padding:18px 28px;border-radius:18px;font-size:14px;font-weight:900;letter-spacing:1px;box-shadow:0 12px 28px rgba(0,0,0,0.18);\">OPEN REPORT</a>"
+                                ? "<a href=\"${allureUrl}\" style=\"display:inline-block;background:#ffffff;color:#0f172a;text-decoration:none;padding:18px 28px;border-radius:18px;font-size:14px;font-weight:900;letter-spacing:1px;box-shadow:0 12px 28px rgba(0,0,0,0.22);\">OPEN REPORT</a>"
                                 : "<span style=\"display:inline-block;background:rgba(255,255,255,0.14);color:#ffffff;padding:18px 28px;border-radius:18px;font-size:13px;font-weight:800;\">REPORT NOT AVAILABLE</span>"
                               }
 
@@ -1099,8 +1099,8 @@ def sendEmailNotification(String buildStatus) {
             <!-- FOOTER -->
             <tr>
               <td style="
-                background:#ffffff;
-                border-top:1px solid #e2e8f0;
+                background:#000000;
+                border-top:1px solid #111827;
                 padding:24px 36px;
               ">
 
@@ -1108,7 +1108,7 @@ def sendEmailNotification(String buildStatus) {
                   <tr>
 
                     <td style="
-                      color:#0f172a;
+                      color:#ffffff;
                       font-size:14px;
                       font-weight:800;
                     ">
@@ -1116,7 +1116,7 @@ def sendEmailNotification(String buildStatus) {
                     </td>
 
                     <td align="right" style="
-                      color:#64748b;
+                      color:#ffffff;
                       font-size:12px;
                       font-weight:700;
                     "></td>
