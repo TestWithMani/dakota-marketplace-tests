@@ -770,22 +770,23 @@ def sendEmailNotification(String buildStatus) {
   /* Email-safe typography (many clients block external font imports). */
   body { margin: 0; padding: 0; background: #eef2ff; font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif; }
   * { box-sizing: border-box; }
-  .wrapper { background: linear-gradient(135deg,#eef2ff 0%,#f8fafc 55%,#eef2ff 100%); padding: 32px 16px; }
-  .card { max-width: 680px; margin: 0 auto; background: #ffffff; border: 1px solid #dbe3ee; border-radius: 18px; overflow: hidden; box-shadow: 0 16px 55px rgba(6,13,31,0.16); }
+  .wrapper { background: radial-gradient(circle at top,#dbeafe 0%,#eef2ff 35%,#f8fafc 100%); padding: 38px 16px; }
+  .card { max-width: 680px; margin: 0 auto; background: #ffffff; border: 1px solid #dbe3ee; border-radius: 20px; overflow: hidden; box-shadow: 0 20px 70px rgba(6,13,31,0.18); }
 
   /* HEADER */
   .hd { background: #060d1f; padding: 0; }
   .hd-stripe { height: 4px; background: linear-gradient(90deg,#60a5fa,#1d4ed8,#7c3aed); width: 100%; }
-  .hd-inner { padding: 26px 30px 22px; }
+  .hd-inner { padding: 28px 32px 24px; }
   .hd-eyebrow { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
   .hd-badge { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #bfdbfe; background: rgba(29,78,216,0.18); border: 1px solid rgba(96,165,250,0.65); padding: 4px 10px; border-radius: 999px; }
   .hd-dot { width: 6px; height: 6px; border-radius: 50%; background: #22c55e; display: inline-block; }
   .hd-live { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 9px; color: #86efac; letter-spacing: 1px; }
-  .hd-title { font-size: 24px; font-weight: 800; color: #f8fafc; letter-spacing: -0.6px; line-height: 1.15; margin: 0; }
+  .hd-title { font-size: 24px; font-weight: 800; color: #f8fafc; letter-spacing: -0.6px; line-height: 1.15; margin: 0 0 4px; }
+  .hd-subtitle { font-size: 12px; color: #93c5fd; letter-spacing: 0.2px; }
 
   /* STATS */
   .stats { display: table; width: 100%; border-collapse: collapse; border-top: 1px solid #0f1e3d; border-bottom: 1px solid #e2e8f0; }
-  .sc { display: table-cell; width: 25%; padding: 18px 8px 16px; text-align: center; border-right: 1px solid #e2e8f0; background: #ffffff; vertical-align: top; }
+  .sc { display: table-cell; width: 25%; padding: 20px 10px 18px; text-align: center; border-right: 1px solid #e2e8f0; background: #ffffff; vertical-align: top; }
   .sc:last-child { border-right: none; }
   .sc-icon { font-size: 18px; display: block; margin-bottom: 6px; }
   .sc-lbl { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 9px; letter-spacing: 1.8px; text-transform: uppercase; color: #64748b; margin-bottom: 5px; display: block; }
@@ -797,20 +798,20 @@ def sendEmailNotification(String buildStatus) {
   .sc-sub { font-size: 10px; color: #94a3b8; margin-top: 4px; display: block; }
 
   /* BODY */
-  .body { padding: 24px 28px; background: #ffffff; }
+  .body { padding: 26px 30px; background: #ffffff; }
   .section-row { margin-bottom: 14px; }
-  .section-label { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #94a3b8; }
+  .section-label { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #64748b; background:#f8fafc; border:1px solid #e2e8f0; border-radius:999px; padding:4px 10px; }
   .section-divider { border: none; border-top: 1px solid #e2e8f0; margin: 0; flex: 1; }
 
   /* INFO GRID */
   .info-table { width: 100%; border-collapse: separate; border-spacing: 10px; margin: 0 -10px 10px; }
-  .ic { background: linear-gradient(135deg,#f8fafc 0%,#ffffff 100%); border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; vertical-align: top; width: 50%; box-shadow: 0 6px 18px rgba(15,23,42,0.06); }
+  .ic { background: linear-gradient(145deg,#f8fafc 0%,#ffffff 100%); border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; vertical-align: top; width: 50%; box-shadow: 0 8px 20px rgba(15,23,42,0.07); }
   .ic-lbl { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 9px; letter-spacing: 1.2px; text-transform: uppercase; color: #94a3b8; display: block; margin-bottom: 4px; }
   .ic-val { font-size: 13px; font-weight: 700; color: #0f172a; display: block; }
   .ic-val-strong { font-size: 15px; font-weight: 800; letter-spacing: -0.2px; }
 
   /* ALLURE */
-  .allure { background: linear-gradient(135deg,#f8fafc 0%,#eef2ff 100%); border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 18px; }
+  .allure { background: linear-gradient(135deg,#f8fafc 0%,#eef2ff 100%); border: 1px solid #dbe3ee; border-radius: 14px; padding: 16px 18px; box-shadow: inset 0 1px 0 #ffffff; }
   .allure-inner { display: table; width: 100%; }
   .allure-left  { display: table-cell; vertical-align: middle; }
   .allure-right { display: table-cell; vertical-align: middle; text-align: right; }
@@ -818,11 +819,11 @@ def sendEmailNotification(String buildStatus) {
   .allure-text  { display: inline-block; vertical-align: middle; }
   .allure-name  { font-size: 13px; font-weight: 700; color: #0f172a; display: block; margin-bottom: 2px; }
   .allure-url   { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 10px; color: #94a3b8; display: block; word-break: break-all; }
-  .allure-btn   { display: inline-block; padding: 11px 18px; background: #000000; color: #ffffff; font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 12px; font-weight: 900; border-radius: 999px; text-decoration: none; letter-spacing: 0.7px; border: 1px solid #000000; white-space: nowrap; box-shadow: 0 10px 22px rgba(0,0,0,0.18); }
+  .allure-btn   { display: inline-block; padding: 11px 18px; background: linear-gradient(180deg,#111111,#000000); color: #ffffff; font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 12px; font-weight: 900; border-radius: 999px; text-decoration: none; letter-spacing: 0.7px; border: 1px solid #000000; white-space: nowrap; box-shadow: 0 12px 24px rgba(0,0,0,0.2); }
   .allure-btn-unavail { display: inline-block; padding: 11px 18px; background: #f1f5f9; color: #94a3b8; font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 12px; font-weight: 900; border-radius: 999px; text-decoration: none; letter-spacing: 0.7px; border: 1px solid #e2e8f0; white-space: nowrap; }
 
   /* FOOTER */
-  .footer { background: #060d1f; padding: 14px 28px; border-top: 1px solid #0f1e3d; }
+  .footer { background: #060d1f; padding: 16px 30px; border-top: 1px solid #0f1e3d; }
   .footer-inner { display: table; width: 100%; }
   .footer-left  { display: table-cell; vertical-align: middle; }
   .footer-right { display: table-cell; vertical-align: middle; text-align: right; }
@@ -846,6 +847,7 @@ def sendEmailNotification(String buildStatus) {
         <span class="hd-live">Build complete</span>
       </div>
       <h1 class="hd-title">Dakota Marketplace Smoke</h1>
+      <div class="hd-subtitle">Automation quality summary</div>
     </div>
   </div>
 
