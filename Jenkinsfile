@@ -755,6 +755,12 @@ def sendEmailNotification(String buildStatus) {
         passRate = (Math.round(passRateRaw) as long) / 10.0d
     }
     def passRateColor = passRate >= 90 ? '#16a34a' : (passRate >= 70 ? '#f59e0b' : '#dc2626')
+    def passedPercent = testStats.total > 0 ? ((testStats.passed as double) * 100.0d / (testStats.total as double)) : 0.0d
+    def failedPercent = testStats.total > 0 ? ((testStats.failed as double) * 100.0d / (testStats.total as double)) : 0.0d
+    def skippedPercent = testStats.total > 0 ? ((testStats.skipped as double) * 100.0d / (testStats.total as double)) : 0.0d
+    def healthLabel = passRate >= 90 ? 'Healthy' : (passRate >= 70 ? 'Degraded' : 'Critical')
+    def healthBg = passRate >= 90 ? '#dcfce7' : (passRate >= 70 ? '#fef3c7' : '#fee2e2')
+    def healthBorder = passRate >= 90 ? '#86efac' : (passRate >= 70 ? '#fcd34d' : '#fca5a5')
     def environmentLabel = ((params.ENVIRONMENT ?: 'UAT').toUpperCase() == 'PROD') ? 'Production' : 'UAT'
     def jobUrl = env.BUILD_URL ?: ''
     def allureUrl = "${jobUrl}allure"
@@ -796,11 +802,18 @@ def sendEmailNotification(String buildStatus) {
   .sc-num.failed { color: #dc2626; }
   .sc-num.skipped{ color: #7c3aed; }
   .sc-sub { font-size: 10px; color: #94a3b8; margin-top: 4px; display: block; }
+  .sc-meter { height: 5px; background: #e2e8f0; border-radius: 999px; margin: 8px 8px 0; overflow: hidden; }
+  .sc-fill { height: 5px; border-radius: 999px; }
+  .sc-fill.total { width: 100%; background: #64748b; }
+  .sc-fill.passed { background: #16a34a; }
+  .sc-fill.failed { background: #dc2626; }
+  .sc-fill.skipped { background: #7c3aed; }
 
   /* BODY */
   .body { padding: 26px 30px; background: #ffffff; }
   .section-row { margin-bottom: 14px; }
   .section-label { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: #64748b; background:#f8fafc; border:1px solid #e2e8f0; border-radius:999px; padding:4px 10px; }
+  .health-chip { display:inline-block; margin-left:10px; font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color:#0f172a; background:${healthBg}; border:1px solid ${healthBorder}; border-radius:999px; padding:4px 10px; }
   .section-divider { border: none; border-top: 1px solid #e2e8f0; margin: 0; flex: 1; }
 
   /* INFO GRID */
@@ -858,24 +871,28 @@ def sendEmailNotification(String buildStatus) {
       <span class="sc-lbl">Total</span>
       <span class="sc-num total">${testStats.total}</span>
       <span class="sc-sub">test cases</span>
+      <div class="sc-meter"><span class="sc-fill total"></span></div>
     </div>
     <div class="sc">
       <span class="sc-icon" style="color:#16a34a;">&#10003;</span>
       <span class="sc-lbl">Passed</span>
       <span class="sc-num passed">${testStats.passed}</span>
       <span class="sc-sub">passed checks</span>
+      <div class="sc-meter"><span class="sc-fill passed" style="width:${passedPercent}%;"></span></div>
     </div>
     <div class="sc">
       <span class="sc-icon" style="color:#dc2626;">&#10005;</span>
       <span class="sc-lbl">Failed</span>
       <span class="sc-num failed">${testStats.failed}</span>
       <span class="sc-sub">action required</span>
+      <div class="sc-meter"><span class="sc-fill failed" style="width:${failedPercent}%;"></span></div>
     </div>
     <div class="sc">
       <span class="sc-icon" style="color:#7c3aed;">&#9193;</span>
       <span class="sc-lbl">Skipped</span>
       <span class="sc-num skipped">${testStats.skipped}</span>
       <span class="sc-sub">not executed</span>
+      <div class="sc-meter"><span class="sc-fill skipped" style="width:${skippedPercent}%;"></span></div>
     </div>
   </div>
 
@@ -885,6 +902,7 @@ def sendEmailNotification(String buildStatus) {
     <!-- Run Details -->
     <div class="section-row">
       <span class="section-label">Run details</span>
+      <span class="health-chip">&#9679; ${healthLabel}</span>
       <hr class="section-divider" style="display:inline-block;width:80%;margin-left:10px;vertical-align:middle;">
     </div>
 
