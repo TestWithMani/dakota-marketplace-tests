@@ -796,22 +796,8 @@ def sendEmailNotification(String buildStatus) {
                     <!-- LEFT -->
                     <td width="62%" style="padding:50px 44px;">
 
-                      <div style="
-                        display:inline-block;
-                        background:rgba(255,255,255,0.16);
-                        color:#ffffff;
-                        padding:8px 16px;
-                        border-radius:999px;
-                        font-size:11px;
-                        font-weight:800;
-                        letter-spacing:1px;
-                        text-transform:uppercase;
-                      ">
-                        Dakota Automation Pipeline
-                      </div>
-
                       <h1 style="
-                        margin:22px 0 12px;
+                        margin:22px 0 0;
                         color:#ffffff;
                         font-size:44px;
                         line-height:1.2;
@@ -819,16 +805,6 @@ def sendEmailNotification(String buildStatus) {
                       ">
                         Smoke Test <br> Execution Report
                       </h1>
-
-                      <div style="
-                        color:rgba(255,255,255,0.92);
-                        font-size:15px;
-                        line-height:1.9;
-                        max-width:500px;
-                      ">
-                        Complete automation execution summary with modern reporting,
-                        test analytics, pipeline statistics, and Allure dashboard access.
-                      </div>
 
                     </td>
 
@@ -877,7 +853,7 @@ def sendEmailNotification(String buildStatus) {
                               font-weight:900;
                               letter-spacing:1px;
                             ">
-                              ${testStats.failed > 0 ? 'FAILED' : 'PASSED'}
+                              ${testStats.failed > 0 ? 'FAILED' : 'SUCCESS'}
                             </div>
 
                           </td>
@@ -917,7 +893,7 @@ def sendEmailNotification(String buildStatus) {
                         font-size:22px;
                         margin-bottom:18px;
                       ">
-                        📊
+                        T
                       </div>
 
                       <div style="
@@ -957,7 +933,7 @@ def sendEmailNotification(String buildStatus) {
                         font-size:22px;
                         margin-bottom:18px;
                       ">
-                        ✅
+                        P
                       </div>
 
                       <div style="
@@ -997,7 +973,7 @@ def sendEmailNotification(String buildStatus) {
                         font-size:22px;
                         margin-bottom:18px;
                       ">
-                        ❌
+                        F
                       </div>
 
                       <div style="
@@ -1037,7 +1013,7 @@ def sendEmailNotification(String buildStatus) {
                         font-size:22px;
                         margin-bottom:18px;
                       ">
-                        ⏭️
+                        S
                       </div>
 
                       <div style="
@@ -1186,7 +1162,7 @@ def sendEmailNotification(String buildStatus) {
                               line-height:74px;
                               font-size:34px;
                             ">
-                              🚀
+                              R
                             </div>
 
                             <div style="
