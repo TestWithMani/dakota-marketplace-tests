@@ -769,33 +769,6 @@ def sendEmailNotification(String buildStatus) {
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-      @media only screen and (max-width: 700px) {
-        .email-card { border-radius: 18px !important; }
-        .hero-pad { padding: 28px 20px !important; }
-        .hero-title { font-size: 30px !important; line-height: 1.25 !important; }
-        .stats-wrap { padding: 16px 14px 6px !important; }
-        .kpi-cell {
-          display: block !important;
-          width: 100% !important;
-          box-sizing: border-box !important;
-          margin-bottom: 8px !important;
-        }
-        .details-wrap { padding: 12px 14px 22px !important; }
-        .stack-col {
-          display: block !important;
-          width: 100% !important;
-          box-sizing: border-box !important;
-          padding-left: 0 !important;
-        }
-        .detail-card { border-radius: 16px !important; }
-        .allure-card { border-radius: 16px !important; margin-top: 12px !important; }
-        .allure-pad { padding: 18px 16px !important; }
-        .allure-title { font-size: 28px !important; }
-        .allure-copy { font-size: 13px !important; line-height: 1.5 !important; }
-        .footer-pad { padding: 14px 16px !important; }
-      }
-    </style>
   </head>
   <body style="margin:0;padding:0;background:#eef2f7;font-family:'Trebuchet MS','Segoe UI',Arial,sans-serif;">
 
