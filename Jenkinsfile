@@ -804,9 +804,10 @@ def sendEmailNotification(String buildStatus) {
 
   /* INFO GRID */
   .info-table { width: 100%; border-collapse: separate; border-spacing: 10px; margin: 0 -10px 10px; }
-  .ic { background: linear-gradient(135deg,#f8fafc 0%,#ffffff 100%); border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; vertical-align: top; width: 50%; }
+  .ic { background: linear-gradient(135deg,#f8fafc 0%,#ffffff 100%); border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; vertical-align: top; width: 50%; box-shadow: 0 6px 18px rgba(15,23,42,0.06); }
   .ic-lbl { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 9px; letter-spacing: 1.2px; text-transform: uppercase; color: #94a3b8; display: block; margin-bottom: 4px; }
-  .ic-val { font-size: 13px; font-weight: 600; color: #0f172a; display: block; }
+  .ic-val { font-size: 13px; font-weight: 700; color: #0f172a; display: block; }
+  .ic-val-strong { font-size: 15px; font-weight: 800; letter-spacing: -0.2px; }
 
   /* ALLURE */
   .allure { background: linear-gradient(135deg,#f8fafc 0%,#eef2ff 100%); border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px 18px; }
@@ -817,8 +818,8 @@ def sendEmailNotification(String buildStatus) {
   .allure-text  { display: inline-block; vertical-align: middle; }
   .allure-name  { font-size: 13px; font-weight: 700; color: #0f172a; display: block; margin-bottom: 2px; }
   .allure-url   { font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 10px; color: #94a3b8; display: block; word-break: break-all; }
-  .allure-btn   { display: inline-block; padding: 10px 18px; background: #000000; color: #ffffff; font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 12px; font-weight: 800; border-radius: 999px; text-decoration: none; letter-spacing: 0.6px; border: 1px solid #000000; white-space: nowrap; }
-  .allure-btn-unavail { display: inline-block; padding: 10px 18px; background: #f1f5f9; color: #94a3b8; font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 12px; font-weight: 800; border-radius: 999px; text-decoration: none; letter-spacing: 0.6px; border: 1px solid #e2e8f0; white-space: nowrap; }
+  .allure-btn   { display: inline-block; padding: 11px 18px; background: #000000; color: #ffffff; font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 12px; font-weight: 900; border-radius: 999px; text-decoration: none; letter-spacing: 0.7px; border: 1px solid #000000; white-space: nowrap; box-shadow: 0 10px 22px rgba(0,0,0,0.18); }
+  .allure-btn-unavail { display: inline-block; padding: 11px 18px; background: #f1f5f9; color: #94a3b8; font-family: "Consolas","SFMono-Regular","Menlo","Monaco","Courier New",monospace; font-size: 12px; font-weight: 900; border-radius: 999px; text-decoration: none; letter-spacing: 0.7px; border: 1px solid #e2e8f0; white-space: nowrap; }
 
   /* FOOTER */
   .footer { background: #060d1f; padding: 14px 28px; border-top: 1px solid #0f1e3d; }
@@ -889,7 +890,7 @@ def sendEmailNotification(String buildStatus) {
       <tr>
         <td class="ic">
           <span class="ic-lbl">Environment</span>
-          <span class="ic-val">${environmentLabel}</span>
+          <span class="ic-val ic-val-strong">${environmentLabel}</span>
         </td>
         <td class="ic">
           <span class="ic-lbl">Portal</span>
@@ -903,7 +904,7 @@ def sendEmailNotification(String buildStatus) {
         </td>
         <td class="ic">
           <span class="ic-lbl">Pass Percentage</span>
-          <span class="ic-val" style="color:${passRateColor};font-weight:700;">${passRate}%</span>
+          <span class="ic-val ic-val-strong" style="color:${passRateColor};">${passRate}%</span>
         </td>
       </tr>
     </table>
