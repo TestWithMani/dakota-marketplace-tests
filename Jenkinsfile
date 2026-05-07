@@ -779,7 +779,7 @@ def sendEmailNotification(String buildStatus) {
 
           <!-- Main Email Card -->
           <table width="100%" cellpadding="0" cellspacing="0" class="email-card" style="
-            max-width:860px;
+            max-width:700px;
             background:#ffffff;
             border-radius:26px;
             overflow:hidden;
