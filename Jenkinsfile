@@ -800,7 +800,7 @@ def sendEmailNotification(String buildStatus) {
                         line-height:1.2;
                         font-weight:900;
                       ">
-                        Smoke Test <br> Execution Report
+                        Dakota Smoke Test Results
                       </h1>
                     </td>
                   </tr>
