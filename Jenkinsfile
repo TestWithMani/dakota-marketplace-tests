@@ -970,9 +970,9 @@ def sendEmailNotification(String buildStatus) {
                           <td style="padding:0 26px;">
 
                             <!-- ENV -->
-                            <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:1px dashed #cbd5e1;">
+                            <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:1px dashed #cbd5e1;background:#f8fbff;">
                               <tr>
-                                <td style="padding:18px 0;font-size:13px;font-weight:800;color:#64748b;">
+                                <td style="padding:18px 0;font-size:13px;font-weight:800;color:#1d4ed8;">
                                   Environment
                                 </td>
 
@@ -983,9 +983,9 @@ def sendEmailNotification(String buildStatus) {
                             </table>
 
                             <!-- PORTAL -->
-                            <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:1px dashed #cbd5e1;">
+                            <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:1px dashed #cbd5e1;background:#f5f3ff;">
                               <tr>
-                                <td style="padding:18px 0;font-size:13px;font-weight:800;color:#64748b;">
+                                <td style="padding:18px 0;font-size:13px;font-weight:800;color:#7c3aed;">
                                   Portal
                                 </td>
 
@@ -996,9 +996,9 @@ def sendEmailNotification(String buildStatus) {
                             </table>
 
                             <!-- DURATION -->
-                            <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:1px dashed #cbd5e1;">
+                            <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:1px dashed #cbd5e1;background:#ecfdf5;">
                               <tr>
-                                <td style="padding:18px 0;font-size:13px;font-weight:800;color:#64748b;">
+                                <td style="padding:18px 0;font-size:13px;font-weight:800;color:#15803d;">
                                   Duration
                                 </td>
 
@@ -1009,9 +1009,9 @@ def sendEmailNotification(String buildStatus) {
                             </table>
 
                             <!-- PASS PERCENTAGE -->
-                            <table width="100%" cellpadding="0" cellspacing="0">
+                            <table width="100%" cellpadding="0" cellspacing="0" style="background:#fffbeb;">
                               <tr>
-                                <td style="padding:18px 0;font-size:13px;font-weight:800;color:#64748b;">
+                                <td style="padding:18px 0;font-size:13px;font-weight:800;color:#b45309;">
                                   Pass Percentage
                                 </td>
 
@@ -1042,19 +1042,7 @@ def sendEmailNotification(String buildStatus) {
                           <td style="padding:34px 30px;">
 
                             <div style="
-                              width:74px;
-                              height:74px;
-                              border-radius:22px;
-                              background:rgba(255,255,255,0.12);
-                              text-align:center;
-                              line-height:74px;
-                              font-size:34px;
-                            ">
-                              
-                            </div>
-
-                            <div style="
-                              margin-top:24px;
+                              margin-top:0;
                               color:#ffffff;
                               font-size:30px;
                               line-height:1.3;
