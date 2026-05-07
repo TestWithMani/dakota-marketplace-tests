@@ -767,19 +767,20 @@ def sendEmailNotification(String buildStatus) {
     def allureAvailable = params.RUN_ALLURE && fileExists(env.ALLURE_DIR)
     def body = """
 <html>
-  <body style="margin:0;padding:0;background:#e9eef8;font-family:'Trebuchet MS','Segoe UI',Arial,sans-serif;">
+  <body style="margin:0;padding:0;background:#eef2f7;font-family:'Trebuchet MS','Segoe UI',Arial,sans-serif;">
 
     <!-- Main Wrapper -->
-    <table width="100%" cellpadding="0" cellspacing="0" style="padding:42px 14px;background:linear-gradient(135deg,#e9eef8 0%,#f5f7fb 100%);">
+    <table width="100%" cellpadding="0" cellspacing="0" style="padding:34px 12px;background:linear-gradient(135deg,#eaf0fb 0%,#f8fafd 100%);">
       <tr>
         <td align="center">
 
           <!-- Main Email Card -->
-          <table width="860" cellpadding="0" cellspacing="0" style="
+          <table width="100%" cellpadding="0" cellspacing="0" style="
+            max-width:860px;
             background:#ffffff;
-            border-radius:32px;
+            border-radius:26px;
             overflow:hidden;
-            box-shadow:0 30px 80px rgba(15,23,42,0.16);
+            box-shadow:0 24px 60px rgba(15,23,42,0.14);
           ">
 
             <!-- TOP HERO -->
@@ -792,11 +793,11 @@ def sendEmailNotification(String buildStatus) {
 
                 <table width="100%" cellpadding="0" cellspacing="0">
                   <tr>
-                    <td style="padding:50px 44px;">
+                    <td style="padding:42px 34px;">
                       <h1 style="
-                        margin:8px 0 0;
+                        margin:0;
                         color:#ffffff;
-                        font-size:44px;
+                        font-size:42px;
                         line-height:1.2;
                         font-weight:900;
                       ">
@@ -811,30 +812,31 @@ def sendEmailNotification(String buildStatus) {
 
             <!-- STATS SECTION -->
             <tr>
-              <td style="padding:34px 36px 10px;">
+              <td style="padding:24px 24px 8px;">
 
-                <table width="100%" cellpadding="10" cellspacing="10">
+                <table width="100%" cellpadding="8" cellspacing="8">
                   <tr>
 
                     <!-- TOTAL -->
                     <td width="25%" style="
-                      background:#eef2f7;
-                      border-radius:24px;
-                      padding:28px 20px;
+                      background:#f4f7fb;
+                      border:1px solid #dbe3ef;
+                      border-radius:18px;
+                      padding:20px 16px;
                     ">
 
                       <div style="
-                        font-size:13px;
+                        font-size:11px;
                         color:#64748b;
                         font-weight:800;
-                        letter-spacing:1px;
+                        letter-spacing:0.8px;
                       ">
                         TOTAL TESTS
                       </div>
 
                       <div style="
-                        margin-top:10px;
-                        font-size:38px;
+                        margin-top:8px;
+                        font-size:36px;
                         font-weight:900;
                         color:#0f172a;
                       ">
@@ -845,13 +847,14 @@ def sendEmailNotification(String buildStatus) {
 
                     <!-- PASSED -->
                     <td width="25%" style="
-                      background:#e9f9f1;
-                      border-radius:24px;
-                      padding:28px 20px;
+                      background:#ecfaf3;
+                      border:1px solid #c9efdc;
+                      border-radius:18px;
+                      padding:20px 16px;
                     ">
 
                       <div style="
-                        font-size:13px;
+                        font-size:11px;
                         color:#15803d;
                         font-weight:800;
                         letter-spacing:1px;
@@ -860,8 +863,8 @@ def sendEmailNotification(String buildStatus) {
                       </div>
 
                       <div style="
-                        margin-top:10px;
-                        font-size:38px;
+                        margin-top:8px;
+                        font-size:36px;
                         font-weight:900;
                         color:#15803d;
                       ">
@@ -872,13 +875,14 @@ def sendEmailNotification(String buildStatus) {
 
                     <!-- FAILED -->
                     <td width="25%" style="
-                      background:#fceff1;
-                      border-radius:24px;
-                      padding:28px 20px;
+                      background:#fef2f2;
+                      border:1px solid #f6cdd2;
+                      border-radius:18px;
+                      padding:20px 16px;
                     ">
 
                       <div style="
-                        font-size:13px;
+                        font-size:11px;
                         color:#b91c1c;
                         font-weight:800;
                         letter-spacing:1px;
@@ -887,8 +891,8 @@ def sendEmailNotification(String buildStatus) {
                       </div>
 
                       <div style="
-                        margin-top:10px;
-                        font-size:38px;
+                        margin-top:8px;
+                        font-size:36px;
                         font-weight:900;
                         color:#b91c1c;
                       ">
@@ -899,13 +903,14 @@ def sendEmailNotification(String buildStatus) {
 
                     <!-- SKIPPED -->
                     <td width="25%" style="
-                      background:#f3efff;
-                      border-radius:24px;
-                      padding:28px 20px;
+                      background:#f5f1ff;
+                      border:1px solid #dfd3ff;
+                      border-radius:18px;
+                      padding:20px 16px;
                     ">
 
                       <div style="
-                        font-size:13px;
+                        font-size:11px;
                         color:#7c3aed;
                         font-weight:800;
                         letter-spacing:1px;
@@ -914,8 +919,8 @@ def sendEmailNotification(String buildStatus) {
                       </div>
 
                       <div style="
-                        margin-top:10px;
-                        font-size:38px;
+                        margin-top:8px;
+                        font-size:36px;
                         font-weight:900;
                         color:#7c3aed;
                       ">
@@ -932,7 +937,7 @@ def sendEmailNotification(String buildStatus) {
 
             <!-- DETAILS + REPORT -->
             <tr>
-              <td style="padding:18px 36px 40px;">
+              <td style="padding:14px 24px 28px;">
 
                 <table width="100%" cellpadding="0" cellspacing="0">
                   <tr>
@@ -943,20 +948,20 @@ def sendEmailNotification(String buildStatus) {
                       <table width="100%" cellpadding="0" cellspacing="0" style="
                         background:#ffffff;
                         border:1px solid #e2e8f0;
-                        border-radius:28px;
+                        border-radius:20px;
                         overflow:hidden;
                       ">
 
                         <!-- HEADER -->
                         <tr>
                           <td style="
-                            padding:24px 26px;
+                            padding:18px 20px;
                         background:#020617;
                             color:#ffffff;
                           ">
 
                             <div style="
-                              font-size:22px;
+                              font-size:18px;
                               font-weight:900;
                             ">
                               Execution Details
@@ -967,16 +972,16 @@ def sendEmailNotification(String buildStatus) {
 
                         <!-- ITEMS -->
                         <tr>
-                          <td style="padding:0 26px;">
+                          <td style="padding:0 18px;">
 
                             <!-- ENV -->
                             <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:1px dashed #cbd5e1;background:#f8fbff;">
                               <tr>
-                                <td style="padding:18px 0;font-size:13px;font-weight:800;color:#1d4ed8;">
+                                <td style="padding:14px 0;font-size:12px;font-weight:800;color:#1d4ed8;">
                                   Environment
                                 </td>
 
-                                <td align="right" style="padding:18px 0;font-size:14px;font-weight:800;color:#0f172a;">
+                                <td align="right" style="padding:14px 0;font-size:13px;font-weight:800;color:#0f172a;">
                                   ${environmentLabel}
                                 </td>
                               </tr>
@@ -985,11 +990,11 @@ def sendEmailNotification(String buildStatus) {
                             <!-- PORTAL -->
                             <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:1px dashed #cbd5e1;background:#f5f3ff;">
                               <tr>
-                                <td style="padding:18px 0;font-size:13px;font-weight:800;color:#7c3aed;">
+                                <td style="padding:14px 0;font-size:12px;font-weight:800;color:#7c3aed;">
                                   Portal
                                 </td>
 
-                                <td align="right" style="padding:18px 0;font-size:14px;font-weight:800;color:#0f172a;">
+                                <td align="right" style="padding:14px 0;font-size:13px;font-weight:800;color:#0f172a;">
                                   ${params.PORTAL ?: 'All Marketplace Access'}
                                 </td>
                               </tr>
@@ -998,11 +1003,11 @@ def sendEmailNotification(String buildStatus) {
                             <!-- DURATION -->
                             <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom:1px dashed #cbd5e1;background:#ecfdf5;">
                               <tr>
-                                <td style="padding:18px 0;font-size:13px;font-weight:800;color:#15803d;">
+                                <td style="padding:14px 0;font-size:12px;font-weight:800;color:#15803d;">
                                   Duration
                                 </td>
 
-                                <td align="right" style="padding:18px 0;font-size:14px;font-weight:800;color:#0f172a;">
+                                <td align="right" style="padding:14px 0;font-size:13px;font-weight:800;color:#0f172a;">
                                   ${durationString}
                                 </td>
                               </tr>
@@ -1011,11 +1016,11 @@ def sendEmailNotification(String buildStatus) {
                             <!-- PASS PERCENTAGE -->
                             <table width="100%" cellpadding="0" cellspacing="0" style="background:#fffbeb;">
                               <tr>
-                                <td style="padding:18px 0;font-size:13px;font-weight:800;color:#b45309;">
+                                <td style="padding:14px 0;font-size:12px;font-weight:800;color:#b45309;">
                                   Pass Percentage
                                 </td>
 
-                                <td align="right" style="padding:18px 0;font-size:14px;font-weight:900;color:${passRateColor};">
+                                <td align="right" style="padding:14px 0;font-size:13px;font-weight:900;color:${passRateColor};">
                                   ${passRate}%
                                 </td>
                               </tr>
@@ -1029,22 +1034,22 @@ def sendEmailNotification(String buildStatus) {
                     </td>
 
                     <!-- RIGHT REPORT -->
-                    <td width="46%" valign="top" style="padding-left:18px;">
+                    <td width="46%" valign="top" style="padding-left:12px;">
 
                       <table width="100%" cellpadding="0" cellspacing="0" style="
                         background:
                         linear-gradient(135deg,#020617 0%,#0f172a 45%,#1d4ed8 100%);
-                        border-radius:28px;
+                        border-radius:20px;
                         overflow:hidden;
                       ">
 
                         <tr>
-                          <td style="padding:34px 30px;">
+                          <td style="padding:24px 22px;">
 
                             <div style="
                               margin-top:0;
                               color:#ffffff;
-                              font-size:30px;
+                              font-size:36px;
                               line-height:1.3;
                               font-weight:900;
                             ">
@@ -1052,21 +1057,21 @@ def sendEmailNotification(String buildStatus) {
                             </div>
 
                             <div style="
-                              margin-top:12px;
+                              margin-top:8px;
                               color:#dbeafe;
-                              font-size:15px;
-                              line-height:1.8;
+                              font-size:14px;
+                              line-height:1.6;
                             ">
                               Access complete execution analytics, screenshots,
                               logs, failed validations, and test evidence.
                             </div>
 
                             <!-- BUTTON -->
-                            <div style="margin-top:34px;">
+                            <div style="margin-top:24px;">
 
                               ${allureAvailable
-                                ? "<a href=\"${allureUrl}\" style=\"display:inline-block;background:#ffffff;color:#0f172a;text-decoration:none;padding:18px 28px;border-radius:18px;font-size:14px;font-weight:900;letter-spacing:1px;box-shadow:0 12px 28px rgba(0,0,0,0.22);\">OPEN REPORT</a>"
-                                : "<span style=\"display:inline-block;background:rgba(255,255,255,0.14);color:#ffffff;padding:18px 28px;border-radius:18px;font-size:13px;font-weight:800;\">REPORT NOT AVAILABLE</span>"
+                                ? "<a href=\"${allureUrl}\" style=\"display:inline-block;background:#ffffff;color:#0f172a;text-decoration:none;padding:14px 22px;border-radius:14px;font-size:13px;font-weight:900;letter-spacing:0.8px;box-shadow:0 10px 20px rgba(0,0,0,0.2);\">OPEN REPORT</a>"
+                                : "<span style=\"display:inline-block;background:rgba(255,255,255,0.16);color:#ffffff;padding:14px 22px;border-radius:14px;font-size:12px;font-weight:800;\">REPORT NOT AVAILABLE</span>"
                               }
 
                             </div>
@@ -1089,7 +1094,7 @@ def sendEmailNotification(String buildStatus) {
               <td style="
                 background:#000000;
                 border-top:1px solid #111827;
-                padding:24px 36px;
+                padding:16px 24px;
               ">
 
                 <table width="100%" cellpadding="0" cellspacing="0">
@@ -1097,7 +1102,7 @@ def sendEmailNotification(String buildStatus) {
 
                     <td style="
                       color:#ffffff;
-                      font-size:14px;
+                      font-size:13px;
                       font-weight:800;
                     ">
                       Dakota Marketplace Automation
