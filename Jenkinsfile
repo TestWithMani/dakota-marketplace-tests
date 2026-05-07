@@ -1231,9 +1231,7 @@ def sendEmailNotification(String buildStatus) {
                       color:#64748b;
                       font-size:12px;
                       font-weight:700;
-                    ">
-                      Powered by Jenkins • Selenium • Pytest • Allure
-                    </td>
+                    "></td>
 
                   </tr>
                 </table>
