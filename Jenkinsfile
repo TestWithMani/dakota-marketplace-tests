@@ -746,7 +746,7 @@ def sendEmailNotification(String buildStatus) {
         echo "No recipients configured, skipping email."
         return
     }
-    def subject = "Dakota Smoke Test Report | ${new Date().format('MMM dd, yyyy')}"
+    def subject = "Dakota Regression Test Report | ${new Date().format('MMM dd, yyyy')}"
     def durationString = (currentBuild.durationString ?: 'N/A').replace(' and counting', '')
     // Force double math for Jenkins sandbox compatibility, then round to 1 decimal.
     def passRate = 0.0
@@ -804,7 +804,7 @@ def sendEmailNotification(String buildStatus) {
                         line-height:1.2;
                         font-weight:900;
                       ">
-                        Dakota Smoke Test Results
+                        Dakota Regression Test Results
                       </h1>
                     </td>
                   </tr>
