@@ -502,9 +502,9 @@ def setupPythonEnvironment() {
         // no other process can open the lock file while we hold it — they will
         // receive an IOException and retry every 5 seconds up to 300 seconds.
         powershell """
-            \$lockPath  = '${env.VENV_DIR}\.pip.lock'
-            \$venvPy    = '${env.VENV_DIR}\Scripts\python.exe'
-            \$pip       = '${env.VENV_DIR}\Scripts\python'
+            \$lockPath  = '${env.VENV_DIR}/.pip.lock'
+            \$venvPy    = '${env.VENV_DIR}/Scripts/python.exe'
+            \$pip       = '${env.VENV_DIR}/Scripts/python'
             \$timeout   = 300
             \$waited    = 0
             \$lockStream = \$null
