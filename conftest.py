@@ -149,6 +149,21 @@ def _resolve_browser_binary(browser_name: str) -> str | None:
     return None
 
 
+def _effective_browser_for_driver(requested: str) -> str:
+    """On CI agents without Firefox, fall back to Chrome so jobs do not fail at fixture setup."""
+    if requested != "firefox":
+        return requested
+    if _resolve_browser_binary("firefox") is not None:
+        return requested
+    ci = _env_flag("CI") or bool(os.environ.get("JENKINS_URL"))
+    if ci:
+        logging.warning(
+            "Requested Firefox but no Firefox binary was found; using Chrome on this agent."
+        )
+        return "chrome"
+    return requested
+
+
 def _apply_browser_binary_option(browser_name, options):
     binary = _resolve_browser_binary(browser_name)
     if not binary:
@@ -167,11 +182,12 @@ def _apply_browser_binary_option(browser_name, options):
 
 @pytest.fixture(scope="function")
 def driver(browser_name):
+    effective_browser = _effective_browser_for_driver(browser_name)
     browser_driver = None
     viewport_width, viewport_height = _resolve_viewport_size()
     is_headless = _is_headless_mode()
 
-    if browser_name == "chrome":
+    if effective_browser == "chrome":
         options = ChromeOptions()
         _build_common_browser_args(options)
         options.add_argument(f"--window-size={viewport_width},{viewport_height}")
@@ -188,7 +204,7 @@ def driver(browser_name):
             service = ChromeService()
         browser_driver = webdriver.Chrome(service=service, options=options)
 
-    elif browser_name == "edge":
+    elif effective_browser == "edge":
         options = EdgeOptions()
         _build_common_browser_args(options)
         options.add_argument(f"--window-size={viewport_width},{viewport_height}")
@@ -204,7 +220,7 @@ def driver(browser_name):
             service = EdgeService()
         browser_driver = webdriver.Edge(service=service, options=options)
 
-    elif browser_name == "firefox":
+    elif effective_browser == "firefox":
         options = FirefoxOptions()
         options.add_argument(f"--width={viewport_width}")
         options.add_argument(f"--height={viewport_height}")
@@ -221,7 +237,7 @@ def driver(browser_name):
         browser_driver = webdriver.Firefox(service=service, options=options)
 
     if browser_driver is None:
-        raise ValueError(f"Driver setup failed for browser '{browser_name}'")
+        raise ValueError(f"Driver setup failed for browser '{effective_browser}'")
 
     # Enforce viewport after session starts for consistent rendering/click targets.
     browser_driver.set_window_size(viewport_width, viewport_height)
