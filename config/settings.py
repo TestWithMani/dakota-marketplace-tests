@@ -33,7 +33,13 @@ def _get_meta() -> Dict[str, list]:
 
 
 def parse_environment_name(environment: Optional[str] = None) -> Tuple[str, str, str]:
-    raw = environment or os.environ.get("ENV") or _get_meta().get("default_env") or DEFAULT_ENV
+    raw = (
+        environment
+        or os.environ.get("ENV")
+        or os.environ.get("TEST_ENV")
+        or _get_meta().get("default_env")
+        or DEFAULT_ENV
+    )
     normalized = _normalize_token(raw)
 
     parts = normalized.split("_", 1)

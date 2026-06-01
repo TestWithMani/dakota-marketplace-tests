@@ -16,6 +16,12 @@ import shutil
 from pathlib import Path
 from config.settings import resolve_runtime_config
 
+
+def _runtime_env_input():
+    """ENV is canonical; TEST_ENV is set by Jenkins for backward compatibility."""
+    return os.environ.get("ENV") or os.environ.get("TEST_ENV")
+
+
 DEFAULT_BROWSER_WIDTH = 1920
 DEFAULT_BROWSER_HEIGHT = 1080
 
@@ -48,6 +54,17 @@ def _is_headless_mode() -> bool:
     return _env_flag("HEADLESS", default=default_headless)
 
 
+def pytest_configure(config):
+    runtime = resolve_runtime_config(_runtime_env_input())
+    logging.info(
+        "Test runtime: env=%s portal=%s url=%s username=%s",
+        runtime["environment"],
+        runtime["portal"],
+        runtime["url"],
+        runtime["username"],
+    )
+
+
 def pytest_addoption(parser):
     parser.addoption(
         "--browser",
@@ -58,32 +75,32 @@ def pytest_addoption(parser):
 
 @pytest.fixture(scope="session")
 def base_url():
-    runtime = resolve_runtime_config(os.environ.get("ENV"))
+    runtime = resolve_runtime_config(_runtime_env_input())
     return runtime["url"]
 
 @pytest.fixture(scope="session")
 def credentials():
-    runtime = resolve_runtime_config(os.environ.get("ENV"))
+    runtime = resolve_runtime_config(_runtime_env_input())
     return runtime["username"], runtime["password"]
 
 @pytest.fixture(scope="session")
 def environment():
     """Resolved label for ``ENV`` (e.g. ``uat`` or ``uat_fa_data_set``)."""
-    runtime = resolve_runtime_config(os.environ.get("ENV"))
+    runtime = resolve_runtime_config(_runtime_env_input())
     return runtime["environment"]
 
 
 @pytest.fixture(scope="session")
 def portal():
     """Current portal key from ``config.json`` (``all_marketplace_access`` when ``ENV`` is base-only)."""
-    runtime = resolve_runtime_config(os.environ.get("ENV"))
+    runtime = resolve_runtime_config(_runtime_env_input())
     return runtime["portal"]
 
 
 @pytest.fixture(scope="session")
 def runtime_config():
     """Full dict from ``resolve_runtime_config`` (url, credentials, urls map, base_env, portal, …)."""
-    return resolve_runtime_config(os.environ.get("ENV"))
+    return resolve_runtime_config(_runtime_env_input())
 
 @pytest.fixture(scope="session")
 def browser_name(request):

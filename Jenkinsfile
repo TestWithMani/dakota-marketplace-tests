@@ -176,7 +176,9 @@ pipeline {
                     def portalName = params.PORTAL ?: 'All Marketplace Access'
                     def portalKey = getPortalMap()[portalName] ?: ''
                     env.TEST_ENV = portalKey ? "${envName}_${portalKey}" : envName
-                    echo "Environment configured: ${env.TEST_ENV}"
+                    // Pytest/conftest read ENV (not TEST_ENV); must match Jenkins UI selection.
+                    env.ENV = env.TEST_ENV
+                    echo "Environment configured: ENV=${env.ENV}"
                 }
             }
         }
@@ -244,6 +246,7 @@ pipeline {
                     echo "Pytest command: pytest ${runCmd}"
 
                     withEnv([
+                        "ENV=${env.ENV}",
                         "TEST_ENV=${env.TEST_ENV}",
                         "BROWSER=${(params.BROWSER ?: 'chrome').trim().toLowerCase()}",
                         "HEADLESS=${params.HEADLESS as boolean}",

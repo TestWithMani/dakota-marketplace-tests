@@ -1,6 +1,6 @@
 {
     "meta": {
-        "default_env": "prod",
+        "default_env": "uat",
         "supported_base_envs": [
             "uat",
             "prod"
