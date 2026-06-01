@@ -2,13 +2,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-
-def safe_click(driver, element) -> None:
-    """Click without blocking on full page load (avoids WebDriver HTTP read timeouts)."""
-    driver.execute_script("arguments[0].scrollIntoView({block:'center'});", element)
-    driver.execute_script("arguments[0].click();", element)
-
-
 class LoginPage:
     def __init__(self, driver):
         self.driver = driver
@@ -69,10 +62,8 @@ class LoginPage:
 
         login_locator = self.wait.until(lambda d: self._find_first_present(self.login_button_locators))
         login_btn = self.wait.until(EC.element_to_be_clickable(login_locator))
-        safe_click(self.driver, login_btn)
-
-        post_login_wait = WebDriverWait(self.driver, 90)
-        post_login_wait.until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "a[title='Dakota Marketplace']"))
-        )
+        login_btn.click()
+        
+        # Wait for inventory page to load after login
+        self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "a[title='Dakota Marketplace']")))
 
