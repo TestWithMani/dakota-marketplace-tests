@@ -163,10 +163,10 @@ def test_portfolio_companies_contacts_tab_fields_display_functionality(driver, b
     first_field_element.click()
     time.sleep(0.6)
 
-    btn1 = "//lightning-dual-listbox[1]//div[1]//div[2]//div[1]//div[4]//lightning-button-icon[1]//button[1]//lightning-primitive-icon[1]"
-    btn2 = "//lightning-dual-listbox[1]//div[1]//div[2]//div[1]//div[4]//lightning-button-icon[2]//button[1]//lightning-primitive-icon[1]"
-    btn3 = "//lightning-dual-listbox[2]//div[1]//div[2]//div[1]//div[4]//lightning-button-icon[1]//button[1]//lightning-primitive-icon[1]"
-    btn4 = "//lightning-dual-listbox[2]//div[1]//div[2]//div[1]//div[4]//lightning-button-icon[2]//button[1]//lightning-primitive-icon[1]"
+    btn1 = "//lightning-dual-listbox[1]//div[1]//div[2]//div[1]//div[4]//lightning-button-icon[1]//button[1]"
+    btn2 = "//lightning-dual-listbox[1]//div[1]//div[2]//div[1]//div[4]//lightning-button-icon[2]//button[1]"
+    btn3 = "//lightning-dual-listbox[2]//div[1]//div[2]//div[1]//div[4]//lightning-button-icon[1]//button[1]"
+    btn4 = "//lightning-dual-listbox[2]//div[1]//div[2]//div[1]//div[4]//lightning-button-icon[2]//button[1]"
 
     # First two are required
     if not click_button_if_present(driver, btn1):
