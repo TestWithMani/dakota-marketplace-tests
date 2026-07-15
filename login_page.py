@@ -1,11 +1,26 @@
+from __future__ import annotations
+
+import time
+
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support import expected_conditions as EC
 
-class LoginPage:
+from pages.base_page import BasePage
+
+
+class LoginPage(BasePage):
+    """Salesforce Experience Cloud login.
+
+    Username is flaky on this form: password focus / partial page settle can leave
+    the email blank. Always re-find fields, verify both values, and refill username
+    if it was cleared before submit.
+    """
+
+    FILL_RETRIES = 3
+
     def __init__(self, driver):
-        self.driver = driver
-        self.wait = WebDriverWait(driver, 30)
+        super().__init__(driver, timeout=30)
         self.username_locators = [
             (By.ID, "loginPage:loginForm:login-email"),
             (By.NAME, "username"),
@@ -25,45 +40,179 @@ class LoginPage:
             (By.XPATH, "//button[contains(.,'Log In') or contains(.,'Login')]"),
         ]
 
-    def navigate_to_login(self, base_url):
-        """Navigate to the login page"""
+    def navigate_to_login(self, base_url: str) -> None:
         self.driver.get(base_url)
+        self._wait_for_visible_field(self.username_locators)
+        self._wait_for_visible_field(self.password_locators)
+        # Allow Experience Cloud / Aura handlers to attach before interacting.
+        time.sleep(1.0)
 
-    def _find_first_present(self, locators):
+    def _wait_for_visible_field(self, locators):
+        def _find_visible(_driver):
+            return self._find_first_visible(locators)
+
+        return self.wait.until(_find_visible)
+
+    def _find_first_visible(self, locators):
         for locator in locators:
-            elements = self.driver.find_elements(*locator)
-            if elements:
-                return locator
+            for element in self.driver.find_elements(*locator):
+                try:
+                    if element.is_displayed() and element.is_enabled():
+                        return element
+                except Exception:
+                    continue
         return None
 
-    def _set_input_value(self, locator, value):
-        field = self.wait.until(EC.presence_of_element_located(locator))
-        self.driver.execute_script("arguments[0].scrollIntoView({block:'center'});", field)
+    def _field_value(self, field) -> str:
         try:
-            field.clear()
-            field.send_keys(value)
-            if field.get_attribute("value") != value:
-                raise ValueError("send_keys did not populate field value")
+            raw = field.get_attribute("value")
+            if raw is not None and str(raw).strip():
+                return str(raw).strip()
         except Exception:
-            # JS fallback for dynamic inputs where send_keys is swallowed.
-            self.driver.execute_script(
-                "arguments[0].value = arguments[1]; arguments[0].dispatchEvent(new Event('input', {bubbles:true})); arguments[0].dispatchEvent(new Event('change', {bubbles:true}));",
-                field,
-                value,
+            pass
+        try:
+            via_js = self.driver.execute_script("return arguments[0].value || '';", field)
+            return str(via_js or "").strip()
+        except Exception:
+            return ""
+
+    def _js_set_value(self, field, value: str) -> None:
+        """Set value with native setter + events (Aura / Lightning-safe)."""
+        self.driver.execute_script(
+            """
+            const el = arguments[0];
+            const val = arguments[1];
+            el.focus();
+            const proto = window.HTMLInputElement.prototype;
+            const descriptor = Object.getOwnPropertyDescriptor(proto, 'value');
+            if (descriptor && descriptor.set) {
+                descriptor.set.call(el, val);
+            } else {
+                el.value = val;
+            }
+            el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+            el.dispatchEvent(new KeyboardEvent('keyup', { bubbles: true }));
+            """,
+            field,
+            value,
+        )
+
+    def _set_input_value(self, field, value: str, *, label: str) -> None:
+        self.wait.until(lambda _: field.is_displayed() and field.is_enabled())
+        self.driver.execute_script(
+            "arguments[0].scrollIntoView({block:'center'});", field
+        )
+        try:
+            self.js_click(field)
+        except Exception:
+            pass
+        time.sleep(0.25)
+
+        # Prefer JS set first — more reliable on Salesforce login than send_keys alone.
+        self._js_set_value(field, value)
+        time.sleep(0.2)
+
+        if self._field_value(field) != value.strip():
+            try:
+                field.send_keys(Keys.CONTROL, "a")
+                field.send_keys(Keys.BACKSPACE)
+            except Exception:
+                try:
+                    field.clear()
+                except Exception:
+                    pass
+            field.send_keys(value)
+            time.sleep(0.3)
+
+        if self._field_value(field) != value.strip():
+            self._js_set_value(field, value)
+            time.sleep(0.2)
+
+        actual = self._field_value(field)
+        if actual != value.strip():
+            raise ValueError(
+                f"Could not populate login {label}. Expected '{value}', got '{actual}'"
             )
 
-    def login(self, user, pwd):
-        """Login with username and password"""
-        username_locator = self.wait.until(lambda d: self._find_first_present(self.username_locators))
-        password_locator = self.wait.until(lambda d: self._find_first_present(self.password_locators))
+    def _fill_credentials(self, user: str, pwd: str) -> None:
+        """Fill username then password, and re-check username after password."""
+        username_field = self._wait_for_visible_field(self.username_locators)
+        self._set_input_value(username_field, user, label="username")
 
-        self._set_input_value(username_locator, user)
-        self._set_input_value(password_locator, pwd)
+        password_field = self._wait_for_visible_field(self.password_locators)
+        self._set_input_value(password_field, pwd, label="password")
 
-        login_locator = self.wait.until(lambda d: self._find_first_present(self.login_button_locators))
-        login_btn = self.wait.until(EC.element_to_be_clickable(login_locator))
-        login_btn.click()
-        
-        # Wait for inventory page to load after login
-        self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "a[title='Dakota Marketplace']")))
+        # Password focus / autofill often clears username on this form.
+        username_field = self._wait_for_visible_field(self.username_locators)
+        if self._field_value(username_field) != user.strip():
+            print("[Login] Username was empty/cleared after password fill — refilling.")
+            self._set_input_value(username_field, user, label="username")
 
+        password_field = self._wait_for_visible_field(self.password_locators)
+        if self._field_value(password_field) != pwd.strip():
+            print("[Login] Password missing after username refill — refilling.")
+            self._set_input_value(password_field, pwd, label="password")
+            # Final username check after second password fill.
+            username_field = self._wait_for_visible_field(self.username_locators)
+            if self._field_value(username_field) != user.strip():
+                self._set_input_value(username_field, user, label="username")
+
+        username_field = self._wait_for_visible_field(self.username_locators)
+        password_field = self._wait_for_visible_field(self.password_locators)
+        user_actual = self._field_value(username_field)
+        pwd_actual = self._field_value(password_field)
+        if user_actual != user.strip() or pwd_actual != pwd.strip():
+            raise ValueError(
+                f"Login fields not ready. username='{user_actual}', "
+                f"password_len={len(pwd_actual)} (expected {len(pwd.strip())})"
+            )
+        print(
+            f"[Login] Credentials verified "
+            f"(username_len={len(user_actual)}, password_len={len(pwd_actual)})."
+        )
+
+    def _find_login_button(self):
+        for locator in self.login_button_locators:
+            for candidate in self.driver.find_elements(*locator):
+                try:
+                    if candidate.is_displayed() and candidate.is_enabled():
+                        return candidate
+                except Exception:
+                    continue
+        return None
+
+    def login(self, user: str, pwd: str) -> None:
+        if not user or not pwd:
+            raise ValueError("Login username and password must be non-empty")
+
+        last_error: Exception | None = None
+        for attempt in range(1, self.FILL_RETRIES + 1):
+            try:
+                print(f"[Login] Filling credentials (attempt {attempt}/{self.FILL_RETRIES})...")
+                self._fill_credentials(user, pwd)
+                last_error = None
+                break
+            except Exception as exc:
+                last_error = exc
+                print(f"[Login] Fill attempt {attempt} failed: {exc}")
+                time.sleep(1.0)
+
+        if last_error is not None:
+            raise last_error
+
+        login_btn = self._find_login_button()
+        if login_btn is None:
+            raise RuntimeError("Login submit button not found")
+
+        self.wait.until(EC.element_to_be_clickable(login_btn))
+        try:
+            login_btn.click()
+        except Exception:
+            self.js_click(login_btn)
+
+        self.wait.until(
+            EC.presence_of_element_located(
+                (By.CSS_SELECTOR, "a[title='Dakota Marketplace']")
+            )
+        )
